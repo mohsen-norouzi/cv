@@ -19,7 +19,7 @@ export default function HeroContent() {
 
 				<a
 					href="#process"
-					className="font-ui group inline-flex items-center gap-4 text-[11px] font-medium tracking-[0.28em] text-white uppercase transition-opacity hover:opacity-70"
+					className="pointer-events-auto font-ui group inline-flex items-center gap-4 text-[11px] font-medium tracking-[0.28em] text-white uppercase transition-opacity hover:opacity-70"
 				>
 					View process
 					<span
