@@ -1,0 +1,46 @@
+const steps = ["01", "02", "03", "04"];
+
+export default function ScrollIndicator({ active = "02" }) {
+	return (
+		<aside className="absolute top-1/2 right-6 z-20 flex -translate-y-1/2 flex-col items-center md:right-10 lg:right-14">
+			<span className="font-ui mb-5 text-[10px] font-medium tracking-[0.35em] text-white/70 uppercase">
+				Scroll
+			</span>
+
+			<div className="relative flex flex-col items-center gap-5 py-1">
+				<div className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-white/25" />
+				<div className="pointer-events-none absolute top-[28%] left-1/2 h-16 w-px -translate-x-1/2 bg-accent/70" />
+
+				{steps.map((step, index) => {
+					const isActive = step === active;
+					const isLast = index === steps.length - 1;
+
+					return (
+						<div key={step} className="relative z-10 flex flex-col items-center gap-5">
+							{isActive ? (
+								<div className="flex flex-col items-center gap-3">
+									<span className="relative flex size-2 items-center justify-center">
+										<span className="absolute size-9 rounded-full bg-accent/25 blur-[1px]" />
+										<span className="absolute size-6 rounded-full border border-accent/40" />
+										<span className="relative size-2 rounded-full bg-accent shadow-[0_0_10px_2px_rgba(196,163,90,0.55)]" />
+									</span>
+									<span className="font-ui text-[11px] font-medium tracking-wider text-accent">
+										{step}
+									</span>
+								</div>
+							) : (
+								<span className="font-ui text-[11px] font-normal tracking-wider text-white/50">
+									{step}
+								</span>
+							)}
+
+							{!isLast && (
+								<span className="size-1.5 rounded-full bg-white/40" />
+							)}
+						</div>
+					);
+				})}
+			</div>
+		</aside>
+	);
+}

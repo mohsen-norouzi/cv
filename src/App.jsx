@@ -1,17 +1,14 @@
-import { Canvas } from "@react-three/fiber";
-import * as THREE from "three";
-import "./App.css";
-import Experience from "./Experience";
+import HeroContent from "./components/HeroContent";
+import Navbar from "./components/Navbar";
+import ScrollIndicator from "./components/ScrollIndicator";
 
 function App() {
 	return (
-		<Canvas
-			shadows
-			camera={{ position: [0, 0, 10] }}
-			gl={{ shadowMapType: THREE.PCFSoftShadowMap }}
-		>
-			<Experience />
-		</Canvas>
+		<div className="relative h-full w-full overflow-hidden bg-[#6b6b6b]">
+			<Navbar />
+			<HeroContent />
+			<ScrollIndicator active="02" />
+		</div>
 	);
 }
 
