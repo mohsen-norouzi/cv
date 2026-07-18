@@ -34,6 +34,25 @@ const HIDDEN_NAMES = new Set([
 
 const PINE_MATS = new Set(["PineA_f", "PineB_f", "RoundTree_f", "Tuft"]);
 
+/** Chance a given foliage mesh gets a random color nudge */
+const FOLIAGE_VARIETY_CHANCE = 0.4;
+
+function tintFoliage(mat, matName) {
+	mat.color.set(PINE_COLOR);
+	if (matName === "Tuft") mat.color.offsetHSL(0.02, 0.05, 0.08);
+	if (matName === "PineB_f") mat.color.offsetHSL(0.02, -0.02, 0.04);
+	if (matName === "RoundTree_f") mat.color.offsetHSL(-0.02, 0.04, 0.06);
+
+	// Most trees keep the base look; only some get a random shift
+	if (Math.random() > FOLIAGE_VARIETY_CHANCE) return;
+
+	mat.color.offsetHSL(
+		(Math.random() - 0.5) * 0.1,
+		(Math.random() - 0.5) * 0.25,
+		(Math.random() - 0.5) * 0.14,
+	);
+}
+
 function makeLampMaterial({ glowKey, seed }) {
 	const mat = new THREE.MeshStandardMaterial({
 		name: "LampGlow",
@@ -123,10 +142,7 @@ function prepareMaterial(material, stoneMap, meshName) {
 	}
 
 	if (PINE_MATS.has(mat.name)) {
-		mat.color.set(PINE_COLOR);
-		if (mat.name === "Tuft") mat.color.offsetHSL(0.02, 0.05, 0.08);
-		if (mat.name === "PineB_f") mat.color.offsetHSL(0, -0.02, 0.04);
-		if (mat.name === "RoundTree_f") mat.color.offsetHSL(0.03, 0.04, 0.06);
+		tintFoliage(mat, mat.name);
 		return mat;
 	}
 
