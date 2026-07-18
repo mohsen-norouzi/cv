@@ -1,6 +1,6 @@
 import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useMemo, useRef } from "react";
 import { BIRD_ORBIT_CENTER } from "./constants";
 
 function prepareMaterial(material, child) {
@@ -48,12 +48,15 @@ function prepareMaterial(material, child) {
 
 export default function Mountain() {
 	const { scene } = useGLTF("/mountain.glb");
+	// Clone the cached scene so each mount owns its own instance —
+	// StrictMode's double-mount otherwise detaches the shared object.
+	const model = useMemo(() => scene.clone(true), [scene]);
 	const birds = useRef([]);
 
 	useLayoutEffect(() => {
 		const flock = [];
 
-		scene.traverse((child) => {
+		model.traverse((child) => {
 			if (child.name === "Fog" || child.name === "Cube.006") {
 				child.visible = false;
 				return;
@@ -96,7 +99,7 @@ export default function Mountain() {
 		});
 
 		birds.current = flock;
-	}, [scene]);
+	}, [model]);
 
 	useFrame(({ clock }, delta) => {
 		const t = clock.elapsedTime;
@@ -117,7 +120,7 @@ export default function Mountain() {
 		}
 	});
 
-	return <primitive object={scene} />;
+	return <primitive object={model} />;
 }
 
 useGLTF.preload("/mountain.glb");
