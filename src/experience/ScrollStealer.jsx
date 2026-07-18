@@ -1,32 +1,50 @@
 import { useEffect } from "react";
 import { isScrollAnimating, snapScroll } from "./scrollStore";
 
-const WHEEL_THRESHOLD = 12;
-const TOUCH_THRESHOLD = 48;
-/** Ignore further wheel events briefly after a snap starts (trackpads spam wheel). */
-const COOLDOWN_MS = 900;
+/** Accumulated wheel delta needed to fire a snap (trackpads send tiny ticks). */
+const WHEEL_ACCUM_THRESHOLD = 28;
+const TOUCH_THRESHOLD = 36;
+/** Ignore further input briefly after a snap starts. */
+const COOLDOWN_MS = 700;
+/** Reset unused wheel accumulation after idle. */
+const ACCUM_IDLE_MS = 280;
 
 /**
- * Captures wheel / touch. One intentional gesture snaps the camera
- * all the way to the girl (or back to the hero).
+ * Captures wheel / touch. A light intentional gesture snaps to the next stop.
+ * Wheel deltas are accumulated so trackpads don't need a hard flick.
  */
 export default function ScrollStealer() {
 	useEffect(() => {
 		let touchStartY = null;
 		let cooldownUntil = 0;
+		let wheelAccum = 0;
+		let accumResetTimer = 0;
 
 		const trySnap = (direction) => {
 			const now = performance.now();
-			if (now < cooldownUntil) return;
-			if (isScrollAnimating()) return;
+			if (now < cooldownUntil) return false;
+			if (isScrollAnimating()) return false;
 			cooldownUntil = now + COOLDOWN_MS;
+			wheelAccum = 0;
 			snapScroll(direction);
+			return true;
 		};
 
 		const onWheel = (event) => {
 			event.preventDefault();
-			if (Math.abs(event.deltaY) < WHEEL_THRESHOLD) return;
-			trySnap(event.deltaY > 0 ? 1 : -1);
+			if (isScrollAnimating()) return;
+			if (performance.now() < cooldownUntil) return;
+
+			wheelAccum += event.deltaY;
+
+			window.clearTimeout(accumResetTimer);
+			accumResetTimer = window.setTimeout(() => {
+				wheelAccum = 0;
+			}, ACCUM_IDLE_MS);
+
+			if (Math.abs(wheelAccum) >= WHEEL_ACCUM_THRESHOLD) {
+				trySnap(wheelAccum > 0 ? 1 : -1);
+			}
 		};
 
 		const onTouchStart = (event) => {
@@ -54,6 +72,7 @@ export default function ScrollStealer() {
 		window.addEventListener("touchend", onTouchEnd);
 
 		return () => {
+			window.clearTimeout(accumResetTimer);
 			window.removeEventListener("wheel", onWheel);
 			window.removeEventListener("touchstart", onTouchStart);
 			window.removeEventListener("touchmove", onTouchMove);

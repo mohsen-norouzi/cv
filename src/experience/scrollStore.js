@@ -1,15 +1,19 @@
 const listeners = new Set();
 
-/** 0 = hero, 1 = girl */
+/** 0 = hero, 1 = girl, 2 = bakery */
+export const SCROLL_SECTION_COUNT = 3;
+
 let section = 0;
 let progress = 0;
 let raf = 0;
 let animating = false;
 
-const DURATION_MS = 2400;
+/** Cozy snap between stops (slightly quicker) */
+const DURATION_MS = 3400;
 
-function easeInOutCubic(t) {
-	return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+/** Soft ease — long ease-in/out, gentle middle (cozy, not snappy) */
+function easeInOutQuint(t) {
+	return t < 0.5 ? 16 * t * t * t * t * t : 1 - (-2 * t + 2) ** 5 / 2;
 }
 
 function notify() {
@@ -29,18 +33,21 @@ export function isScrollAnimating() {
 }
 
 export function setScrollProgress(next) {
-	progress = Math.min(1, Math.max(0, next));
+	progress = Math.min(SCROLL_SECTION_COUNT - 1, Math.max(0, next));
 	notify();
 }
 
 /**
- * Snap to a section. direction > 0 → girl, direction < 0 → hero.
- * One intentional gesture should call this once.
+ * Snap one section forward/back.
+ * direction > 0 → next stop, direction < 0 → previous.
  */
 export function snapScroll(direction) {
-	const next = direction > 0 ? 1 : 0;
+	const next = Math.min(
+		SCROLL_SECTION_COUNT - 1,
+		Math.max(0, section + (direction > 0 ? 1 : -1)),
+	);
 	if (next === section && !animating) return;
-	if (next === section && animating) return;
+	if (animating) return;
 
 	section = next;
 	const from = progress;
@@ -52,7 +59,7 @@ export function snapScroll(direction) {
 
 	const tick = (now) => {
 		const t = Math.min(1, Math.max(0, (now - start) / DURATION_MS));
-		const eased = easeInOutCubic(t);
+		const eased = easeInOutQuint(t);
 		setScrollProgress(from + (to - from) * eased);
 
 		if (t < 1) {

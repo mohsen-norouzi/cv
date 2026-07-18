@@ -1,5 +1,9 @@
 import { useSyncExternalStore } from "react";
-import { getScrollProgress, subscribeScroll } from "../experience/scrollStore";
+import {
+	getScrollProgress,
+	SCROLL_SECTION_COUNT,
+	subscribeScroll,
+} from "../experience/scrollStore";
 
 const steps = ["01", "02", "03", "04"];
 
@@ -9,10 +13,8 @@ export default function ScrollIndicator() {
 		getScrollProgress,
 		getScrollProgress,
 	);
-	const activeIndex = Math.min(
-		steps.length - 1,
-		Math.floor(progress * steps.length),
-	);
+	const activeIndex = Math.min(steps.length - 1, Math.round(progress));
+	const bar = progress / (SCROLL_SECTION_COUNT - 1);
 
 	return (
 		<aside className="absolute top-1/2 right-6 z-20 flex -translate-y-1/2 flex-col items-center md:right-10 lg:right-14">
@@ -24,7 +26,7 @@ export default function ScrollIndicator() {
 				<div className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-white/25" />
 				<div
 					className="pointer-events-none absolute top-0 left-1/2 h-full w-px origin-top -translate-x-1/2 bg-accent/70"
-					style={{ transform: `translateX(-50%) scaleY(${progress})` }}
+					style={{ transform: `translateX(-50%) scaleY(${bar})` }}
 				/>
 
 				{steps.map((step, index) => {

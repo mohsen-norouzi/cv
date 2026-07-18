@@ -23,11 +23,39 @@ export const CAM_FOV = 42;
 
 /**
  * Singer girl (tripo_node_…) on the path platform.
- * Default end pose: standing on the road, facing her.
+ * Locked end pose: standing on the road, facing her.
  */
 export const GIRL_POSITION = new THREE.Vector3(5.95, 3.06, 21.08);
 export const GIRL_VIEW_POS = new THREE.Vector3(9.75, 3.15, 24.15);
 export const GIRL_LOOK_AT = new THREE.Vector3(5.95, 4.2, 21.08);
+
+/**
+ * Bakery (second tripo_node_…) further up the path.
+ */
+export const BAKERY_POSITION = new THREE.Vector3(6.86, 5.41, 13.31);
+export const BAKERY_VIEW_POS = new THREE.Vector3(2.05, 5.2, 15.55);
+export const BAKERY_LOOK_AT = new THREE.Vector3(6.86, 5.6, 13.11);
+
+/**
+ * Camera path waypoints between snap stops.
+ * Girl → bakery eases up the road, then settles left of the shop (no hard diagonal cut).
+ */
+export const CAM_PATH_HERO_TO_GIRL = [CAM_START, GIRL_VIEW_POS];
+export const CAM_LOOK_HERO_TO_GIRL = [CAM_TARGET, GIRL_LOOK_AT];
+
+export const CAM_PATH_GIRL_TO_BAKERY = [
+	GIRL_VIEW_POS,
+	new THREE.Vector3(8.4, 3.55, 21.8),
+	new THREE.Vector3(5.6, 4.35, 18.6),
+	new THREE.Vector3(3.2, 4.95, 16.6),
+	BAKERY_VIEW_POS,
+];
+export const CAM_LOOK_GIRL_TO_BAKERY = [
+	GIRL_LOOK_AT,
+	new THREE.Vector3(6.4, 4.5, 18.5),
+	new THREE.Vector3(6.7, 5.2, 15.2),
+	BAKERY_LOOK_AT,
+];
 
 /** Street lamp emissive / fill intensity (per Street_Light* mesh) */
 export const BIG_LAMP_INTENSITY = 3.7;

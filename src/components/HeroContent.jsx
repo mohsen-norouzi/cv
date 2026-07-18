@@ -7,7 +7,7 @@ export default function HeroContent() {
 		getScrollProgress,
 		getScrollProgress,
 	);
-	const opacity = Math.max(0, 1 - progress * 1.35);
+	const opacity = Math.max(0, 1 - progress * 1.6);
 	const hidden = opacity < 0.02;
 
 	return (
