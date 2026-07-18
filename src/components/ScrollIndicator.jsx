@@ -1,6 +1,19 @@
+import { useSyncExternalStore } from "react";
+import { getScrollProgress, subscribeScroll } from "../experience/scrollStore";
+
 const steps = ["01", "02", "03", "04"];
 
-export default function ScrollIndicator({ active = "02" }) {
+export default function ScrollIndicator() {
+	const progress = useSyncExternalStore(
+		subscribeScroll,
+		getScrollProgress,
+		getScrollProgress,
+	);
+	const activeIndex = Math.min(
+		steps.length - 1,
+		Math.floor(progress * steps.length),
+	);
+
 	return (
 		<aside className="absolute top-1/2 right-6 z-20 flex -translate-y-1/2 flex-col items-center md:right-10 lg:right-14">
 			<span className="font-ui mb-5 text-[10px] font-medium tracking-[0.35em] text-white/70 uppercase">
@@ -9,14 +22,20 @@ export default function ScrollIndicator({ active = "02" }) {
 
 			<div className="relative flex flex-col items-center gap-5 py-1">
 				<div className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-white/25" />
-				<div className="pointer-events-none absolute top-[28%] left-1/2 h-16 w-px -translate-x-1/2 bg-accent/70" />
+				<div
+					className="pointer-events-none absolute top-0 left-1/2 h-full w-px origin-top -translate-x-1/2 bg-accent/70"
+					style={{ transform: `translateX(-50%) scaleY(${progress})` }}
+				/>
 
 				{steps.map((step, index) => {
-					const isActive = step === active;
+					const isActive = index === activeIndex;
 					const isLast = index === steps.length - 1;
 
 					return (
-						<div key={step} className="relative z-10 flex flex-col items-center gap-5">
+						<div
+							key={step}
+							className="relative z-10 flex flex-col items-center gap-5"
+						>
 							{isActive ? (
 								<div className="flex flex-col items-center gap-3">
 									<span className="relative flex size-2 items-center justify-center">

@@ -21,6 +21,14 @@ export const CAM_TARGET = new THREE.Vector3(12, 9, -4);
 export const CAM_START = new THREE.Vector3(2.5, 3.8, 34);
 export const CAM_FOV = 42;
 
+/**
+ * Singer girl (tripo_node_…) on the path platform.
+ * Default end pose: standing on the road, facing her.
+ */
+export const GIRL_POSITION = new THREE.Vector3(5.95, 3.06, 21.08);
+export const GIRL_VIEW_POS = new THREE.Vector3(9.75, 3.15, 24.15);
+export const GIRL_LOOK_AT = new THREE.Vector3(5.95, 4.2, 21.08);
+
 /** Street lamp emissive / fill intensity (per Street_Light* mesh) */
 export const BIG_LAMP_INTENSITY = 3.7;
 

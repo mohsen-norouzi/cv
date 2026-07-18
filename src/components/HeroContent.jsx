@@ -1,6 +1,24 @@
+import { useSyncExternalStore } from "react";
+import { getScrollProgress, subscribeScroll } from "../experience/scrollStore";
+
 export default function HeroContent() {
+	const progress = useSyncExternalStore(
+		subscribeScroll,
+		getScrollProgress,
+		getScrollProgress,
+	);
+	const opacity = Math.max(0, 1 - progress * 1.35);
+	const hidden = opacity < 0.02;
+
 	return (
-		<div className="absolute inset-0 z-10 flex items-center px-8 md:px-12 lg:px-[12%]">
+		<div
+			className="absolute inset-0 z-10 flex items-center px-8 md:px-12 lg:px-[12%]"
+			style={{
+				opacity,
+				visibility: hidden ? "hidden" : "visible",
+				transition: "opacity 0.05s linear",
+			}}
+		>
 			<div className="max-w-xl">
 				<p className="font-ui mb-6 text-[11px] font-medium tracking-[0.32em] text-accent uppercase">
 					01&nbsp;&nbsp;/&nbsp;&nbsp;Discover

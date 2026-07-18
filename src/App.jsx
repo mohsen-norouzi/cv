@@ -5,10 +5,12 @@ import HeroContent from "./components/HeroContent";
 import Navbar from "./components/Navbar";
 import ScrollIndicator from "./components/ScrollIndicator";
 import Experience from "./Experience";
+import ScrollStealer from "./experience/ScrollStealer";
 
 function App() {
 	return (
 		<div className="relative h-full w-full overflow-hidden bg-[#c9b8a8]">
+			<ScrollStealer />
 			<Canvas
 				className="absolute inset-0 h-full w-full"
 				style={{ width: "100%", height: "100%" }}
@@ -37,11 +39,10 @@ function App() {
 					<Navbar />
 				</div>
 				<HeroContent />
-				<ScrollIndicator active="02" />
+				<ScrollIndicator />
 			</div>
 		</div>
 	);
 }
 
 export default App;
-	

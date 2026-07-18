@@ -16,7 +16,7 @@ import { flicker, hashSeed } from "./flicker";
 import { createStoneTexture } from "./stoneTexture";
 
 /** Cache-bust so a replaced Try1.glb isn't served from an old browser cache */
-const MODEL_URL = "/Try1.glb?v=5";
+const MODEL_URL = "/Try1.glb?v=6";
 
 /** Template / removed props */
 const HIDDEN_NAMES = new Set([
