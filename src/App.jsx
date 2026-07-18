@@ -8,14 +8,14 @@ import Experience from "./Experience";
 
 function App() {
 	return (
-		<div className="relative h-full w-full overflow-hidden bg-[#dcc4a0]">
+		<div className="relative h-full w-full overflow-hidden bg-[#c9b8a8]">
 			<Canvas
 				className="absolute inset-0 h-full w-full"
 				style={{ width: "100%", height: "100%" }}
 				shadows
 				dpr={[1, 2]}
 				camera={{
-					position: [-5.472, 3.343, 28.23],
+					position: [2.5, 3.8, 34],
 					fov: 42,
 					near: 0.1,
 					far: 250,
@@ -44,3 +44,4 @@ function App() {
 }
 
 export default App;
+	

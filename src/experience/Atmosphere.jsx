@@ -8,8 +8,8 @@ export default function Atmosphere() {
 
 	useLayoutEffect(() => {
 		const fogColor = new THREE.Color(FOG_COLOR);
-		// Background comes from the SkyDome gradient; fog blends terrain into it
-		scene.fog = new THREE.FogExp2(FOG_COLOR, 0.006);
+		// Lighter fog so cool shadow / warm lit facets stay readable
+		scene.fog = new THREE.FogExp2(FOG_COLOR, 0.0045);
 		gl.setClearColor(fogColor);
 		gl.shadowMap.enabled = true;
 		gl.shadowMap.type = THREE.PCFSoftShadowMap;

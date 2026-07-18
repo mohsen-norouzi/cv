@@ -1,61 +1,63 @@
 import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
-import { BEACON_TIP, PORTAL_GLOW } from "./constants";
-import { breathe, flicker } from "./flicker";
+import { SUN_POSITION } from "./constants";
+import { flicker } from "./flicker";
 
-export default function Lights() {
-	const portalLight = useRef(null);
-	const beaconLight = useRef(null);
+const BIG_FILL_RATIO = 1.5;
+
+export default function Lights({ lamps }) {
+	const big = useRef(null);
+	const lampsRef = useRef(lamps);
+	lampsRef.current = lamps;
 
 	useFrame(({ clock }) => {
 		const t = clock.elapsedTime;
-		if (portalLight.current) {
-			portalLight.current.intensity = 70 * breathe(t, 0.4);
-		}
-		if (beaconLight.current) {
-			beaconLight.current.intensity = 90 * flicker(t, 1.7);
+		const { big: bigI, bigPos } = lampsRef.current;
+
+		if (big.current) {
+			big.current.intensity = bigI * BIG_FILL_RATIO * flicker(t, 0.3);
+			big.current.position.set(bigPos.x, bigPos.y, bigPos.z);
 		}
 	});
 
 	return (
 		<>
-			<ambientLight intensity={0.2} color="#e4d8c8" />
-			<hemisphereLight args={["#ece0d0", "#7c7268", 0.5]} />
-			{/* Low sun behind the portal — the warm backlight of the scene */}
+			{/* Dimmer ambient so warm key + cool fill read like golden hour */}
+			<ambientLight intensity={0.16} color="#c4b0a0" />
+			<hemisphereLight args={["#f0c49a", "#3d4a5c", 0.55]} />
+			{/* Warm sunset key — from the left like the reference */}
 			<directionalLight
-				position={[14, 10, -60]}
-				intensity={2}
-				color="#ffd9a4"
+				position={SUN_POSITION}
+				intensity={2.1}
+				color="#ffb06a"
 				castShadow
 				shadow-mapSize={[2048, 2048]}
 				shadow-camera-near={1}
-				shadow-camera-far={120}
-				shadow-camera-left={-40}
-				shadow-camera-right={40}
-				shadow-camera-top={40}
-				shadow-camera-bottom={-40}
-				shadow-bias={-0.0002}
+				shadow-camera-far={160}
+				shadow-camera-left={-70}
+				shadow-camera-right={70}
+				shadow-camera-top={70}
+				shadow-camera-bottom={-70}
+				shadow-bias={-0.00025}
 			/>
-			{/* Raking front-left fill so camera-facing facets break into planes */}
+			{/* Cool blue fill on the shadow side */}
 			<directionalLight
-				position={[-35, 9, 14]}
-				intensity={0.5}
-				color="#e8dccc"
+				position={[50, 18, 30]}
+				intensity={0.55}
+				color="#6e84a8"
+			/>
+			{/* Soft warm bounce */}
+			<directionalLight
+				position={[-20, 8, 40]}
+				intensity={0.25}
+				color="#ffd2a8"
 			/>
 			<pointLight
-				ref={portalLight}
-				position={PORTAL_GLOW}
-				intensity={70}
-				color="#ffb14a"
-				distance={28}
-				decay={2}
-			/>
-			<pointLight
-				ref={beaconLight}
-				position={BEACON_TIP}
-				intensity={90}
-				color="#ffe6a0"
-				distance={22}
+				ref={big}
+				position={[lamps.bigPos.x, lamps.bigPos.y, lamps.bigPos.z]}
+				intensity={lamps.big * BIG_FILL_RATIO}
+				color="#ffb56a"
+				distance={12}
 				decay={2}
 			/>
 		</>
