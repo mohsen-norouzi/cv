@@ -13,8 +13,8 @@ export default function PostFX() {
 	return (
 		<EffectComposer multisampling={0} enableNormalPass={false}>
 			<Bloom
-				luminanceThreshold={0.7}
-				luminanceSmoothing={0.25}
+				luminanceThreshold={0.98}
+				luminanceSmoothing={0.2}
 				intensity={1.75}
 				mipmapBlur
 				radius={0.65}

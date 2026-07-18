@@ -12,14 +12,14 @@ function prepareMaterial(material, child) {
 	mat.needsUpdate = true;
 
 	if (mat.name === "Rock" && mat.color) {
-		mat.color.set("#7a7e84");
-		mat.roughness = 0.92;
+		mat.color.set("#c0bcb4");
+		mat.roughness = 1;
 		mat.metalness = 0;
 	}
 
 	if (mat.name === "PathMat" && mat.color) {
-		mat.color.set("#3a342c");
-		mat.roughness = 0.95;
+		mat.color.set("#d2cabc");
+		mat.roughness = 1;
 	}
 
 	if (mat.name === "PortalGlow") {

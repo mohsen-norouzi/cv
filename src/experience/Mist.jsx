@@ -5,9 +5,9 @@ export default function Mist() {
 	const mistMat = useMemo(
 		() =>
 			new THREE.MeshBasicMaterial({
-				color: "#8a8378",
+				color: "#e6d2ae",
 				transparent: true,
-				opacity: 0.14,
+				opacity: 0.1,
 				depthWrite: false,
 				side: THREE.DoubleSide,
 			}),

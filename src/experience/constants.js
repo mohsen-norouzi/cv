@@ -1,6 +1,9 @@
 import * as THREE from "three";
 
-export const FOG_COLOR = "#6f6a62";
+export const FOG_COLOR = "#dcc4a0";
+export const SKY_TOP = "#ece4d8";
+export const SKY_HORIZON = "#f3cd92";
+export const SUN_POSITION = new THREE.Vector3(10, 10, -150);
 export const BEACON_TIP = new THREE.Vector3(27, 22.46, -18);
 export const PORTAL_GLOW = new THREE.Vector3(9, 9.2, -7);
 export const BIRD_ORBIT_CENTER = new THREE.Vector3(22, 0, -12);

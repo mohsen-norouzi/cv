@@ -19,21 +19,28 @@ export default function Lights() {
 
 	return (
 		<>
-			<ambientLight intensity={0.55} color="#d8cfc2" />
-			<hemisphereLight args={["#e0d8cc", "#4a4640", 0.55]} />
+			<ambientLight intensity={0.2} color="#e4d8c8" />
+			<hemisphereLight args={["#ece0d0", "#7c7268", 0.5]} />
+			{/* Low sun behind the portal — the warm backlight of the scene */}
 			<directionalLight
-				position={[-12, 22, 14]}
-				intensity={0.55}
-				color="#efe6d6"
+				position={[14, 10, -60]}
+				intensity={2}
+				color="#ffd9a4"
 				castShadow
 				shadow-mapSize={[2048, 2048]}
 				shadow-camera-near={1}
-				shadow-camera-far={80}
+				shadow-camera-far={120}
 				shadow-camera-left={-40}
 				shadow-camera-right={40}
 				shadow-camera-top={40}
 				shadow-camera-bottom={-40}
 				shadow-bias={-0.0002}
+			/>
+			{/* Raking front-left fill so camera-facing facets break into planes */}
+			<directionalLight
+				position={[-35, 9, 14]}
+				intensity={0.5}
+				color="#e8dccc"
 			/>
 			<pointLight
 				ref={portalLight}

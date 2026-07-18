@@ -5,6 +5,7 @@ import Lights from "./experience/Lights";
 import Mist from "./experience/Mist";
 import Mountain from "./experience/Mountain";
 import PostFX from "./experience/PostFX";
+import SkyDome from "./experience/SkyDome";
 import StarGlow from "./experience/StarGlow";
 
 export default function Experience() {
@@ -14,6 +15,7 @@ export default function Experience() {
 			    uses the removed unpackRGBAToDepth) and intermittently kills
 			    compilation of every standard material in the scene */}
 			<Atmosphere />
+			<SkyDome />
 			<CameraRig />
 			<Lights />
 			<Mountain />

@@ -8,7 +8,7 @@ import Experience from "./Experience";
 
 function App() {
 	return (
-		<div className="relative h-full w-full overflow-hidden bg-[#6f6a62]">
+		<div className="relative h-full w-full overflow-hidden bg-[#dcc4a0]">
 			<Canvas
 				className="absolute inset-0 h-full w-full"
 				style={{ width: "100%", height: "100%" }}
