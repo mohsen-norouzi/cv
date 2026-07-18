@@ -14,7 +14,12 @@ function App() {
 				style={{ width: "100%", height: "100%" }}
 				shadows
 				dpr={[1, 2]}
-				camera={{ position: [-1.5, 5.8, 33], fov: 36, near: 0.1, far: 250 }}
+				camera={{
+					position: [-5.472, 3.343, 28.23],
+					fov: 42,
+					near: 0.1,
+					far: 250,
+				}}
 				gl={{
 					antialias: true,
 					toneMapping: THREE.NoToneMapping,

@@ -1,13 +1,14 @@
 import { useThree } from "@react-three/fiber";
 import { useLayoutEffect } from "react";
-import { CAM_TARGET } from "./constants";
+import { CAM_FOV, CAM_START, CAM_TARGET } from "./constants";
 
 export default function CameraRig() {
 	const { camera } = useThree();
 
 	useLayoutEffect(() => {
-		camera.position.set(-1.5, 5.8, 33);
+		camera.position.copy(CAM_START);
 		camera.lookAt(CAM_TARGET);
+		camera.fov = CAM_FOV;
 		camera.updateProjectionMatrix();
 	}, [camera]);
 
