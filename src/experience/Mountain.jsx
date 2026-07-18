@@ -5,6 +5,9 @@ import * as THREE from "three";
 import {
 	BIG_LAMP_INTENSITY,
 	BOULDER_COLOR,
+	HORIZON_GLOW,
+	HORIZON_INTENSITY,
+	HORIZON_OPACITY,
 	LIGHTHOUSE_INTENSITY,
 	PATH_COLOR,
 	PINE_COLOR,
@@ -42,7 +45,6 @@ function tintFoliage(mat, matName) {
 	if (matName === "PineB_f") mat.color.offsetHSL(0.02, -0.02, 0.04);
 	if (matName === "RoundTree_f") mat.color.offsetHSL(-0.02, 0.04, 0.06);
 
-	// Most trees keep the base look; only some get a random shift
 	if (Math.random() > FOLIAGE_VARIETY_CHANCE) return;
 
 	mat.color.offsetHSL(
@@ -82,16 +84,14 @@ function prepareMaterial(material, stoneMap, meshName) {
 		return mat;
 	}
 
-	// Soft sunset card in the glb — warm horizon haze
 	if (mat.name === "HorizonGlow") {
 		mat.color.set("#000000");
-		mat.emissive.set("#ffb070");
-		mat.emissiveIntensity = 1.15;
+		mat.emissive.set(HORIZON_GLOW);
+		mat.emissiveIntensity = HORIZON_INTENSITY;
 		mat.toneMapped = false;
 		mat.transparent = true;
-		mat.opacity = 0.45;
+		mat.opacity = HORIZON_OPACITY;
 		mat.depthWrite = false;
-		// Fog on this plane made a hard “shelf” line when the camera moved
 		mat.fog = false;
 		return mat;
 	}
@@ -103,7 +103,6 @@ function prepareMaterial(material, stoneMap, meshName) {
 		});
 	}
 
-	// Each Street_Light* gets its own seed so flickers don't sync
 	if (mat.name === "Light") {
 		return makeLampMaterial({
 			glowKey: "streetLamp",
@@ -188,15 +187,11 @@ export default function Mountain() {
 				Array.isArray(child.material) ? child.material : [child.material]
 			)
 				.filter(Boolean)
-				.map((material) =>
-					prepareMaterial(material, stoneMap, child.name),
-				);
+				.map((material) => prepareMaterial(material, stoneMap, child.name));
 
 			if (materials.length === 0) return;
 
-			child.material = Array.isArray(child.material)
-				? materials
-				: materials[0];
+			child.material = Array.isArray(child.material) ? materials : materials[0];
 
 			for (const mat of materials) {
 				const kind = mat.userData?.glow;

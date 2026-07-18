@@ -1,11 +1,23 @@
 import {
 	Bloom,
+	BrightnessContrast,
 	EffectComposer,
+	HueSaturation,
 	ToneMapping,
 	Vignette,
 } from "@react-three/postprocessing";
 import { ToneMappingMode } from "postprocessing";
 import * as THREE from "three";
+import {
+	BLOOM_INTENSITY,
+	BLOOM_RADIUS,
+	BLOOM_THRESHOLD,
+	BRIGHTNESS,
+	CONTRAST,
+	SATURATION,
+	VIGNETTE_DARKNESS,
+	VIGNETTE_OFFSET,
+} from "./constants";
 
 export default function PostFX() {
 	return (
@@ -15,13 +27,15 @@ export default function PostFX() {
 			frameBufferType={THREE.HalfFloatType}
 		>
 			<Bloom
-				luminanceThreshold={0.75}
+				luminanceThreshold={BLOOM_THRESHOLD}
 				luminanceSmoothing={0.28}
-				intensity={1.25}
+				intensity={BLOOM_INTENSITY}
 				mipmapBlur
-				radius={0.5}
+				radius={BLOOM_RADIUS}
 			/>
-			<Vignette offset={0.28} darkness={0.42} />
+			<HueSaturation saturation={SATURATION} />
+			<BrightnessContrast brightness={BRIGHTNESS} contrast={CONTRAST} />
+			<Vignette offset={VIGNETTE_OFFSET} darkness={VIGNETTE_DARKNESS} />
 			<ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
 		</EffectComposer>
 	);

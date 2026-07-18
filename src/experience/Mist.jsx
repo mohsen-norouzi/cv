@@ -1,18 +1,16 @@
 import { useMemo } from "react";
 import * as THREE from "three";
-import { FOG_COLOR } from "./constants";
 
 /**
- * Very soft ground haze only — hard stacked fog planes caused visible
- * banding / “lines” when the camera parallax moved.
+ * Soft valley haze — one low-opacity plane only (no stacked banding).
  */
 export default function Mist() {
 	const mistMat = useMemo(
 		() =>
 			new THREE.MeshBasicMaterial({
-				color: FOG_COLOR,
+				color: "#f0c9a4",
 				transparent: true,
-				opacity: 0.08,
+				opacity: 0.11,
 				depthWrite: false,
 				fog: false,
 				side: THREE.DoubleSide,
@@ -23,12 +21,12 @@ export default function Mist() {
 	return (
 		<group>
 			<mesh
-				position={[10, 1.6, 2]}
-				rotation={[-Math.PI / 2.05, 0, 0.15]}
+				position={[10, 1.4, 4]}
+				rotation={[-Math.PI / 2.08, 0, 0.12]}
 				material={mistMat}
 				renderOrder={2}
 			>
-				<planeGeometry args={[100, 80]} />
+				<planeGeometry args={[90, 70]} />
 			</mesh>
 		</group>
 	);

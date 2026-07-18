@@ -1,8 +1,19 @@
 import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
 import {
+	AMBIENT_COLOR,
+	AMBIENT_INT,
+	FILL_COLOR,
+	FILL_INT,
+	HEMI_GROUND,
+	HEMI_INT,
+	HEMI_SKY,
+	KEY_COLOR,
+	KEY_INT,
 	LIGHTHOUSE_INTENSITY,
 	LIGHTHOUSE_LAMP,
+	RIM_COLOR,
+	RIM_INT,
 	SUN_POSITION,
 } from "./constants";
 import { flicker } from "./flicker";
@@ -22,12 +33,16 @@ export default function Lights() {
 
 	return (
 		<>
-			<ambientLight intensity={0.16} color="#c4b0a0" />
-			<hemisphereLight args={["#f0c49a", "#3d4a5c", 0.55]} />
+			<ambientLight intensity={AMBIENT_INT} color={AMBIENT_COLOR} />
+			<hemisphereLight
+				skyColor={HEMI_SKY}
+				groundColor={HEMI_GROUND}
+				intensity={HEMI_INT}
+			/>
 			<directionalLight
 				position={SUN_POSITION}
-				intensity={2.1}
-				color="#ffb06a"
+				intensity={KEY_INT}
+				color={KEY_COLOR}
 				castShadow
 				shadow-mapSize={[2048, 2048]}
 				shadow-camera-near={1}
@@ -40,13 +55,13 @@ export default function Lights() {
 			/>
 			<directionalLight
 				position={[50, 18, 30]}
-				intensity={0.55}
-				color="#6e84a8"
+				intensity={FILL_INT}
+				color={FILL_COLOR}
 			/>
 			<directionalLight
 				position={[-20, 8, 40]}
-				intensity={0.25}
-				color="#ffd2a8"
+				intensity={RIM_INT}
+				color={RIM_COLOR}
 			/>
 			<StreetLamps />
 			<pointLight

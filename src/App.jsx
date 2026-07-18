@@ -3,13 +3,14 @@ import { Suspense } from "react";
 import * as THREE from "three";
 import HeroContent from "./components/HeroContent";
 import Navbar from "./components/Navbar";
-import ScrollIndicator from "./components/ScrollIndicator";
+import ScrollCue from "./components/ScrollCue";
+import SectionCaption from "./components/SectionCaption";
 import Experience from "./Experience";
 import ScrollStealer from "./experience/ScrollStealer";
 
 function App() {
 	return (
-		<div className="relative h-full w-full overflow-hidden bg-[#e0c4a4]">
+		<div className="relative h-full w-full overflow-hidden bg-[#c9b8a8]">
 			<ScrollStealer />
 			<Canvas
 				className="absolute inset-0 h-full w-full"
@@ -35,11 +36,19 @@ function App() {
 			</Canvas>
 
 			<div className="pointer-events-none absolute inset-0 z-10">
+				{/* Mount point for 3D-projected project labels */}
+				<div id="project-labels" className="absolute inset-0" />
+				{/* Top readability for nav */}
+				<div
+					aria-hidden
+					className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/30 to-transparent"
+				/>
 				<div className="pointer-events-auto">
 					<Navbar />
 				</div>
 				<HeroContent />
-				<ScrollIndicator />
+				<SectionCaption />
+				<ScrollCue />
 			</div>
 		</div>
 	);
