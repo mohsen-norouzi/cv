@@ -5,18 +5,15 @@ import Mist from "./experience/Mist";
 import Mountain from "./experience/Mountain";
 import PostFX from "./experience/PostFX";
 import SkyDome from "./experience/SkyDome";
-import { useLampControls } from "./experience/useLampControls";
 
 export default function Experience() {
-	const lamps = useLampControls();
-
 	return (
 		<>
 			<Atmosphere />
 			<SkyDome />
 			<CameraRig />
-			<Lights lamps={lamps} />
-			<Mountain lamps={lamps} />
+			<Lights />
+			<Mountain />
 			<Mist />
 			<PostFX />
 		</>

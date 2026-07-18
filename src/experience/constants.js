@@ -23,6 +23,7 @@ export const CAM_FOV = 42;
 
 /** Big wooden street light — hanging lantern height */
 export const BIG_LAMP = new THREE.Vector3(5.03, 4.15, 26.63);
+export const BIG_LAMP_INTENSITY = 3.7;
 
 export const BIRD_ORBIT_CENTER = new THREE.Vector3(12, 6, 10);
 

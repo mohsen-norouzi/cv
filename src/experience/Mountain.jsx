@@ -3,6 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import { useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import {
+	BIG_LAMP_INTENSITY,
 	BOULDER_COLOR,
 	PATH_COLOR,
 	PINE_COLOR,
@@ -125,13 +126,11 @@ function prepareMaterial(material, stoneMap) {
 	return mat;
 }
 
-export default function Mountain({ lamps }) {
+export default function Mountain() {
 	const { scene } = useGLTF(MODEL_URL);
 	const model = useMemo(() => scene.clone(true), [scene]);
 	const stoneMap = useMemo(() => createStoneTexture(), []);
 	const glows = useRef({ bigLamp: [] });
-	const lampsRef = useRef(lamps);
-	lampsRef.current = lamps;
 
 	useLayoutEffect(() => {
 		const nextGlows = { bigLamp: [] };
@@ -175,10 +174,9 @@ export default function Mountain({ lamps }) {
 
 	useFrame(({ clock }) => {
 		const t = clock.elapsedTime;
-		const { big } = lampsRef.current;
-
 		for (const mat of glows.current.bigLamp) {
-			mat.emissiveIntensity = big * flicker(t, mat.userData.glowSeed);
+			mat.emissiveIntensity =
+				BIG_LAMP_INTENSITY * flicker(t, mat.userData.glowSeed);
 		}
 	});
 
