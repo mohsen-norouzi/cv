@@ -1,4 +1,3 @@
-import { SoftShadows } from "@react-three/drei";
 import Atmosphere from "./experience/Atmosphere";
 import CameraRig from "./experience/CameraRig";
 import { BEACON_TIP, PORTAL_GLOW } from "./experience/constants";
@@ -11,7 +10,9 @@ import StarGlow from "./experience/StarGlow";
 export default function Experience() {
 	return (
 		<>
-			<SoftShadows size={18} samples={12} focus={0.85} />
+			{/* drei's SoftShadows is broken with three r185 (its PCSS shader
+			    uses the removed unpackRGBAToDepth) and intermittently kills
+			    compilation of every standard material in the scene */}
 			<Atmosphere />
 			<CameraRig />
 			<Lights />
