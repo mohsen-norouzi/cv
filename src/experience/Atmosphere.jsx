@@ -8,8 +8,9 @@ export default function Atmosphere() {
 
 	useLayoutEffect(() => {
 		const fogColor = new THREE.Color(FOG_COLOR);
-		// Lighter fog so cool shadow / warm lit facets stay readable
-		scene.fog = new THREE.FogExp2(FOG_COLOR, 0.0045);
+		// Exp2 fades smoothly — no hard fog “steps” on large flat faces
+		scene.fog = new THREE.FogExp2(FOG_COLOR, 0.012);
+		scene.background = fogColor;
 		gl.setClearColor(fogColor);
 		gl.shadowMap.enabled = true;
 		gl.shadowMap.type = THREE.PCFSoftShadowMap;

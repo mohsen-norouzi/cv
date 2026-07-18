@@ -62,10 +62,15 @@ export default function SkyDome() {
 				uniform vec3 sunDir;
 				varying vec3 vWorldPosition;
 
+				// Breaks 8-bit gradient banding without visible film grain
+				float dither(vec2 p) {
+					return fract(52.9829189 * fract(dot(p, vec2(0.06711056, 0.00583715))));
+				}
+
 				void main() {
 					vec3 dir = normalize(vWorldPosition);
 					float h = dir.y;
-					float heightMix = pow(clamp(h * 1.8 + 0.15, 0.0, 1.0), 0.85);
+					float heightMix = smoothstep(-0.05, 0.75, h);
 
 					// Warm near sun azimuth, cool opposite (reference sunset wedge)
 					float sunAz = max(dot(normalize(vec3(dir.x, 0.0, dir.z)), normalize(vec3(sunDir.x, 0.0, sunDir.z))), 0.0);
@@ -78,6 +83,8 @@ export default function SkyDome() {
 					vec3 col = mix(horizon, topColor, heightMix);
 					// Lift the sun side of the upper sky slightly
 					col = mix(col, sunColor, sunGlow * (1.0 - heightMix) * 0.25);
+
+					col += (dither(gl_FragCoord.xy) - 0.5) / 96.0;
 
 					gl_FragColor = vec4(col, 1.0);
 				}

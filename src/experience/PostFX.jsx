@@ -5,10 +5,15 @@ import {
 	Vignette,
 } from "@react-three/postprocessing";
 import { ToneMappingMode } from "postprocessing";
+import * as THREE from "three";
 
 export default function PostFX() {
 	return (
-		<EffectComposer multisampling={0} enableNormalPass={false}>
+		<EffectComposer
+			multisampling={0}
+			enableNormalPass={false}
+			frameBufferType={THREE.HalfFloatType}
+		>
 			<Bloom
 				luminanceThreshold={0.75}
 				luminanceSmoothing={0.28}

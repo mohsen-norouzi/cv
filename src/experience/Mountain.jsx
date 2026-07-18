@@ -23,7 +23,6 @@ const HIDDEN_NAMES = new Set([
 	"PineA",
 	"PineB",
 	"RoundTree",
-	"HorizonGlowCard",
 	"Cube",
 	"Cube.001",
 	"Cone",
@@ -77,9 +76,23 @@ function prepareMaterial(material, stoneMap, meshName) {
 	mat.flatShading = true;
 	mat.needsUpdate = true;
 
-	if (mat.name === "HorizonGlow" || mat.name === "Lamp") {
+	if (mat.name === "Lamp") {
 		mat.emissive.set("#000000");
 		mat.emissiveIntensity = 0;
+		return mat;
+	}
+
+	// Soft sunset card in the glb — warm horizon haze
+	if (mat.name === "HorizonGlow") {
+		mat.color.set("#000000");
+		mat.emissive.set("#ffb070");
+		mat.emissiveIntensity = 1.15;
+		mat.toneMapped = false;
+		mat.transparent = true;
+		mat.opacity = 0.45;
+		mat.depthWrite = false;
+		// Fog on this plane made a hard “shelf” line when the camera moved
+		mat.fog = false;
 		return mat;
 	}
 

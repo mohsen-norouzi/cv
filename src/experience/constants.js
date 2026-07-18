@@ -1,7 +1,7 @@
 import * as THREE from "three";
 
-/** Soft peach fog that blends into the sunset sky */
-export const FOG_COLOR = "#c9b8a8";
+/** Warm sunset haze — matches sky horizon + HTML page backdrop */
+export const FOG_COLOR = "#e0c4a4";
 /** Cool dusty blue at zenith */
 export const SKY_TOP = "#7a8fb0";
 /** Warm peach / apricot at horizon */
