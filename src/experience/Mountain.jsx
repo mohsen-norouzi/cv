@@ -5,17 +5,18 @@ import * as THREE from "three";
 import {
 	BIG_LAMP_INTENSITY,
 	BOULDER_COLOR,
+	LIGHTHOUSE_INTENSITY,
 	PATH_COLOR,
 	PINE_COLOR,
 	PLATFORM_COLOR,
 	TERRAIN_COLOR,
 	WATER_COLOR,
 } from "./constants";
-import { flicker } from "./flicker";
+import { flicker, hashSeed } from "./flicker";
 import { createStoneTexture } from "./stoneTexture";
 
 /** Cache-bust so a replaced Try1.glb isn't served from an old browser cache */
-const MODEL_URL = "/Try1.glb?v=3";
+const MODEL_URL = "/Try1.glb?v=5";
 
 /** Template / removed props */
 const HIDDEN_NAMES = new Set([
@@ -50,28 +51,34 @@ function makeLampMaterial({ glowKey, seed }) {
 	return mat;
 }
 
-function prepareMaterial(material, stoneMap) {
+function prepareMaterial(material, stoneMap, meshName) {
 	if (!material) return material;
 
 	const mat = material.clone();
 	mat.flatShading = true;
 	mat.needsUpdate = true;
 
-	if (
-		mat.name === "LH_Lamp" ||
-		mat.name === "HorizonGlow" ||
-		mat.name === "Lamp"
-	) {
+	if (mat.name === "HorizonGlow" || mat.name === "Lamp") {
 		mat.emissive.set("#000000");
 		mat.emissiveIntensity = 0;
 		return mat;
 	}
 
-	if (mat.name === "Light") {
-		return makeLampMaterial({ glowKey: "bigLamp", seed: 0.3 });
+	if (mat.name === "LH_Lamp") {
+		return makeLampMaterial({
+			glowKey: "lighthouse",
+			seed: hashSeed("lighthouse"),
+		});
 	}
 
-	// Pale stone path — reference look
+	// Each Street_Light* gets its own seed so flickers don't sync
+	if (mat.name === "Light") {
+		return makeLampMaterial({
+			glowKey: "streetLamp",
+			seed: hashSeed(meshName || "street"),
+		});
+	}
+
 	if (mat.name === "Road") {
 		mat.color.set(PATH_COLOR);
 		mat.roughness = 0.88;
@@ -130,10 +137,10 @@ export default function Mountain() {
 	const { scene } = useGLTF(MODEL_URL);
 	const model = useMemo(() => scene.clone(true), [scene]);
 	const stoneMap = useMemo(() => createStoneTexture(), []);
-	const glows = useRef({ bigLamp: [] });
+	const glows = useRef({ streetLamp: [], lighthouse: [] });
 
 	useLayoutEffect(() => {
-		const nextGlows = { bigLamp: [] };
+		const nextGlows = { streetLamp: [], lighthouse: [] };
 
 		model.traverse((child) => {
 			if (HIDDEN_NAMES.has(child.name)) {
@@ -143,7 +150,8 @@ export default function Mountain() {
 
 			if (!child.isMesh) return;
 
-			const isLampGlass = child.name === "Street_Light";
+			const isLampGlass =
+				/^Street_Light/i.test(child.name) || child.name === "Cylinder.025";
 			child.castShadow = !isLampGlass;
 			child.receiveShadow = true;
 
@@ -151,7 +159,9 @@ export default function Mountain() {
 				Array.isArray(child.material) ? child.material : [child.material]
 			)
 				.filter(Boolean)
-				.map((material) => prepareMaterial(material, stoneMap));
+				.map((material) =>
+					prepareMaterial(material, stoneMap, child.name),
+				);
 
 			if (materials.length === 0) return;
 
@@ -174,9 +184,13 @@ export default function Mountain() {
 
 	useFrame(({ clock }) => {
 		const t = clock.elapsedTime;
-		for (const mat of glows.current.bigLamp) {
+		for (const mat of glows.current.streetLamp) {
 			mat.emissiveIntensity =
 				BIG_LAMP_INTENSITY * flicker(t, mat.userData.glowSeed);
+		}
+		for (const mat of glows.current.lighthouse) {
+			mat.emissiveIntensity =
+				LIGHTHOUSE_INTENSITY * flicker(t, mat.userData.glowSeed);
 		}
 	});
 

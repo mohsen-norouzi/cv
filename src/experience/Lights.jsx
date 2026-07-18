@@ -1,17 +1,22 @@
 import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
-import { BIG_LAMP, BIG_LAMP_INTENSITY, SUN_POSITION } from "./constants";
+import {
+	LIGHTHOUSE_INTENSITY,
+	LIGHTHOUSE_LAMP,
+	SUN_POSITION,
+} from "./constants";
 import { flicker } from "./flicker";
+import StreetLamps from "./StreetLamps";
 
-const BIG_FILL_RATIO = 1.5;
+const LH_FILL_RATIO = 2.2;
 
 export default function Lights() {
-	const big = useRef(null);
+	const lighthouse = useRef(null);
 
 	useFrame(({ clock }) => {
-		if (big.current) {
-			big.current.intensity =
-				BIG_LAMP_INTENSITY * BIG_FILL_RATIO * flicker(clock.elapsedTime, 0.3);
+		if (lighthouse.current) {
+			lighthouse.current.intensity =
+				LIGHTHOUSE_INTENSITY * LH_FILL_RATIO * flicker(clock.elapsedTime, 1.4);
 		}
 	});
 
@@ -43,12 +48,13 @@ export default function Lights() {
 				intensity={0.25}
 				color="#ffd2a8"
 			/>
+			<StreetLamps />
 			<pointLight
-				ref={big}
-				position={BIG_LAMP}
-				intensity={BIG_LAMP_INTENSITY * BIG_FILL_RATIO}
-				color="#ffb56a"
-				distance={12}
+				ref={lighthouse}
+				position={LIGHTHOUSE_LAMP}
+				intensity={LIGHTHOUSE_INTENSITY * LH_FILL_RATIO}
+				color="#ffb14a"
+				distance={28}
 				decay={2}
 			/>
 		</>

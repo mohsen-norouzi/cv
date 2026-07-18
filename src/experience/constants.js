@@ -21,9 +21,12 @@ export const CAM_TARGET = new THREE.Vector3(12, 9, -4);
 export const CAM_START = new THREE.Vector3(2.5, 3.8, 34);
 export const CAM_FOV = 42;
 
-/** Big wooden street light — hanging lantern height */
-export const BIG_LAMP = new THREE.Vector3(5.03, 4.15, 26.63);
+/** Street lamp emissive / fill intensity (per Street_Light* mesh) */
 export const BIG_LAMP_INTENSITY = 3.7;
+
+/** Lighthouse lamp tip (Cylinder.025) */
+export const LIGHTHOUSE_LAMP = new THREE.Vector3(31.683, 5.513, 2.756);
+export const LIGHTHOUSE_INTENSITY = 6;
 
 export const BIRD_ORBIT_CENTER = new THREE.Vector3(12, 6, 10);
 
