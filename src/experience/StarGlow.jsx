@@ -2,6 +2,7 @@ import { Billboard } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
+import { flicker } from "./flicker";
 
 function createStarTexture() {
 	const size = 512;
@@ -53,21 +54,34 @@ function createStarTexture() {
 	return texture;
 }
 
-export default function StarGlow({ position, scale = 3.5, opacity = 0.9 }) {
+export default function StarGlow({
+	position,
+	scale = 3.5,
+	opacity = 0.9,
+	seed = 0,
+	spin = 0.08,
+}) {
 	const texture = useMemo(() => createStarTexture(), []);
 	const matRef = useRef(null);
+	const meshRef = useRef(null);
 
 	useFrame(({ clock }) => {
-		if (!matRef.current) return;
-		const pulse = 0.92 + Math.sin(clock.elapsedTime * 1.4) * 0.08;
-		matRef.current.opacity = opacity * pulse;
+		const t = clock.elapsedTime;
+		const live = flicker(t, seed);
+		const mat = matRef.current;
+		const mesh = meshRef.current;
+		if (!mat || !mesh) return;
+
+		mat.opacity = opacity * live;
+		mesh.scale.setScalar(scale * (0.92 + live * 0.14));
+		mesh.rotation.z = t * spin;
 	});
 
 	if (!texture) return null;
 
 	return (
 		<Billboard follow position={position}>
-			<mesh renderOrder={10} scale={scale}>
+			<mesh ref={meshRef} renderOrder={10} scale={scale}>
 				<planeGeometry args={[1, 1]} />
 				<meshBasicMaterial
 					ref={matRef}

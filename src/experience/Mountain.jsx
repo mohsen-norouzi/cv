@@ -2,6 +2,7 @@ import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useLayoutEffect, useMemo, useRef } from "react";
 import { BIRD_ORBIT_CENTER } from "./constants";
+import { breathe, flicker } from "./flicker";
 
 function prepareMaterial(material, child) {
 	if (!material) return material;
@@ -26,6 +27,8 @@ function prepareMaterial(material, child) {
 		mat.emissiveIntensity = 18;
 		mat.toneMapped = false;
 		mat.color.set("#000000");
+		mat.userData.glow = "portal";
+		mat.userData.baseEmissive = 18;
 	}
 
 	if (mat.name === "Beacon") {
@@ -35,6 +38,8 @@ function prepareMaterial(material, child) {
 			child.name === "Sphere.001" || child.name.includes("Sphere");
 		mat.emissiveIntensity = isTip ? 40 : 4;
 		mat.emissive.set(isTip ? "#ffe6a0" : "#e8b45a");
+		mat.userData.glow = isTip ? "beaconTip" : "beaconBeam";
+		mat.userData.baseEmissive = isTip ? 40 : 4;
 	}
 
 	if (mat.name === "Horizon") {
@@ -48,13 +53,13 @@ function prepareMaterial(material, child) {
 
 export default function Mountain() {
 	const { scene } = useGLTF("/mountain.glb");
-	// Clone the cached scene so each mount owns its own instance —
-	// StrictMode's double-mount otherwise detaches the shared object.
 	const model = useMemo(() => scene.clone(true), [scene]);
 	const birds = useRef([]);
+	const glows = useRef({ portal: [], beaconTip: [], beaconBeam: [] });
 
 	useLayoutEffect(() => {
 		const flock = [];
+		const nextGlows = { portal: [], beaconTip: [], beaconBeam: [] };
 
 		model.traverse((child) => {
 			if (child.name === "Fog" || child.name === "Cube.006") {
@@ -87,11 +92,20 @@ export default function Mountain() {
 
 			const materials = (
 				Array.isArray(child.material) ? child.material : [child.material]
-			).map((material) => prepareMaterial(material, child));
+			)
+				.filter(Boolean)
+				.map((material) => prepareMaterial(material, child));
+
+			if (materials.length === 0) return;
 
 			child.material = Array.isArray(child.material)
 				? materials
 				: materials[0];
+
+			for (const mat of materials) {
+				const kind = mat.userData?.glow;
+				if (kind && nextGlows[kind]) nextGlows[kind].push(mat);
+			}
 
 			if (child.geometry) {
 				child.geometry.computeVertexNormals();
@@ -99,6 +113,7 @@ export default function Mountain() {
 		});
 
 		birds.current = flock;
+		glows.current = nextGlows;
 	}, [model]);
 
 	useFrame(({ clock }, delta) => {
@@ -118,9 +133,23 @@ export default function Mountain() {
 			object.rotation.z = Math.sin(t * bobSpeed + angle) * 0.12;
 			object.rotation.x = Math.sin(t * bobSpeed * 0.5 + angle) * 0.08;
 		}
+
+		const portalLive = breathe(t, 0.2);
+		const tipLive = flicker(t, 1.1);
+		const beamLive = breathe(t, 2.4);
+
+		for (const mat of glows.current.portal) {
+			mat.emissiveIntensity = mat.userData.baseEmissive * portalLive;
+		}
+		for (const mat of glows.current.beaconTip) {
+			mat.emissiveIntensity = mat.userData.baseEmissive * tipLive;
+		}
+		for (const mat of glows.current.beaconBeam) {
+			mat.emissiveIntensity = mat.userData.baseEmissive * beamLive;
+		}
 	});
 
-	return <primitive object={model} />;
+	return <primitive object={model} dispose={null} />;
 }
 
 useGLTF.preload("/mountain.glb");

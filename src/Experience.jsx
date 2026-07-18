@@ -17,8 +17,20 @@ export default function Experience() {
 			<Lights />
 			<Mountain />
 			<Mist />
-			<StarGlow position={BEACON_TIP} scale={4.2} opacity={0.95} />
-			<StarGlow position={PORTAL_GLOW} scale={2.4} opacity={0.45} />
+			<StarGlow
+				position={BEACON_TIP}
+				scale={4.2}
+				opacity={0.95}
+				seed={1.2}
+				spin={0.12}
+			/>
+			<StarGlow
+				position={PORTAL_GLOW}
+				scale={2.4}
+				opacity={0.45}
+				seed={0.3}
+				spin={0.05}
+			/>
 			<PostFX />
 		</>
 	);
