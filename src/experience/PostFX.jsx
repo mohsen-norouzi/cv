@@ -3,6 +3,7 @@ import {
 	BrightnessContrast,
 	EffectComposer,
 	HueSaturation,
+	N8AO,
 	ToneMapping,
 	Vignette,
 } from "@react-three/postprocessing";
@@ -22,10 +23,20 @@ import {
 export default function PostFX() {
 	return (
 		<EffectComposer
-			multisampling={0}
+			multisampling={4}
 			enableNormalPass={false}
 			frameBufferType={THREE.HalfFloatType}
 		>
+			{/* Contact shadows in crevices — the single biggest "rendered, not
+			    realtime" cue. Half-res keeps it cheap. */}
+			<N8AO
+				halfRes
+				quality="performance"
+				aoRadius={2}
+				intensity={2.6}
+				distanceFalloff={1}
+				color="#3a2e28"
+			/>
 			<Bloom
 				luminanceThreshold={BLOOM_THRESHOLD}
 				luminanceSmoothing={0.28}

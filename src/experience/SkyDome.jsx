@@ -72,10 +72,12 @@ export default function SkyDome() {
 					float heightMix = smoothstep(-0.05, 0.75, h);
 
 					float sunAz = max(dot(normalize(vec3(dir.x, 0.0, dir.z)), normalize(vec3(sunDir.x, 0.0, sunDir.z))), 0.0);
-					float sunGlow = pow(sunAz, 2.2);
+					float sunGlow = pow(sunAz, 1.5);
 					float sunDisk = pow(max(dot(dir, normalize(sunDir)), 0.0), 32.0);
 
-					vec3 horizonCol = mix(coolColor, horizonColor, sunGlow);
+					// Horizon keeps a warm base all around; away from the sun it only
+					// cools off, it never drops to pure gray
+					vec3 horizonCol = mix(coolColor, horizonColor, 0.5 + 0.5 * sunGlow);
 					horizonCol = mix(horizonCol, sunColor, sunGlow * 0.65 + sunDisk * 0.5);
 
 					vec3 col = mix(horizonCol, topColor, heightMix);
@@ -99,7 +101,7 @@ export default function SkyDome() {
 			{sunTexture && (
 				<Billboard follow position={SUN_POSITION}>
 					<mesh renderOrder={-9}>
-						<planeGeometry args={[90, 90]} />
+						<planeGeometry args={[120, 120]} />
 						<meshBasicMaterial
 							map={sunTexture}
 							transparent

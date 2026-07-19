@@ -10,7 +10,7 @@ import ScrollStealer from "./experience/ScrollStealer";
 
 function App() {
 	return (
-		<div className="relative h-full w-full overflow-hidden bg-[#c9b8a8]">
+		<div className="relative h-full w-full overflow-hidden bg-[#d7c4b2]">
 			<ScrollStealer />
 			<Canvas
 				className="absolute inset-0 h-full w-full"

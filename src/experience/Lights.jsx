@@ -46,12 +46,14 @@ export default function Lights() {
 				castShadow
 				shadow-mapSize={[2048, 2048]}
 				shadow-camera-near={1}
-				shadow-camera-far={160}
-				shadow-camera-left={-70}
-				shadow-camera-right={70}
-				shadow-camera-top={70}
-				shadow-camera-bottom={-70}
-				shadow-bias={-0.00025}
+				shadow-camera-far={200}
+				shadow-camera-left={-48}
+				shadow-camera-right={48}
+				shadow-camera-top={48}
+				shadow-camera-bottom={-48}
+				shadow-bias={-0.0001}
+				shadow-radius={5}
+				shadow-blurSamples={12}
 			/>
 			<directionalLight
 				position={[50, 18, 30]}

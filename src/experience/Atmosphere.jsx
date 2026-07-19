@@ -12,7 +12,8 @@ export default function Atmosphere() {
 		scene.background = fogColor;
 		gl.setClearColor(fogColor);
 		gl.shadowMap.enabled = true;
-		gl.shadowMap.type = THREE.PCFSoftShadowMap;
+		// VSM = real blurred soft shadows (PCFSoft is deprecated in three r185)
+		gl.shadowMap.type = THREE.VSMShadowMap;
 
 		return () => {
 			scene.fog = null;
