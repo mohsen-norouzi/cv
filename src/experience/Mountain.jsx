@@ -18,6 +18,7 @@ import {
 } from "./constants";
 import { getFocusAmount, getFocusStop } from "./focusStore";
 import { flicker, hashSeed } from "./flicker";
+import { setSceneReady } from "./loadStore";
 import { createStoneTexture } from "./stoneTexture";
 
 const MODEL_URL = "/Try1.glb?v=8";
@@ -627,6 +628,18 @@ export default function Mountain() {
 		glows.current = nextGlows;
 		waterMats.current = nextWater;
 		horizonMats.current = nextHorizon;
+
+		// Wait a couple frames so the first draw + shadow bake can settle
+		let alive = true;
+		requestAnimationFrame(() => {
+			requestAnimationFrame(() => {
+				if (alive) setSceneReady(true);
+			});
+		});
+		return () => {
+			alive = false;
+			setSceneReady(false);
+		};
 	}, [model, stoneMap, rippleMap]);
 
 	useFrame(({ clock }, delta) => {

@@ -40,8 +40,8 @@ export const BAKERY_VIEW_POS = new THREE.Vector3(2.05, 5.2, 15.55);
 export const BAKERY_LOOK_AT = new THREE.Vector3(6.86, 5.6, 13.11);
 
 /**
- * Moon crystal (Moon_Crystal / Crystal001) on the upper path platform.
- * View stands on the road (path curves right here), looking back at the crystal.
+ * Final stop — stone bench on the upper path platform.
+ * View stands on the road (path curves right here), looking back at the bench.
  */
 export const CRYSTAL_POSITION = new THREE.Vector3(8.34, 8.39, 4.99);
 export const CRYSTAL_VIEW_POS = new THREE.Vector3(13.6, 10.4, 2.15);

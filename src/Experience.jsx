@@ -6,7 +6,6 @@ import Lights from "./experience/Lights";
 import Mist from "./experience/Mist";
 import Mountain from "./experience/Mountain";
 import PostFX from "./experience/PostFX";
-import ProjectLabels from "./experience/ProjectLabels";
 import ShadowBake from "./experience/ShadowBake";
 import SkyDome from "./experience/SkyDome";
 
@@ -22,7 +21,6 @@ export default function Experience() {
 			<Mountain />
 			<ShadowBake frames={6} />
 			<Mist />
-			<ProjectLabels />
 			<PostFX />
 		</>
 	);

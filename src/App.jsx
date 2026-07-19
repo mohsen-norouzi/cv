@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import * as THREE from "three";
 import HeroContent from "./components/HeroContent";
 import Navbar from "./components/Navbar";
+import SceneLoader from "./components/SceneLoader";
 import ScrollCue from "./components/ScrollCue";
 import SectionCaption from "./components/SectionCaption";
 import Experience from "./Experience";
@@ -36,9 +37,9 @@ function App() {
 				</Suspense>
 			</Canvas>
 
+			<SceneLoader />
+
 			<div className="pointer-events-none absolute inset-0 z-10">
-				{/* Mount point for 3D-projected project labels */}
-				<div id="project-labels" className="absolute inset-0" />
 				{/* Top readability for nav */}
 				<div
 					aria-hidden

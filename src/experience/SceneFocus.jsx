@@ -11,8 +11,12 @@ import {
 	KEY_INT,
 	RIM_INT,
 } from "./constants";
-import { computeFocus, setFocus } from "./focusStore";
-import { getScrollProgress } from "./scrollStore";
+import {
+	computeFocus,
+	setFocus,
+	setFocusReveal,
+} from "./focusStore";
+import { getScrollProgress, isScrollAnimating } from "./scrollStore";
 
 /** Warm stage key */
 const SPOT_COLOR = "#ffe0a8";
@@ -104,6 +108,10 @@ export default function SceneFocus({
 }) {
 	const { scene } = useThree();
 	const focus = useRef(0);
+	const spotAmt = useRef(0);
+	const textAmt = useRef(0);
+	const hold = useRef(0);
+	const lastStop = useRef(0);
 	const target = useMemo(() => new THREE.Object3D(), []);
 	const light = useRef(null);
 	const beam = useRef(null);
@@ -128,6 +136,43 @@ export default function SceneFocus({
 		const f = focus.current;
 		setFocus(f, stop);
 
+		// Reset staged reveals when changing stops
+		if (stop !== lastStop.current) {
+			lastStop.current = stop;
+			hold.current = 0;
+			spotAmt.current = 0;
+			textAmt.current = 0;
+		}
+
+		/**
+		 * Sequence after scroll lands:
+		 * 1) wait until camera settled + scroll snap done
+		 * 2) brief beat
+		 * 3) spotlight eases in
+		 * 4) text follows once the spot is mostly on
+		 */
+		const arrived =
+			stop >= 1 && f > 0.9 && !isScrollAnimating() && amount > 0.85;
+		if (arrived) hold.current += delta;
+		else hold.current = 0;
+
+		const spotTarget = arrived && hold.current > 0.4 ? 1 : 0;
+		spotAmt.current = THREE.MathUtils.damp(
+			spotAmt.current,
+			spotTarget,
+			spotTarget > 0 ? 1.15 : 6,
+			delta,
+		);
+		const textTarget = spotAmt.current > 0.62 ? 1 : 0;
+		textAmt.current = THREE.MathUtils.damp(
+			textAmt.current,
+			textTarget,
+			textTarget > 0 ? 2.2 : 8,
+			delta,
+		);
+		setFocusReveal(spotAmt.current, textAmt.current);
+
+		const s = spotAmt.current;
 		const subject = STOPS[stop] ?? STOPS[1];
 		const spot =
 			stop === 2 ? SPOTS.bakery : stop === 3 ? SPOTS.crystal : SPOTS.girl;
@@ -165,12 +210,12 @@ export default function SceneFocus({
 
 		target.position.copy(to);
 
-		const on = f > 0.02;
+		const on = s > 0.01;
 		if (light.current) {
 			light.current.position.copy(from);
 			light.current.target = target;
 			light.current.target.updateMatrixWorld();
-			light.current.intensity = spot.intensity * f;
+			light.current.intensity = spot.intensity * s;
 			light.current.angle = spot.angle;
 			light.current.visible = on;
 		}
@@ -183,13 +228,13 @@ export default function SceneFocus({
 			dir.copy(to).sub(from).normalize();
 			quat.setFromUnitVectors(up, dir);
 			beam.current.quaternion.copy(quat);
-			beam.current.material.opacity = 0.22 * f;
+			beam.current.material.opacity = 0.22 * s;
 			beam.current.visible = on;
 		}
 
 		if (pool.current) {
 			pool.current.position.set(to.x, subject.y + 0.03, to.z);
-			pool.current.material.opacity = 0.35 * f;
+			pool.current.material.opacity = 0.35 * s;
 			pool.current.visible = on;
 			pool.current.scale.setScalar(spot.pool);
 		}
