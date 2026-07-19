@@ -46,13 +46,13 @@ export default function HeroContent() {
 
 			<div className="relative max-w-lg pointer-events-auto">
 				<FadeUp active={show} delay={0.1} duration={0.9}>
-					<p className="font-ui hero-type mb-5 text-[12px] font-medium tracking-[0.22em] text-white/90 uppercase">
+					<p className="font-ui mb-5 text-[12px] font-medium tracking-[0.22em] text-white/90 uppercase">
 						Hi, I&apos;m <span className="hero-accent">Mohsen</span>
 					</p>
 				</FadeUp>
 
 				<FadeUp active={show} delay={0.22} duration={0.95} y={28}>
-					<h1 className="font-display hero-type mb-5 text-[clamp(2.4rem,5.2vw,3.75rem)] leading-[1.12] font-bold tracking-[-0.03em] text-white">
+					<h1 className="font-display mb-5 text-[clamp(2.4rem,5.2vw,3.75rem)] leading-[1.12] font-bold tracking-[-0.03em] text-white">
 						I build digital{" "}
 						<span className="hero-accent">experiences</span> that make
 						impact
@@ -61,7 +61,7 @@ export default function HeroContent() {
 				</FadeUp>
 
 				<FadeUp active={show} delay={0.36} duration={0.9}>
-					<p className="font-ui hero-type mb-9 max-w-md text-[15px] leading-[1.7] font-normal text-white/85">
+					<p className="font-ui mb-9 max-w-md text-[15px] leading-[1.7] font-normal text-white/85">
 						Web developer crafting fast, accessible and meaningful web
 						experiences.
 					</p>
@@ -72,7 +72,7 @@ export default function HeroContent() {
 						<button
 							type="button"
 							onClick={() => requestSnap(1)}
-							className="font-ui inline-flex items-center gap-2 rounded-sm bg-accent px-5 py-3 text-[11px] font-semibold tracking-[0.18em] text-[#1f1a14] uppercase shadow-[0_8px_28px_rgba(0,0,0,0.35)] transition-opacity hover:opacity-90"
+							className="font-ui inline-flex items-center gap-2 rounded-sm bg-accent px-5 py-3 text-[11px] font-semibold tracking-[0.18em] text-[#1f1a14] uppercase transition-opacity hover:opacity-90"
 						>
 							View my work
 							<span aria-hidden>→</span>
@@ -80,7 +80,7 @@ export default function HeroContent() {
 
 						<a
 							href="#about"
-							className="font-ui hero-type text-[11px] font-medium tracking-[0.2em] text-white uppercase underline decoration-white/45 underline-offset-4 transition-colors hover:text-accent hover:decoration-accent"
+							className="font-ui text-[11px] font-medium tracking-[0.2em] text-white uppercase underline decoration-white/45 underline-offset-4 transition-colors hover:text-accent hover:decoration-accent"
 						>
 							About me
 						</a>

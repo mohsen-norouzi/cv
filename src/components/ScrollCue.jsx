@@ -30,18 +30,13 @@ export default function ScrollCue() {
 			}}
 			aria-hidden={hidden}
 		>
-			{/* Soft scrim so the cue stays readable on bright fog */}
-			<div
-				aria-hidden
-				className="pointer-events-none absolute -inset-x-6 -inset-y-4 -z-10 bg-gradient-to-r from-black/55 via-black/25 to-transparent blur-sm"
-			/>
 			<svg
 				width="18"
 				height="28"
 				viewBox="0 0 18 28"
 				fill="none"
 				aria-hidden
-				className="text-white/85 drop-shadow-[0_2px_8px_rgba(0,0,0,0.55)]"
+				className="text-white/80"
 			>
 				<rect
 					x="1"
@@ -60,7 +55,7 @@ export default function ScrollCue() {
 					className="animate-pulse"
 				/>
 			</svg>
-			<span className="font-ui text-[10px] font-medium tracking-[0.28em] text-white/80 uppercase drop-shadow-[0_2px_8px_rgba(0,0,0,0.55)]">
+			<span className="font-ui text-[10px] font-medium tracking-[0.28em] text-white/75 uppercase">
 				Scroll to explore
 			</span>
 		</div>
