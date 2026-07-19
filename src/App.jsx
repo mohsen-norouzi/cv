@@ -16,7 +16,7 @@ function App() {
 				className="absolute inset-0 h-full w-full"
 				style={{ width: "100%", height: "100%" }}
 				shadows
-				dpr={[1, 1.5]}
+				dpr={[1, 1.25]}
 				camera={{
 					position: [2.5, 3.8, 34],
 					fov: 42,

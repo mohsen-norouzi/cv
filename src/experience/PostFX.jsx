@@ -35,9 +35,9 @@ export default function PostFX() {
 			<N8AO
 				halfRes
 				quality="performance"
-				aoRadius={1.2}
-				intensity={3.2}
-				distanceFalloff={0.9}
+				aoRadius={1.0}
+				intensity={2.4}
+				distanceFalloff={1.0}
 				color="#3b2f28"
 			/>
 			<Bloom

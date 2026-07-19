@@ -1,5 +1,7 @@
+import { Billboard } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
+import * as THREE from "three";
 import {
 	AMBIENT_COLOR,
 	AMBIENT_INT,
@@ -19,15 +21,42 @@ import {
 import { flicker } from "./flicker";
 import StreetLamps from "./StreetLamps";
 
-const LH_FILL_RATIO = 2.2;
+const LH_FILL_RATIO = 1.4;
+
+function createHaloTexture() {
+	const size = 256;
+	const canvas = document.createElement("canvas");
+	canvas.width = size;
+	canvas.height = size;
+	const ctx = canvas.getContext("2d");
+	if (!ctx) return null;
+	const c = size / 2;
+	const grad = ctx.createRadialGradient(c, c, 0, c, c, c);
+	grad.addColorStop(0, "rgba(255,245,220,0.95)");
+	grad.addColorStop(0.15, "rgba(255,200,120,0.45)");
+	grad.addColorStop(0.45, "rgba(255,160,70,0.12)");
+	grad.addColorStop(1, "rgba(255,120,40,0)");
+	ctx.fillStyle = grad;
+	ctx.fillRect(0, 0, size, size);
+	const texture = new THREE.CanvasTexture(canvas);
+	texture.colorSpace = THREE.SRGBColorSpace;
+	return texture;
+}
 
 export default function Lights() {
 	const lighthouse = useRef(null);
+	const lhHalo = useRef(null);
+	const haloTex = useMemo(() => createHaloTexture(), []);
 
 	useFrame(({ clock }) => {
+		const live = flicker(clock.elapsedTime, 1.4);
 		if (lighthouse.current) {
 			lighthouse.current.intensity =
-				LIGHTHOUSE_INTENSITY * LH_FILL_RATIO * flicker(clock.elapsedTime, 1.4);
+				LIGHTHOUSE_INTENSITY * LH_FILL_RATIO * live;
+		}
+		if (lhHalo.current) {
+			lhHalo.current.material.opacity = 0.55 * live;
+			lhHalo.current.scale.setScalar(5.5 * (0.9 + live * 0.2));
 		}
 	});
 
@@ -52,8 +81,8 @@ export default function Lights() {
 				shadow-camera-right={48}
 				shadow-camera-top={44}
 				shadow-camera-bottom={-30}
-				shadow-bias={-0.00015}
-				shadow-normalBias={0.035}
+				shadow-bias={-0.0002}
+				shadow-normalBias={0.05}
 			/>
 			<directionalLight
 				position={[50, 18, 30]}
@@ -70,10 +99,26 @@ export default function Lights() {
 				ref={lighthouse}
 				position={LIGHTHOUSE_LAMP}
 				intensity={LIGHTHOUSE_INTENSITY * LH_FILL_RATIO}
-				color="#ffb14a"
-				distance={24}
+				color="#ffc48a"
+				distance={20}
 				decay={2}
 			/>
+			{haloTex && (
+				<Billboard follow position={LIGHTHOUSE_LAMP}>
+					<mesh ref={lhHalo} renderOrder={8} scale={5.5}>
+						<planeGeometry args={[1, 1]} />
+						<meshBasicMaterial
+							map={haloTex}
+							color="#ffc078"
+							transparent
+							depthWrite={false}
+							toneMapped={false}
+							blending={THREE.AdditiveBlending}
+							opacity={0.55}
+						/>
+					</mesh>
+				</Billboard>
+			)}
 		</>
 	);
 }

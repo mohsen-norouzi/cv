@@ -3,7 +3,7 @@ import * as THREE from "three";
 /** Soft warm haze — matches HTML page backdrop (keep App bg in sync) */
 /** Thin — depth comes from discrete mist banks, not a uniform veil */
 export const FOG_COLOR = "#e2cbb0";
-export const FOG_DENSITY = 0.0028;
+export const FOG_DENSITY = 0.0042;
 
 /** Powder blue at zenith — the reference sky is light, never navy */
 export const SKY_TOP = "#7f97b4";
