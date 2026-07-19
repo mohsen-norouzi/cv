@@ -1,7 +1,19 @@
 import { useFrame } from "@react-three/fiber";
-import { folder, useControls } from "leva";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
+
+/** Locked look — tuned in Leva, then baked */
+const MIST = {
+	frontMist: 0,
+	topMist: 0.5,
+	startMist: 0.2,
+	frontY: 2.5,
+	peakY: 16,
+	amount: 1.65,
+	size: 1,
+	softness: 1,
+	speed: 1,
+};
 
 /** Hash → value noise → FBM cloud field */
 function createCloudTexture(size = 256) {
@@ -84,8 +96,8 @@ function createCloudTexture(size = 256) {
 }
 
 /**
- * Mountain climb recipes. Opacity is driven live by leva height gradient
- * (front → peak). Packed dense along the CAM_START → peak sightline.
+ * Mountain climb recipes. Opacity follows height gradient (front → peak).
+ * Packed dense along the CAM_START → peak sightline.
  */
 /**
  * Fewer, larger puffs — same look, far less transparent overdraw.
@@ -100,7 +112,8 @@ const BANKS = [
 		spread: [10, 1.6, 5],
 		scale: [30, 9],
 		scaleJitter: 0.35,
-		groundRatio: 0.45,
+		// No groundRatio — flat XZ quads read as bright horizontal lines when edge-on
+		groundRatio: 0,
 		drift: 2.8,
 		floor: 0.42,
 	},
@@ -111,7 +124,7 @@ const BANKS = [
 		spread: [8, 1.2, 4],
 		scale: [28, 8],
 		scaleJitter: 0.35,
-		groundRatio: 0.5,
+		groundRatio: 0,
 		drift: 2.6,
 		floor: 0.38,
 	},
@@ -122,7 +135,7 @@ const BANKS = [
 		spread: [8, 1.4, 4],
 		scale: [28, 8],
 		scaleJitter: 0.35,
-		groundRatio: 0.4,
+		groundRatio: 0,
 		drift: 2.7,
 		floor: 0.36,
 	},
@@ -133,7 +146,7 @@ const BANKS = [
 		spread: [12, 1.0, 6],
 		scale: [34, 9],
 		scaleJitter: 0.35,
-		groundRatio: 0.5,
+		groundRatio: 0,
 		drift: 3.0,
 	},
 	{
@@ -143,7 +156,7 @@ const BANKS = [
 		spread: [10, 1.0, 5],
 		scale: [30, 8],
 		scaleJitter: 0.35,
-		groundRatio: 0.5,
+		groundRatio: 0,
 		drift: 2.6,
 	},
 	{
@@ -153,7 +166,7 @@ const BANKS = [
 		spread: [14, 2.2, 8],
 		scale: [32, 10],
 		scaleJitter: 0.4,
-		groundRatio: 0.3,
+		groundRatio: 0,
 		drift: 3.2,
 		floor: 0.22,
 	},
@@ -164,7 +177,7 @@ const BANKS = [
 		spread: [16, 2.8, 8],
 		scale: [34, 11],
 		scaleJitter: 0.4,
-		groundRatio: 0.25,
+		groundRatio: 0,
 		drift: 3.4,
 	},
 	{
@@ -174,7 +187,7 @@ const BANKS = [
 		spread: [20, 3.8, 11],
 		scale: [38, 13],
 		scaleJitter: 0.45,
-		groundRatio: 0.12,
+		groundRatio: 0,
 		drift: 4.0,
 	},
 	{
@@ -184,7 +197,7 @@ const BANKS = [
 		spread: [18, 4.5, 11],
 		scale: [40, 14],
 		scaleJitter: 0.45,
-		groundRatio: 0.15,
+		groundRatio: 0,
 		drift: 4.5,
 	},
 	{
@@ -194,7 +207,7 @@ const BANKS = [
 		spread: [16, 4.0, 10],
 		scale: [44, 15],
 		scaleJitter: 0.4,
-		groundRatio: 0.12,
+		groundRatio: 0,
 		drift: 4.8,
 	},
 	{
@@ -204,7 +217,7 @@ const BANKS = [
 		spread: [14, 3.5, 9],
 		scale: [46, 16],
 		scaleJitter: 0.4,
-		groundRatio: 0.1,
+		groundRatio: 0,
 		drift: 5.0,
 	},
 	{
@@ -214,7 +227,7 @@ const BANKS = [
 		spread: [26, 4.5, 12],
 		scale: [52, 16],
 		scaleJitter: 0.4,
-		groundRatio: 0.08,
+		groundRatio: 0,
 		drift: 5.2,
 	},
 	{
@@ -391,29 +404,6 @@ export default function Mist() {
 	const texture = useMemo(() => createCloudTexture(256), []);
 	const puffs = useMemo(() => buildPuffs(), []);
 
-	const mist = useControls("Mist", {
-		enabled: { value: true, label: "Enabled" },
-		gradient: folder({
-			frontMist: { value: 0.12, min: 0, max: 1, step: 0.01, label: "Front %" },
-			topMist: { value: 0.9, min: 0, max: 1, step: 0.01, label: "Peak %" },
-			startMist: {
-				value: 0.25,
-				min: 0,
-				max: 2,
-				step: 0.01,
-				label: "Start mist",
-			},
-			frontY: { value: 2.5, min: 0, max: 12, step: 0.1, label: "Front height" },
-			peakY: { value: 16, min: 6, max: 28, step: 0.1, label: "Peak height" },
-		}),
-		look: folder({
-			amount: { value: 1.65, min: 0, max: 3, step: 0.01, label: "Amount" },
-			size: { value: 1.35, min: 0.4, max: 2.5, step: 0.01, label: "Size" },
-			softness: { value: 0.85, min: 0, max: 1, step: 0.01, label: "Softness" },
-			speed: { value: 1.0, min: 0, max: 3, step: 0.01, label: "Speed" },
-		}),
-	});
-
 	const { geometry, material } = useMemo(() => {
 		const base = new THREE.PlaneGeometry(1, 1);
 		const geo = new THREE.InstancedBufferGeometry();
@@ -455,15 +445,15 @@ export default function Mist() {
 		const mat = new THREE.ShaderMaterial({
 			uniforms: {
 				uTime: { value: 0 },
-				uSpeed: { value: 1 },
-				uFrontMist: { value: 0.12 },
-				uTopMist: { value: 0.9 },
-				uStartMist: { value: 0.25 },
-				uFrontY: { value: 2.5 },
-				uPeakY: { value: 16 },
-				uAmount: { value: 1 },
-				uSize: { value: 1 },
-				uSoftness: { value: 0.85 },
+				uSpeed: { value: MIST.speed },
+				uFrontMist: { value: MIST.frontMist },
+				uTopMist: { value: MIST.topMist },
+				uStartMist: { value: MIST.startMist },
+				uFrontY: { value: MIST.frontY },
+				uPeakY: { value: MIST.peakY },
+				uAmount: { value: MIST.amount },
+				uSize: { value: MIST.size },
+				uSoftness: { value: MIST.softness },
 				uMap: { value: texture },
 			},
 			vertexShader: mistVertex,
@@ -482,22 +472,10 @@ export default function Mist() {
 	uniforms.current = material.uniforms;
 
 	useFrame(({ clock }) => {
-		if (!mist.enabled) return;
 		const u = uniforms.current;
 		if (!u) return;
 		u.uTime.value = clock.elapsedTime;
-		u.uSpeed.value = mist.speed;
-		u.uFrontMist.value = mist.frontMist;
-		u.uTopMist.value = mist.topMist;
-		u.uStartMist.value = mist.startMist;
-		u.uFrontY.value = mist.frontY;
-		u.uPeakY.value = mist.peakY;
-		u.uAmount.value = mist.amount;
-		u.uSize.value = mist.size;
-		u.uSoftness.value = mist.softness;
 	});
-
-	if (!mist.enabled) return null;
 
 	return (
 		<mesh
