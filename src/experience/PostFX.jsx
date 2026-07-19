@@ -3,6 +3,7 @@ import {
 	BrightnessContrast,
 	EffectComposer,
 	HueSaturation,
+	N8AO,
 	ToneMapping,
 	Vignette,
 } from "@react-three/postprocessing";
@@ -19,7 +20,11 @@ import {
 	VIGNETTE_OFFSET,
 } from "./constants";
 
-/** Lean post stack — N8AO was a major FPS hit */
+/**
+ * Post stack. N8AO is back in its cheapest config — the earlier FPS hit was
+ * AO stacked on 4x MSAA + per-frame VSM blur, both since removed. If GPU
+ * time still spikes, this is the first thing to drop again.
+ */
 export default function PostFX() {
 	return (
 		<EffectComposer
@@ -27,6 +32,14 @@ export default function PostFX() {
 			enableNormalPass={false}
 			frameBufferType={THREE.HalfFloatType}
 		>
+			<N8AO
+				halfRes
+				quality="performance"
+				aoRadius={1.2}
+				intensity={3.2}
+				distanceFalloff={0.9}
+				color="#3b2f28"
+			/>
 			<Bloom
 				luminanceThreshold={BLOOM_THRESHOLD}
 				luminanceSmoothing={0.3}

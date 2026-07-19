@@ -257,6 +257,36 @@ const MERGE_MATS = new Set([
 	"Trunk",
 ]);
 
+/** Foliage materials that get a per-tree tint baked before merging */
+const FOLIAGE_TINT_MATS = new Set(["PineA_f", "PineB_f", "RoundTree_f", "Tuft"]);
+
+/**
+ * Constant vertex-color tint for one tree — merged foliage shares a single
+ * material, so variety has to live in the geometry.
+ */
+function bakeTreeTint(geo, seed) {
+	let s = (seed % 2147483646) + 1;
+	const rand = () => {
+		s = (s * 16807) % 2147483647;
+		return (s - 1) / 2147483646;
+	};
+	const lum = 0.84 + rand() * 0.3;
+	const warm = 1 + (rand() - 0.5) * 0.16;
+	const green = 1 + (rand() - 0.5) * 0.1;
+	const r = lum * warm;
+	const g = lum * green;
+	const b = lum * (2 - warm);
+
+	const count = geo.attributes.position.count;
+	const colors = new Float32Array(count * 3);
+	for (let i = 0; i < count; i++) {
+		colors[i * 3] = r;
+		colors[i * 3 + 1] = g;
+		colors[i * 3 + 2] = b;
+	}
+	geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+}
+
 /**
  * Bake world transforms and merge every mesh sharing a material into one Mesh.
  * Biggest draw-call win for this forest scene.
@@ -289,6 +319,14 @@ function mergeMeshesByMaterial(model, materialNames) {
 		if (geos.length < 2) {
 			for (const g of geos) g.dispose();
 			continue;
+		}
+
+		if (FOLIAGE_TINT_MATS.has(material.name)) {
+			geos.forEach((geo, i) => {
+				bakeTreeTint(geo, hashSeed(sources[i].name || `tree-${i}`));
+			});
+			material.vertexColors = true;
+			material.needsUpdate = true;
 		}
 
 		const merged = mergeGeometries(geos, false);

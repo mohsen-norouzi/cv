@@ -1,8 +1,9 @@
 import * as THREE from "three";
 
 /** Soft warm haze — matches HTML page backdrop (keep App bg in sync) */
+/** Thin — depth comes from discrete mist banks, not a uniform veil */
 export const FOG_COLOR = "#e2cbb0";
-export const FOG_DENSITY = 0.008;
+export const FOG_DENSITY = 0.0028;
 
 /** Powder blue at zenith — the reference sky is light, never navy */
 export const SKY_TOP = "#7f97b4";
@@ -13,9 +14,9 @@ export const SKY_COOL = "#b9aec6";
 /** Hot sun disk side */
 export const SKY_SUN = "#ffd5a2";
 
-/** Deep back-left, inside the camera's view cone — backlit like the reference */
-export const SUN_POSITION = new THREE.Vector3(-28, 17, -120);
-export const SUN_DIRECTION = new THREE.Vector3(-0.23, 0.14, -0.96).normalize();
+/** Low left, raking across the scene — every facet gets a lit and a shade side */
+export const SUN_POSITION = new THREE.Vector3(-70, 22, -35);
+export const SUN_DIRECTION = new THREE.Vector3(-0.85, 0.27, -0.43).normalize();
 
 /** From Try1.glb CamTarget */
 export const CAM_TARGET = new THREE.Vector3(12, 9, -4);
@@ -73,19 +74,20 @@ export const PATH_COLOR = "#ece8de";
 export const PLATFORM_COLOR = "#e0dbd2";
 export const TERRAIN_COLOR = "#82877b";
 export const WATER_COLOR = "#9fb4c2";
-export const PINE_COLOR = "#46614b";
+export const PINE_COLOR = "#40624a";
 export const BOULDER_COLOR = "#767b80";
 export const HORIZON_GLOW = "#ffb070";
 export const HORIZON_INTENSITY = 1.15;
 export const HORIZON_OPACITY = 0.45;
 
-/** Light / post grade — bright pastel: lifted shadows, warm key, no true black */
-export const AMBIENT_INT = 0.3;
+/** Light / post grade — warm key shaping, soft shadows, thin fog veil */
+/** Lower fill = real shadow sides; strong warm key = shaping */
+export const AMBIENT_INT = 0.2;
 export const AMBIENT_COLOR = "#d2c2ba";
 export const HEMI_SKY = "#f6d4ac";
-export const HEMI_GROUND = "#6d7888";
-export const HEMI_INT = 0.85;
-export const KEY_INT = 2.8;
+export const HEMI_GROUND = "#5d6a80";
+export const HEMI_INT = 0.55;
+export const KEY_INT = 4.1;
 export const KEY_COLOR = "#ffb877";
 export const FILL_INT = 0.5;
 export const FILL_COLOR = "#6e84a8";
@@ -96,8 +98,8 @@ export const RIM_COLOR = "#ffd2a8";
 export const BLOOM_THRESHOLD = 0.84;
 export const BLOOM_INTENSITY = 1.4;
 export const BLOOM_RADIUS = 0.55;
-export const SATURATION = 0.07;
-export const BRIGHTNESS = 0.05;
-export const CONTRAST = 0.045;
+export const SATURATION = 0.13;
+export const BRIGHTNESS = 0.03;
+export const CONTRAST = 0.17;
 export const VIGNETTE_OFFSET = 0.28;
 export const VIGNETTE_DARKNESS = 0.36;
