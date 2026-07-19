@@ -2,45 +2,56 @@ import { useEffect } from "react";
 import { isScrollAnimating, snapScroll } from "./scrollStore";
 
 /** Accumulated wheel delta needed to fire a snap (trackpads send tiny ticks). */
-const WHEEL_ACCUM_THRESHOLD = 10;
-const TOUCH_THRESHOLD = 18;
-/** Ignore further input briefly after a snap starts. */
-const COOLDOWN_MS = 200;
-/** Reset unused wheel accumulation after idle. */
-const ACCUM_IDLE_MS = 400;
+const WHEEL_ACCUM_THRESHOLD = 24;
+const TOUCH_THRESHOLD = 28;
+/** After a snap, ignore input until the wheel/touch goes quiet (kills trackpad inertia). */
+const GESTURE_IDLE_MS = 450;
 
 /**
- * Captures wheel / touch. A light intentional gesture snaps to the next stop.
- * Wheel deltas are accumulated so trackpads don't need a hard flick.
+ * Captures wheel / touch. One intentional gesture → one snap.
+ * Stays locked through the animation and leftover trackpad momentum.
  */
 export default function ScrollStealer() {
 	useEffect(() => {
 		let touchStartY = null;
-		let cooldownUntil = 0;
 		let wheelAccum = 0;
-		let accumResetTimer = 0;
+		let gestureLocked = false;
+		let idleTimer = 0;
+
+		const armIdleUnlock = () => {
+			window.clearTimeout(idleTimer);
+			idleTimer = window.setTimeout(() => {
+				// Stay locked until the snap finishes, then wait for a quiet gap.
+				if (isScrollAnimating()) {
+					armIdleUnlock();
+					return;
+				}
+				gestureLocked = false;
+				wheelAccum = 0;
+			}, GESTURE_IDLE_MS);
+		};
 
 		const trySnap = (direction) => {
-			const now = performance.now();
-			if (now < cooldownUntil) return false;
-			if (isScrollAnimating()) return false;
-			cooldownUntil = now + COOLDOWN_MS;
+			if (gestureLocked || isScrollAnimating()) return false;
+			gestureLocked = true;
 			wheelAccum = 0;
 			snapScroll(direction);
+			armIdleUnlock();
 			return true;
 		};
 
 		const onWheel = (event) => {
 			event.preventDefault();
-			if (isScrollAnimating()) return;
-			if (performance.now() < cooldownUntil) return;
+
+			// Any wheel while locked / animating just extends the lock (eat inertia).
+			if (gestureLocked || isScrollAnimating()) {
+				gestureLocked = true;
+				armIdleUnlock();
+				return;
+			}
 
 			wheelAccum += event.deltaY;
-
-			window.clearTimeout(accumResetTimer);
-			accumResetTimer = window.setTimeout(() => {
-				wheelAccum = 0;
-			}, ACCUM_IDLE_MS);
+			armIdleUnlock();
 
 			if (Math.abs(wheelAccum) >= WHEEL_ACCUM_THRESHOLD) {
 				trySnap(wheelAccum > 0 ? 1 : -1);
@@ -72,7 +83,7 @@ export default function ScrollStealer() {
 		window.addEventListener("touchend", onTouchEnd);
 
 		return () => {
-			window.clearTimeout(accumResetTimer);
+			window.clearTimeout(idleTimer);
 			window.removeEventListener("wheel", onWheel);
 			window.removeEventListener("touchstart", onTouchStart);
 			window.removeEventListener("touchmove", onTouchMove);
