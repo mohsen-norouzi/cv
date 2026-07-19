@@ -2,12 +2,12 @@ import { useEffect } from "react";
 import { isScrollAnimating, snapScroll } from "./scrollStore";
 
 /** Accumulated wheel delta needed to fire a snap (trackpads send tiny ticks). */
-const WHEEL_ACCUM_THRESHOLD = 28;
-const TOUCH_THRESHOLD = 36;
+const WHEEL_ACCUM_THRESHOLD = 10;
+const TOUCH_THRESHOLD = 18;
 /** Ignore further input briefly after a snap starts. */
-const COOLDOWN_MS = 700;
+const COOLDOWN_MS = 200;
 /** Reset unused wheel accumulation after idle. */
-const ACCUM_IDLE_MS = 280;
+const ACCUM_IDLE_MS = 400;
 
 /**
  * Captures wheel / touch. A light intentional gesture snaps to the next stop.

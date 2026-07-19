@@ -8,8 +8,8 @@ let progress = 0;
 let raf = 0;
 let animating = false;
 
-/** Cozy snap between stops (slightly quicker) */
-const DURATION_MS = 3400;
+/** Snap between stops */
+const DURATION_MS = 750;
 
 /** Soft ease — long ease-in/out, gentle middle (cozy, not snappy) */
 function easeInOutQuint(t) {
