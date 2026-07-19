@@ -40,8 +40,16 @@ export const BAKERY_VIEW_POS = new THREE.Vector3(2.05, 5.2, 15.55);
 export const BAKERY_LOOK_AT = new THREE.Vector3(6.86, 5.6, 13.11);
 
 /**
+ * Moon crystal (Moon_Crystal / Crystal001) on the upper path platform.
+ * View stands on the road (path curves right here), looking back at the crystal.
+ */
+export const CRYSTAL_POSITION = new THREE.Vector3(8.34, 8.39, 4.99);
+export const CRYSTAL_VIEW_POS = new THREE.Vector3(13.6, 10.4, 2.15);
+export const CRYSTAL_LOOK_AT = new THREE.Vector3(8.34, 8.75, 4.99);
+
+/**
  * Camera path waypoints between snap stops.
- * Girl → bakery eases up the road, then settles left of the shop (no hard diagonal cut).
+ * Girl → bakery eases up the road; bakery → crystal follows the road as it bends right.
  */
 export const CAM_PATH_HERO_TO_GIRL = [CAM_START, GIRL_VIEW_POS];
 export const CAM_LOOK_HERO_TO_GIRL = [CAM_TARGET, GIRL_LOOK_AT];
@@ -59,6 +67,15 @@ export const CAM_LOOK_GIRL_TO_BAKERY = [
 	new THREE.Vector3(6.7, 5.2, 15.2),
 	BAKERY_LOOK_AT,
 ];
+
+/** Straight-ish climb into the gem stop (look is slerped in CameraRig). */
+export const CAM_PATH_BAKERY_TO_CRYSTAL = [
+	BAKERY_VIEW_POS,
+	new THREE.Vector3(7.4, 7.8, 9.0),
+	CRYSTAL_VIEW_POS,
+];
+/** Endpoints only — segment 2 blends facing via quaternion slerp (no look-point whip). */
+export const CAM_LOOK_BAKERY_TO_CRYSTAL = [BAKERY_LOOK_AT, CRYSTAL_LOOK_AT];
 
 /** Street lamp emissive / fill intensity — lamps carry the cozy mood */
 export const BIG_LAMP_INTENSITY = 4.6;

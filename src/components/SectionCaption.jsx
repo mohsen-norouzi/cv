@@ -17,6 +17,11 @@ const sections = [
 		title: "Bakery Website",
 		blurb: "Sweet and simple site for a local bakery.",
 	},
+	{
+		id: "03",
+		title: "Moon Crystal",
+		blurb: "A glowing landmark at the top of the path.",
+	},
 ];
 
 export default function SectionCaption() {

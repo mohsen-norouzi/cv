@@ -2,13 +2,18 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import {
+	BAKERY_LOOK_AT,
+	BAKERY_VIEW_POS,
 	CAM_FOV,
 	CAM_LOOK_GIRL_TO_BAKERY,
 	CAM_LOOK_HERO_TO_GIRL,
+	CAM_PATH_BAKERY_TO_CRYSTAL,
 	CAM_PATH_GIRL_TO_BAKERY,
 	CAM_PATH_HERO_TO_GIRL,
 	CAM_START,
 	CAM_TARGET,
+	CRYSTAL_LOOK_AT,
+	CRYSTAL_VIEW_POS,
 } from "./constants";
 import { getScrollProgress, isScrollAnimating } from "./scrollStore";
 
@@ -19,6 +24,11 @@ const LOOK_Y = 0.08;
 const DAMP = 2.8;
 /** Extra softness on top of the eased scroll progress */
 const FOLLOW_DAMP = 2.2;
+/** Bakery → crystal segment index */
+const CRYSTAL_SEG = 2;
+const LOOK_DIST = 10;
+const _fwd = new THREE.Vector3(0, 0, -1);
+const _dir = new THREE.Vector3();
 
 function makeCurve(points) {
 	return new THREE.CatmullRomCurve3(
@@ -35,6 +45,10 @@ function sampleSegment(curves, progress, out) {
 	curves[i0].getPointAt(t, out);
 }
 
+function easeInOut(t) {
+	return t * t * (3 - 2 * t);
+}
+
 export default function CameraRig() {
 	const { camera } = useThree();
 	const offset = useRef(new THREE.Vector2());
@@ -43,11 +57,15 @@ export default function CameraRig() {
 	const targetPos = useRef(new THREE.Vector3());
 	const targetLook = useRef(new THREE.Vector3());
 	const smoothP = useRef(0);
+	const qStart = useRef(new THREE.Quaternion());
+	const qEnd = useRef(new THREE.Quaternion());
+	const qNow = useRef(new THREE.Quaternion());
 
 	const posCurves = useMemo(
 		() => [
 			makeCurve(CAM_PATH_HERO_TO_GIRL),
 			makeCurve(CAM_PATH_GIRL_TO_BAKERY),
+			makeCurve(CAM_PATH_BAKERY_TO_CRYSTAL),
 		],
 		[],
 	);
@@ -60,6 +78,11 @@ export default function CameraRig() {
 	);
 
 	useLayoutEffect(() => {
+		const d0 = BAKERY_LOOK_AT.clone().sub(BAKERY_VIEW_POS).normalize();
+		const d1 = CRYSTAL_LOOK_AT.clone().sub(CRYSTAL_VIEW_POS).normalize();
+		qStart.current.setFromUnitVectors(_fwd, d0);
+		qEnd.current.setFromUnitVectors(_fwd, d1);
+
 		camera.position.copy(CAM_START);
 		camera.lookAt(CAM_TARGET);
 		camera.fov = CAM_FOV;
@@ -80,7 +103,20 @@ export default function CameraRig() {
 		const p = smoothP.current;
 
 		sampleSegment(posCurves, p, targetPos.current);
-		sampleSegment(lookCurves, p, targetLook.current);
+
+		const seg = Math.min(posCurves.length - 1, Math.floor(p));
+		const t = THREE.MathUtils.clamp(p - seg, 0, 1);
+
+		if (seg === CRYSTAL_SEG) {
+			// Slerp facing — avoids look-at points crossing the camera (yaw whip).
+			qNow.current.copy(qStart.current).slerp(qEnd.current, easeInOut(t));
+			_dir.copy(_fwd).applyQuaternion(qNow.current);
+			targetLook.current
+				.copy(targetPos.current)
+				.addScaledVector(_dir, LOOK_DIST);
+		} else {
+			sampleSegment(lookCurves, p, targetLook.current);
+		}
 
 		pos.current.x = THREE.MathUtils.damp(
 			pos.current.x,

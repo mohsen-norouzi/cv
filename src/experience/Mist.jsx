@@ -1,6 +1,7 @@
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
+import { getScrollProgress } from "./scrollStore";
 
 /** Locked look — tuned in Leva, then baked */
 const MIST = {
@@ -470,15 +471,27 @@ export default function Mist() {
 	}, [puffs, texture]);
 
 	uniforms.current = material.uniforms;
+	const meshRef = useRef(null);
+	const fade = useRef(1);
 
-	useFrame(({ clock }) => {
+	useFrame(({ clock }, delta) => {
 		const u = uniforms.current;
 		if (!u) return;
 		u.uTime.value = clock.elapsedTime;
+
+		// Mist only on the hero — fade out as soon as you leave scene 0
+		const onHero = Math.max(0, 1 - getScrollProgress() * 2.2);
+		fade.current = THREE.MathUtils.damp(fade.current, onHero, 5, delta);
+		u.uAmount.value = MIST.amount * fade.current;
+
+		if (meshRef.current) {
+			meshRef.current.visible = fade.current > 0.02;
+		}
 	});
 
 	return (
 		<mesh
+			ref={meshRef}
 			geometry={geometry}
 			material={material}
 			frustumCulled={false}

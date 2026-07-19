@@ -18,7 +18,9 @@ import {
 	RIM_INT,
 	SUN_POSITION,
 } from "./constants";
+import { getFocusAmount } from "./focusStore";
 import { flicker } from "./flicker";
+import SceneFocus from "./SceneFocus";
 import StreetLamps from "./StreetLamps";
 
 const LH_FILL_RATIO = 1.4;
@@ -44,32 +46,45 @@ function createHaloTexture() {
 }
 
 export default function Lights() {
+	const ambient = useRef(null);
+	const hemi = useRef(null);
+	const keyLight = useRef(null);
+	const fill = useRef(null);
+	const rim = useRef(null);
 	const lighthouse = useRef(null);
 	const lhHalo = useRef(null);
 	const haloTex = useMemo(() => createHaloTexture(), []);
 
 	useFrame(({ clock }) => {
 		const live = flicker(clock.elapsedTime, 1.4);
+		const focus = getFocusAmount();
+		const world = 1 - focus * 0.85;
 		if (lighthouse.current) {
 			lighthouse.current.intensity =
-				LIGHTHOUSE_INTENSITY * LH_FILL_RATIO * live;
+				LIGHTHOUSE_INTENSITY * LH_FILL_RATIO * live * world;
 		}
 		if (lhHalo.current) {
-			lhHalo.current.material.opacity = 0.55 * live;
+			lhHalo.current.material.opacity = 0.55 * live * world;
 			lhHalo.current.scale.setScalar(5.5 * (0.9 + live * 0.2));
 		}
 	});
 
 	return (
 		<>
-			<ambientLight intensity={AMBIENT_INT} color={AMBIENT_COLOR} />
+			<ambientLight
+				ref={ambient}
+				intensity={AMBIENT_INT}
+				color={AMBIENT_COLOR}
+			/>
 			<hemisphereLight
+				ref={hemi}
 				skyColor={HEMI_SKY}
 				groundColor={HEMI_GROUND}
 				intensity={HEMI_INT}
 			/>
 			{/* High-res sun shadow — baked after a few frames via ShadowBake */}
 			<directionalLight
+				ref={keyLight}
 				position={SUN_POSITION}
 				intensity={KEY_INT}
 				color={KEY_COLOR}
@@ -85,11 +100,13 @@ export default function Lights() {
 				shadow-normalBias={0.05}
 			/>
 			<directionalLight
+				ref={fill}
 				position={[50, 18, 30]}
 				intensity={FILL_INT}
 				color={FILL_COLOR}
 			/>
 			<directionalLight
+				ref={rim}
 				position={[-20, 8, 40]}
 				intensity={RIM_INT}
 				color={RIM_COLOR}
@@ -119,6 +136,13 @@ export default function Lights() {
 					</mesh>
 				</Billboard>
 			)}
+			<SceneFocus
+				ambient={ambient}
+				hemi={hemi}
+				keyLight={keyLight}
+				fill={fill}
+				rim={rim}
+			/>
 		</>
 	);
 }

@@ -1,5 +1,6 @@
 import { Billboard } from "@react-three/drei";
-import { useMemo } from "react";
+import { useFrame } from "@react-three/fiber";
+import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import {
 	SKY_COOL,
@@ -9,6 +10,7 @@ import {
 	SUN_DIRECTION,
 	SUN_POSITION,
 } from "./constants";
+import { getFocusAmount } from "./focusStore";
 
 function createSunTexture() {
 	const size = 512;
@@ -34,6 +36,8 @@ function createSunTexture() {
 }
 
 export default function SkyDome() {
+	const sunMesh = useRef(null);
+
 	const skyMat = useMemo(() => {
 		return new THREE.ShaderMaterial({
 			side: THREE.BackSide,
@@ -45,6 +49,8 @@ export default function SkyDome() {
 				coolColor: { value: new THREE.Color(SKY_COOL) },
 				sunColor: { value: new THREE.Color(SKY_SUN) },
 				sunDir: { value: SUN_DIRECTION.clone() },
+				/** 1 = full sun, 0 = sun killed for scene focus */
+				sunAmount: { value: 1 },
 			},
 			vertexShader: /* glsl */ `
 				varying vec3 vWorldPosition;
@@ -60,6 +66,7 @@ export default function SkyDome() {
 				uniform vec3 coolColor;
 				uniform vec3 sunColor;
 				uniform vec3 sunDir;
+				uniform float sunAmount;
 				varying vec3 vWorldPosition;
 
 				float dither(vec2 p) {
@@ -75,13 +82,12 @@ export default function SkyDome() {
 					float sunGlow = pow(sunAz, 1.5);
 					float sunDisk = pow(max(dot(dir, normalize(sunDir)), 0.0), 32.0);
 
-					// Horizon keeps a warm base all around; away from the sun it only
-					// cools off, it never drops to pure gray
+					// Keep the warm sky palette; only fade the hot sun contribution
 					vec3 horizonCol = mix(coolColor, horizonColor, 0.5 + 0.5 * sunGlow);
-					horizonCol = mix(horizonCol, sunColor, sunGlow * 0.65 + sunDisk * 0.5);
+					horizonCol = mix(horizonCol, sunColor, (sunGlow * 0.65 + sunDisk * 0.5) * sunAmount);
 
 					vec3 col = mix(horizonCol, topColor, heightMix);
-					col = mix(col, sunColor, sunGlow * (1.0 - heightMix) * 0.25);
+					col = mix(col, sunColor, sunGlow * (1.0 - heightMix) * 0.25 * sunAmount);
 
 					col += (dither(gl_FragCoord.xy) - 0.5) / 96.0;
 
@@ -93,6 +99,15 @@ export default function SkyDome() {
 
 	const sunTexture = useMemo(() => createSunTexture(), []);
 
+	useFrame(() => {
+		const sunAmount = 1 - getFocusAmount() * 0.95;
+		skyMat.uniforms.sunAmount.value = sunAmount;
+		if (sunMesh.current) {
+			sunMesh.current.material.opacity = sunAmount;
+			sunMesh.current.visible = sunAmount > 0.05;
+		}
+	});
+
 	return (
 		<group>
 			<mesh material={skyMat} renderOrder={-10} frustumCulled={false}>
@@ -100,7 +115,7 @@ export default function SkyDome() {
 			</mesh>
 			{sunTexture && (
 				<Billboard follow position={SUN_POSITION}>
-					<mesh renderOrder={-9}>
+					<mesh ref={sunMesh} renderOrder={-9}>
 						<planeGeometry args={[120, 120]} />
 						<meshBasicMaterial
 							map={sunTexture}

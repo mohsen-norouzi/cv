@@ -1,7 +1,7 @@
 const listeners = new Set();
 
-/** 0 = hero, 1 = girl, 2 = bakery */
-export const SCROLL_SECTION_COUNT = 3;
+/** 0 = hero, 1 = girl, 2 = bakery, 3 = moon crystal */
+export const SCROLL_SECTION_COUNT = 4;
 
 let section = 0;
 let progress = 0;

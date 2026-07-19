@@ -16,10 +16,113 @@ import {
 	TERRAIN_COLOR,
 	WATER_COLOR,
 } from "./constants";
+import { getFocusAmount, getFocusStop } from "./focusStore";
 import { flicker, hashSeed } from "./flicker";
 import { createStoneTexture } from "./stoneTexture";
 
-const MODEL_URL = "/Try1.glb?v=7";
+const MODEL_URL = "/Try1.glb?v=8";
+
+/** Project showcase meshes — slow Y-spin while that stop is focused */
+const GIRL_MESH = "tripo_node_1feaf1fd-79b2-4217-a867-f97ada61b588";
+const BAKERY_MESH = "tripo_node_e70704d4-4ce1-4bf4-974e-d1eea2c8202b";
+const BENCH_MESH = "Stylized_Cartoon_Stone_Bench";
+/** Top stone only — mid/base stay fixed */
+const SHOWCASE_TOP_PLATFORM = {
+	girl: "Platform_0_0",
+	bakery: "Platform_0_0001",
+	crystal: "Platform_0_0002",
+};
+const SPIN_SPEED = 0.4;
+
+let contactShadowTex = null;
+
+/** Soft radial blob — “baked” contact shadow for platform tops (no shadow pass) */
+function getContactShadowTexture() {
+	if (contactShadowTex) return contactShadowTex;
+	const size = 128;
+	const canvas = document.createElement("canvas");
+	canvas.width = size;
+	canvas.height = size;
+	const ctx = canvas.getContext("2d");
+	if (!ctx) return null;
+	const c = size / 2;
+	const grad = ctx.createRadialGradient(c, c, 0, c, c, c);
+	grad.addColorStop(0, "rgba(0,0,0,0.72)");
+	grad.addColorStop(0.35, "rgba(0,0,0,0.38)");
+	grad.addColorStop(0.7, "rgba(0,0,0,0.1)");
+	grad.addColorStop(1, "rgba(0,0,0,0)");
+	ctx.fillStyle = grad;
+	ctx.fillRect(0, 0, size, size);
+	contactShadowTex = new THREE.CanvasTexture(canvas);
+	contactShadowTex.colorSpace = THREE.SRGBColorSpace;
+	return contactShadowTex;
+}
+
+/**
+ * Parent subject + top stone (+ optional extras) under one pivot, with a baked
+ * contact shadow. Mid/base platforms stay put; only the top layer spins.
+ */
+function bundleShowcase(model, subject, topPlatformName, key, extras = []) {
+	if (!subject) return null;
+	const existing = model.getObjectByName(`Showcase_${key}`);
+	if (existing) {
+		for (const extra of extras) {
+			if (extra && extra.parent !== existing) existing.attach(extra);
+		}
+		return existing;
+	}
+
+	const top = model.getObjectByName(topPlatformName);
+	if (!top) return null;
+
+	model.updateMatrixWorld(true);
+	const box = new THREE.Box3().setFromObject(top);
+	const center = box.getCenter(new THREE.Vector3());
+	const size = box.getSize(new THREE.Vector3());
+	const topY = box.max.y;
+
+	const group = new THREE.Group();
+	group.name = `Showcase_${key}`;
+	const parent = subject.parent ?? model;
+	parent.add(group);
+	// Box3 center is world-space; group.position is local to parent
+	group.position.copy(center);
+	parent.worldToLocal(group.position);
+	group.updateMatrixWorld(true);
+
+	group.attach(subject);
+	group.attach(top);
+	for (const extra of extras) {
+		if (extra && extra !== subject && extra !== top) group.attach(extra);
+	}
+
+	const tex = getContactShadowTexture();
+	if (tex) {
+		const radius = Math.min(size.x, size.z) * 0.42;
+		const shadow = new THREE.Mesh(
+			new THREE.CircleGeometry(1, 40),
+			new THREE.MeshBasicMaterial({
+				map: tex,
+				color: "#1a1208",
+				transparent: true,
+				opacity: 0.85,
+				depthWrite: false,
+				toneMapped: false,
+			}),
+		);
+		shadow.name = `ContactShadow_${key}`;
+		shadow.rotation.x = -Math.PI / 2;
+		shadow.scale.setScalar(radius);
+		shadow.position.set(0, topY - center.y + 0.012, 0);
+		shadow.renderOrder = 2;
+		shadow.castShadow = false;
+		shadow.receiveShadow = false;
+		group.add(shadow);
+	}
+
+	group.userData.baseY = group.position.y;
+	return group;
+}
 
 const HIDDEN_NAMES = new Set([
 	"PineA",
@@ -172,6 +275,64 @@ function buildMaterialLibrary(stoneMap, rippleMap) {
 				return put(name, mat);
 			}
 
+			/**
+			 * Moon crystal gem — soft translucent lilac (no Physical transmission;
+			 * that goes black under EffectComposer).
+			 */
+			if (
+				name === "Crystal" ||
+				name === "Crystal shader.001" ||
+				name.startsWith("Crystal shader")
+			) {
+				const crystal = new THREE.MeshStandardMaterial({
+					name: "Crystal",
+					color: "#9b8cff",
+					emissive: "#6e5cff",
+					emissiveIntensity: 0.7,
+					roughness: 0.14,
+					metalness: 0.08,
+					transparent: true,
+					opacity: 0.58,
+					depthWrite: false,
+					flatShading: true,
+					toneMapped: true,
+					envMapIntensity: 1.9,
+				});
+				crystal.userData.glow = "moonCrystal";
+				return put(name, crystal);
+			}
+
+			/** Support rings / swirl — was white ei=9 (sun). Soft lunar violet instead. */
+			if (name === "Lava two.001" || name.startsWith("Lava two")) {
+				const lava = new THREE.MeshStandardMaterial({
+					name: "Lava two.001",
+					color: "#0a0814",
+					emissive: "#8b78ff",
+					emissiveIntensity: 1.15,
+					roughness: 1,
+					metalness: 0,
+					flatShading: true,
+					toneMapped: false,
+				});
+				lava.userData.glow = "moonRing";
+				return put(name, lava);
+			}
+
+			/** Rivets — cool dark metal so they don’t flash white */
+			if (name === "Oil Slick Metal.001" || name.startsWith("Oil Slick")) {
+				const metal = source.clone();
+				metal.name = name;
+				metal.color.set("#3a4258");
+				metal.emissive?.set?.("#000000");
+				metal.emissiveIntensity = 0;
+				metal.roughness = 0.28;
+				metal.metalness = 0.95;
+				metal.envMapIntensity = 1.3;
+				metal.flatShading = true;
+				metal.needsUpdate = true;
+				return put(name, metal);
+			}
+
 			if (name === "HorizonGlow") {
 				mat.color.set("#000000");
 				mat.emissive.set(HORIZON_GLOW);
@@ -181,6 +342,7 @@ function buildMaterialLibrary(stoneMap, rippleMap) {
 				mat.opacity = HORIZON_OPACITY;
 				mat.depthWrite = false;
 				mat.fog = false;
+				mat.userData.horizonGlow = true;
 				return put(name, mat);
 			}
 
@@ -356,14 +518,31 @@ export default function Mountain() {
 	const model = useMemo(() => scene.clone(true), [scene]);
 	const stoneMap = useMemo(() => createStoneTexture(), []);
 	const rippleMap = useMemo(() => createRippleTexture(), []);
-	const glows = useRef({ streetLamp: [], lighthouse: [] });
+	const glows = useRef({
+		streetLamp: [],
+		lighthouse: [],
+		moonCrystal: [],
+		moonRing: [],
+	});
 	const waterMats = useRef([]);
+	const horizonMats = useRef([]);
+	const spinRoots = useRef({ girl: null, bakery: null, crystal: null });
 
 	useLayoutEffect(() => {
 		const library = buildMaterialLibrary(stoneMap, rippleMap);
-		const nextGlows = { streetLamp: [], lighthouse: [] };
+		const nextGlows = {
+			streetLamp: [],
+			lighthouse: [],
+			moonCrystal: [],
+			moonRing: [],
+		};
 		const nextWater = [];
+		const nextHorizon = [];
 		const tracked = new Set();
+		spinRoots.current = { girl: null, bakery: null, crystal: null };
+		let girlMesh = null;
+		let bakeryMesh = null;
+		let benchMesh = null;
 
 		model.traverse((child) => {
 			if (HIDDEN_NAMES.has(child.name)) {
@@ -371,13 +550,16 @@ export default function Mountain() {
 				return;
 			}
 
+			if (child.name === GIRL_MESH) girlMesh = child;
+			if (child.name === BAKERY_MESH) bakeryMesh = child;
+			if (child.name === BENCH_MESH) benchMesh = child;
+
 			if (!child.isMesh) return;
 
 			const foliage = isFoliageName(child.name);
 			const isLampGlass =
 				/^Street_Light/i.test(child.name) || child.name === "Cylinder.025";
-
-			// Trees cast again — shadow map is baked once (see ShadowBake)
+			// Models cast for sun bake + live stage spots (spinning subjects)
 			child.castShadow = !isLampGlass;
 			child.receiveShadow = true;
 
@@ -392,12 +574,15 @@ export default function Mountain() {
 
 			child.material = Array.isArray(child.material) ? materials : materials[0];
 
+			if (child.name === "Crystal001") child.renderOrder = 2;
+
 			for (const mat of materials) {
 				if (tracked.has(mat)) continue;
 				tracked.add(mat);
 				const kind = mat.userData?.glow;
 				if (kind && nextGlows[kind]) nextGlows[kind].push(mat);
 				if (mat.userData?.water) nextWater.push(mat);
+				if (mat.userData?.horizonGlow) nextHorizon.push(mat);
 			}
 
 			// Facet bake only on big ground meshes
@@ -419,12 +604,36 @@ export default function Mountain() {
 
 		mergeMeshesByMaterial(model, MERGE_MATS);
 
+		// Bundle model + top stone + baked shadow; mid/base stones stay fixed
+		spinRoots.current.girl = bundleShowcase(
+			model,
+			girlMesh,
+			SHOWCASE_TOP_PLATFORM.girl,
+			"girl",
+		);
+		spinRoots.current.bakery = bundleShowcase(
+			model,
+			bakeryMesh,
+			SHOWCASE_TOP_PLATFORM.bakery,
+			"bakery",
+		);
+		spinRoots.current.crystal = bundleShowcase(
+			model,
+			benchMesh,
+			SHOWCASE_TOP_PLATFORM.crystal,
+			"crystal",
+		);
+
 		glows.current = nextGlows;
 		waterMats.current = nextWater;
+		horizonMats.current = nextHorizon;
 	}, [model, stoneMap, rippleMap]);
 
-	useFrame(({ clock }) => {
+	useFrame(({ clock }, delta) => {
 		const t = clock.elapsedTime;
+		const focus = getFocusAmount();
+		const stop = getFocusStop();
+		const sun = 1 - focus * 0.95;
 		for (const mat of glows.current.streetLamp) {
 			mat.emissiveIntensity =
 				BIG_LAMP_INTENSITY * flicker(t, mat.userData.glowSeed);
@@ -433,10 +642,34 @@ export default function Mountain() {
 			mat.emissiveIntensity =
 				LIGHTHOUSE_INTENSITY * flicker(t, mat.userData.glowSeed);
 		}
+		for (const mat of glows.current.moonCrystal) {
+			mat.emissiveIntensity = 0.6 + Math.sin(t * 0.9) * 0.15;
+		}
+		for (const mat of glows.current.moonRing) {
+			mat.emissiveIntensity = 1.0 + Math.sin(t * 1.1) * 0.2;
+		}
+		for (const mat of horizonMats.current) {
+			mat.opacity = HORIZON_OPACITY * sun;
+			mat.emissiveIntensity = HORIZON_INTENSITY * sun;
+		}
 		for (const mat of waterMats.current) {
 			if (!mat.bumpMap) continue;
 			mat.bumpMap.offset.x = t * 0.008;
 			mat.bumpMap.offset.y = Math.sin(t * 0.05) * 0.05;
+		}
+
+		const roots = spinRoots.current;
+		const active =
+			stop === 1
+				? roots.girl
+				: stop === 2
+					? roots.bakery
+					: stop === 3
+						? roots.crystal
+						: null;
+
+		if (active && focus > 0.02) {
+			active.rotation.y += delta * SPIN_SPEED * focus;
 		}
 	});
 

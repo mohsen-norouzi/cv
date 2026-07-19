@@ -1,3 +1,4 @@
+import { useFrame } from "@react-three/fiber";
 import {
 	Bloom,
 	BrightnessContrast,
@@ -8,6 +9,7 @@ import {
 	Vignette,
 } from "@react-three/postprocessing";
 import { ToneMappingMode } from "postprocessing";
+import { useRef } from "react";
 import * as THREE from "three";
 import {
 	BLOOM_INTENSITY,
@@ -19,6 +21,7 @@ import {
 	VIGNETTE_DARKNESS,
 	VIGNETTE_OFFSET,
 } from "./constants";
+import { getFocusAmount } from "./focusStore";
 
 /**
  * Post stack. N8AO is back in its cheapest config — the earlier FPS hit was
@@ -26,6 +29,20 @@ import {
  * time still spikes, this is the first thing to drop again.
  */
 export default function PostFX() {
+	const vignette = useRef(null);
+	const grade = useRef(null);
+
+	useFrame(() => {
+		const f = getFocusAmount();
+		if (vignette.current) {
+			vignette.current.darkness = VIGNETTE_DARKNESS + f * 0.35;
+		}
+		if (grade.current) {
+			grade.current.brightness = BRIGHTNESS;
+			grade.current.contrast = CONTRAST;
+		}
+	});
+
 	return (
 		<EffectComposer
 			multisampling={0}
@@ -48,8 +65,16 @@ export default function PostFX() {
 				radius={BLOOM_RADIUS}
 			/>
 			<HueSaturation saturation={SATURATION} />
-			<BrightnessContrast brightness={BRIGHTNESS} contrast={CONTRAST} />
-			<Vignette offset={VIGNETTE_OFFSET} darkness={VIGNETTE_DARKNESS} />
+			<BrightnessContrast
+				ref={grade}
+				brightness={BRIGHTNESS}
+				contrast={CONTRAST}
+			/>
+			<Vignette
+				ref={vignette}
+				offset={VIGNETTE_OFFSET}
+				darkness={VIGNETTE_DARKNESS}
+			/>
 			<ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
 		</EffectComposer>
 	);

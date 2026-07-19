@@ -2,7 +2,11 @@ import { Html } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useLayoutEffect, useRef, useState } from "react";
 import * as THREE from "three";
-import { BAKERY_POSITION, GIRL_POSITION } from "./constants";
+import {
+	BAKERY_POSITION,
+	CRYSTAL_POSITION,
+	GIRL_POSITION,
+} from "./constants";
 import { getScrollProgress } from "./scrollStore";
 
 const projects = [
@@ -27,6 +31,17 @@ const projects = [
 			BAKERY_POSITION.z + 0.4,
 		),
 		side: "right",
+	},
+	{
+		id: "03",
+		title: "Moon Crystal",
+		blurb: "A glowing landmark at the top of the path.",
+		position: new THREE.Vector3(
+			CRYSTAL_POSITION.x - 0.2,
+			CRYSTAL_POSITION.y + 2.1,
+			CRYSTAL_POSITION.z - 0.2,
+		),
+		side: "left",
 	},
 ];
 

@@ -3,6 +3,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { BIG_LAMP_INTENSITY } from "./constants";
+import { getFocusAmount } from "./focusStore";
 import { flicker, hashSeed } from "./flicker";
 
 const MODEL_URL = "/Try1.glb?v=7";
@@ -97,6 +98,7 @@ export default function StreetLamps() {
 
 		const active = new Set(ranked.slice(0, MAX_LAMPS).map((r) => r.index));
 		const halo = haloRef.current;
+		const world = 1 - getFocusAmount() * 0.85;
 
 		for (let i = 0; i < lamps.length; i++) {
 			const lamp = lamps[i];
@@ -106,7 +108,8 @@ export default function StreetLamps() {
 			if (light) {
 				if (active.has(i)) {
 					light.visible = true;
-					light.intensity = BIG_LAMP_INTENSITY * FILL_RATIO * live;
+					light.intensity =
+						BIG_LAMP_INTENSITY * FILL_RATIO * live * world;
 				} else {
 					light.visible = false;
 					light.intensity = 0;
