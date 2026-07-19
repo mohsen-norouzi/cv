@@ -1,3 +1,5 @@
+import { playWhoosh } from "./audioStore";
+
 const listeners = new Set();
 
 /** 0 = hero, 1 = girl, 2 = bakery, 3 = bench */
@@ -93,6 +95,7 @@ export function snapScroll(direction) {
 
 	if (raf) cancelAnimationFrame(raf);
 	animating = true;
+	playWhoosh();
 
 	const tick = (now) => {
 		const t = Math.min(1, Math.max(0, (now - start) / DURATION_MS));

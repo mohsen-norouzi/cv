@@ -2,6 +2,7 @@ import { Canvas } from "@react-three/fiber";
 import { Suspense } from "react";
 import * as THREE from "three";
 import HeroContent from "./components/HeroContent";
+import MusicToggle from "./components/MusicToggle";
 import Navbar from "./components/Navbar";
 import SceneLoader from "./components/SceneLoader";
 import ScrollCue from "./components/ScrollCue";
@@ -51,6 +52,7 @@ function App() {
 				<HeroContent />
 				<SectionCaption />
 				<ScrollCue />
+				<MusicToggle />
 			</div>
 		</div>
 	);

@@ -12,7 +12,7 @@ import SkyDome from "./experience/SkyDome";
 export default function Experience() {
 	return (
 		<>
-			<Perf />
+			{/* <Perf /> */}
 			<Atmosphere />
 			<SkyDome />
 			<EnvLight intensity={0.45} />
