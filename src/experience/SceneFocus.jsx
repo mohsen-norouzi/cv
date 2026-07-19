@@ -16,7 +16,12 @@ import {
 	setFocus,
 	setFocusReveal,
 } from "./focusStore";
-import { getScrollProgress, isScrollAnimating } from "./scrollStore";
+import {
+	continueSnapAfterExit,
+	getScrollProgress,
+	isExitPending,
+	isScrollAnimating,
+} from "./scrollStore";
 
 /** Warm stage key */
 const SPOT_COLOR = "#ffe0a8";
@@ -112,6 +117,8 @@ export default function SceneFocus({
 	const textAmt = useRef(0);
 	const hold = useRef(0);
 	const lastStop = useRef(0);
+	/** 0 idle · 1 hide text · 2 hide light · 3 hand off to camera */
+	const exitStage = useRef(0);
 	const target = useMemo(() => new THREE.Object3D(), []);
 	const light = useRef(null);
 	const beam = useRef(null);
@@ -136,40 +143,86 @@ export default function SceneFocus({
 		const f = focus.current;
 		setFocus(f, stop);
 
-		// Reset staged reveals when changing stops
-		if (stop !== lastStop.current) {
+		// Reset staged reveals when changing stops (after camera move)
+		if (stop !== lastStop.current && !isExitPending()) {
 			lastStop.current = stop;
 			hold.current = 0;
 			spotAmt.current = 0;
 			textAmt.current = 0;
+			exitStage.current = 0;
 		}
 
-		/**
-		 * Sequence after scroll lands:
-		 * 1) wait until camera settled + scroll snap done
-		 * 2) brief beat
-		 * 3) spotlight eases in
-		 * 4) text follows once the spot is mostly on
-		 */
-		const arrived =
-			stop >= 1 && f > 0.9 && !isScrollAnimating() && amount > 0.85;
-		if (arrived) hold.current += delta;
-		else hold.current = 0;
+		let spotTarget = 0;
+		let textTarget = 0;
 
-		const spotTarget = arrived && hold.current > 0.4 ? 1 : 0;
-		spotAmt.current = THREE.MathUtils.damp(
-			spotAmt.current,
-			spotTarget,
-			spotTarget > 0 ? 1.15 : 6,
-			delta,
-		);
-		const textTarget = spotAmt.current > 0.62 ? 1 : 0;
-		textAmt.current = THREE.MathUtils.damp(
-			textAmt.current,
-			textTarget,
-			textTarget > 0 ? 2.2 : 8,
-			delta,
-		);
+		if (isExitPending()) {
+			/**
+			 * Leave sequence: text out → light out → then move camera
+			 */
+			if (exitStage.current === 0) exitStage.current = 1;
+
+			if (exitStage.current === 1) {
+				textTarget = 0;
+				spotTarget = 1; // keep spot while text leaves
+				if (textAmt.current < 0.15) exitStage.current = 2;
+			} else if (exitStage.current === 2) {
+				// Kill light and move in the same beat
+				textTarget = 0;
+				spotTarget = 0;
+				spotAmt.current = 0;
+				textAmt.current = 0;
+				exitStage.current = 3;
+				continueSnapAfterExit();
+			} else {
+				textTarget = 0;
+				spotTarget = 0;
+			}
+
+			if (exitStage.current === 1) {
+				textAmt.current = THREE.MathUtils.damp(
+					textAmt.current,
+					textTarget,
+					12,
+					delta,
+				);
+				spotAmt.current = THREE.MathUtils.damp(
+					spotAmt.current,
+					spotTarget,
+					8,
+					delta,
+				);
+			}
+		} else {
+			exitStage.current = 0;
+
+			/**
+			 * Arrive sequence: wait until settled → light in → text in
+			 */
+			const arrived =
+				stop >= 1 &&
+				f > 0.92 &&
+				!isScrollAnimating() &&
+				amount > 0.9;
+			if (arrived) hold.current += delta;
+			else hold.current = 0;
+
+			spotTarget = arrived && hold.current > 0.55 ? 1 : 0;
+			spotAmt.current = THREE.MathUtils.damp(
+				spotAmt.current,
+				spotTarget,
+				spotTarget > 0 ? 1.05 : 5,
+				delta,
+			);
+			textTarget =
+				arrived && spotAmt.current > 0.72 && hold.current > 1.1 ? 1 : 0;
+			textAmt.current = THREE.MathUtils.damp(
+				textAmt.current,
+				textTarget,
+				textTarget > 0 ? 2 : 7,
+				delta,
+			);
+		}
+
 		setFocusReveal(spotAmt.current, textAmt.current);
 
 		const s = spotAmt.current;

@@ -5,7 +5,7 @@ import {
 } from "../experience/loadStore";
 import {
 	getScrollProgress,
-	snapScroll,
+	requestSnap,
 	subscribeScroll,
 } from "../experience/scrollStore";
 import FadeUp from "./FadeUp";
@@ -71,7 +71,7 @@ export default function HeroContent() {
 					<div className="flex flex-wrap items-center gap-7">
 						<button
 							type="button"
-							onClick={() => snapScroll(1)}
+							onClick={() => requestSnap(1)}
 							className="font-ui inline-flex items-center gap-2 rounded-sm bg-accent px-5 py-3 text-[11px] font-semibold tracking-[0.18em] text-[#1f1a14] uppercase shadow-[0_8px_28px_rgba(0,0,0,0.35)] transition-opacity hover:opacity-90"
 						>
 							View my work

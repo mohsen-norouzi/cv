@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { isScrollAnimating, snapScroll } from "./scrollStore";
+import { isScrollAnimating, requestSnap } from "./scrollStore";
 
 /** Accumulated wheel delta needed to fire a snap (trackpads send tiny ticks). */
 const WHEEL_ACCUM_THRESHOLD = 24;
@@ -35,7 +35,7 @@ export default function ScrollStealer() {
 			if (gestureLocked || isScrollAnimating()) return false;
 			gestureLocked = true;
 			wheelAccum = 0;
-			snapScroll(direction);
+			requestSnap(direction);
 			armIdleUnlock();
 			return true;
 		};

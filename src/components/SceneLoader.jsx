@@ -7,6 +7,7 @@ import {
 
 /**
  * Full-screen loader until the GLB is fetched and Mountain has finished setup.
+ * Dismisses once — never covers the UI again if useProgress flickers.
  */
 export default function SceneLoader() {
 	const { progress, active } = useProgress();
@@ -15,24 +16,17 @@ export default function SceneLoader() {
 		getSceneReady,
 		getSceneReady,
 	);
-	const [gone, setGone] = useState(false);
 	const [fadeOut, setFadeOut] = useState(false);
+	const [gone, setGone] = useState(false);
 
-	const loading = !sceneReady || active || progress < 100;
+	const ready = sceneReady && !active && progress >= 100;
 
 	useEffect(() => {
-		if (loading) {
-			setFadeOut(false);
-			setGone(false);
-			return;
-		}
-		const t = requestAnimationFrame(() => setFadeOut(true));
+		if (gone || fadeOut || !ready) return;
+		setFadeOut(true);
 		const hide = setTimeout(() => setGone(true), 700);
-		return () => {
-			cancelAnimationFrame(t);
-			clearTimeout(hide);
-		};
-	}, [loading]);
+		return () => clearTimeout(hide);
+	}, [ready, fadeOut, gone]);
 
 	if (gone) return null;
 
@@ -46,7 +40,7 @@ export default function SceneLoader() {
 				transition: "opacity 0.65s ease",
 				pointerEvents: fadeOut ? "none" : "auto",
 			}}
-			aria-busy={loading}
+			aria-busy={!ready}
 			aria-live="polite"
 		>
 			<p className="font-display text-[13px] font-semibold tracking-[0.28em] text-[#2a2a2a]/uppercase">

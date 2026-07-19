@@ -8,8 +8,11 @@ let progress = 0;
 let raf = 0;
 let animating = false;
 
+/** Pending leave sequence before the camera moves */
+let exitGate = null; // { direction: 1|-1 }
+
 /** Snap between stops */
-const DURATION_MS = 750;
+const DURATION_MS = 900;
 
 /** Soft ease — long ease-in/out, gentle middle (cozy, not snappy) */
 function easeInOutQuint(t) {
@@ -29,7 +32,11 @@ export function getScrollSection() {
 }
 
 export function isScrollAnimating() {
-	return animating;
+	return animating || exitGate != null;
+}
+
+export function isExitPending() {
+	return exitGate != null;
 }
 
 export function setScrollProgress(next) {
@@ -38,8 +45,38 @@ export function setScrollProgress(next) {
 }
 
 /**
- * Snap one section forward/back.
- * direction > 0 → next stop, direction < 0 → previous.
+ * User intent to change stop.
+ * From a project stop: exit text → light first, then camera moves.
+ * From hero: move immediately (nothing to tear down).
+ */
+export function requestSnap(direction) {
+	if (animating || exitGate) return;
+
+	const next = Math.min(
+		SCROLL_SECTION_COUNT - 1,
+		Math.max(0, section + (direction > 0 ? 1 : -1)),
+	);
+	if (next === section) return;
+
+	if (section >= 1) {
+		exitGate = { direction: direction > 0 ? 1 : -1 };
+		return;
+	}
+
+	snapScroll(direction);
+}
+
+/** Called by SceneFocus once text + spot have fully hidden */
+export function continueSnapAfterExit() {
+	if (!exitGate) return;
+	const { direction } = exitGate;
+	exitGate = null;
+	snapScroll(direction);
+}
+
+/**
+ * Snap one section forward/back immediately (camera move).
+ * Prefer `requestSnap` for user gestures.
  */
 export function snapScroll(direction) {
 	const next = Math.min(
