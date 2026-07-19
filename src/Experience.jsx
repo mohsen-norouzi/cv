@@ -7,6 +7,7 @@ import Mist from "./experience/Mist";
 import Mountain from "./experience/Mountain";
 import PostFX from "./experience/PostFX";
 import ProjectLabels from "./experience/ProjectLabels";
+import ShadowBake from "./experience/ShadowBake";
 import SkyDome from "./experience/SkyDome";
 
 export default function Experience() {
@@ -15,10 +16,11 @@ export default function Experience() {
 			<Perf />
 			<Atmosphere />
 			<SkyDome />
-			<EnvLight intensity={0.5} />
+			<EnvLight intensity={0.45} />
 			<CameraRig />
 			<Lights />
 			<Mountain />
+			<ShadowBake frames={6} />
 			<Mist />
 			<ProjectLabels />
 			<PostFX />

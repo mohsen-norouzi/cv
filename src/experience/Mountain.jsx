@@ -2,6 +2,7 @@ import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
+import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import {
 	BIG_LAMP_INTENSITY,
 	BOULDER_COLOR,
@@ -18,10 +19,8 @@ import {
 import { flicker, hashSeed } from "./flicker";
 import { createStoneTexture } from "./stoneTexture";
 
-/** Cache-bust so a replaced Try1.glb isn't served from an old browser cache */
 const MODEL_URL = "/Try1.glb?v=7";
 
-/** Template / removed props */
 const HIDDEN_NAMES = new Set([
 	"PineA",
 	"PineB",
@@ -36,23 +35,13 @@ const HIDDEN_NAMES = new Set([
 
 const PINE_MATS = new Set(["PineA_f", "PineB_f", "RoundTree_f", "Tuft"]);
 
-/** Materials that get per-facet tonal variation (the hand-crafted look) */
+/** Facet variation only on a few large meshes (toNonIndexed is expensive) */
 const VARIED_MATS = {
 	Terrain: 0.1,
 	Road: 0.07,
-	Boulder: 0.13,
 	Platform: 0.06,
-	PineA_f: 0.09,
-	PineB_f: 0.09,
-	RoundTree_f: 0.09,
-	Tuft: 0.1,
 };
 
-/**
- * Give every triangle a slight luminance / warm-cool nudge via vertex colors.
- * Offline renders read as "expensive" partly because no two facets are the
- * exact same color; flat-tinted low-poly reads as plastic.
- */
 function addFacetVariation(geometry, amount, seed) {
 	const geo = geometry.index ? geometry.toNonIndexed() : geometry;
 	const count = geo.attributes.position.count;
@@ -78,9 +67,8 @@ function addFacetVariation(geometry, amount, seed) {
 	return geo;
 }
 
-/** Blurry noise bump map — reads as slow rippling water under a low sun */
 function createRippleTexture() {
-	const size = 256;
+	const size = 128;
 	const canvas = document.createElement("canvas");
 	canvas.width = size;
 	canvas.height = size;
@@ -89,10 +77,10 @@ function createRippleTexture() {
 
 	ctx.fillStyle = "#808080";
 	ctx.fillRect(0, 0, size, size);
-	for (let i = 0; i < 320; i++) {
+	for (let i = 0; i < 120; i++) {
 		const x = Math.random() * size;
 		const y = Math.random() * size;
-		const r = 6 + Math.random() * 22;
+		const r = 4 + Math.random() * 14;
 		const lum = 108 + Math.floor(Math.random() * 40);
 		const grad = ctx.createRadialGradient(x, y, 0, x, y, r);
 		grad.addColorStop(0, `rgba(${lum},${lum},${lum},0.35)`);
@@ -108,22 +96,11 @@ function createRippleTexture() {
 	return texture;
 }
 
-/** Chance a given foliage mesh gets a random color nudge */
-const FOLIAGE_VARIETY_CHANCE = 0.4;
-
 function tintFoliage(mat, matName) {
 	mat.color.set(PINE_COLOR);
 	if (matName === "Tuft") mat.color.offsetHSL(0.02, 0.05, 0.08);
 	if (matName === "PineB_f") mat.color.offsetHSL(0.02, -0.02, 0.04);
 	if (matName === "RoundTree_f") mat.color.offsetHSL(-0.02, 0.04, 0.06);
-
-	if (Math.random() > FOLIAGE_VARIETY_CHANCE) return;
-
-	mat.color.offsetHSL(
-		(Math.random() - 0.5) * 0.1,
-		(Math.random() - 0.5) * 0.25,
-		(Math.random() - 0.5) * 0.14,
-	);
 }
 
 function makeLampMaterial({ glowKey, seed }) {
@@ -143,111 +120,212 @@ function makeLampMaterial({ glowKey, seed }) {
 	return mat;
 }
 
-function prepareMaterial(material, stoneMap, meshName) {
-	if (!material) return material;
+/**
+ * Build shared materials once — 85 pines must NOT each get a unique clone.
+ */
+function buildMaterialLibrary(stoneMap, rippleMap) {
+	const cache = new Map();
 
-	const mat = material.clone();
-	mat.flatShading = true;
-	mat.needsUpdate = true;
-
-	if (mat.name === "Lamp") {
-		mat.emissive.set("#000000");
-		mat.emissiveIntensity = 0;
+	const put = (key, mat) => {
+		cache.set(key, mat);
 		return mat;
-	}
+	};
 
-	if (mat.name === "HorizonGlow") {
-		mat.color.set("#000000");
-		mat.emissive.set(HORIZON_GLOW);
-		mat.emissiveIntensity = HORIZON_INTENSITY;
-		mat.toneMapped = false;
-		mat.transparent = true;
-		mat.opacity = HORIZON_OPACITY;
-		mat.depthWrite = false;
-		mat.fog = false;
-		return mat;
-	}
+	return {
+		get(source, meshName) {
+			if (!source) return source;
+			const name = source.name || "unnamed";
 
-	if (mat.name === "LH_Lamp") {
-		return makeLampMaterial({
-			glowKey: "lighthouse",
-			seed: hashSeed("lighthouse"),
-		});
-	}
+			// Lamp glass: unique seed per mesh (only a handful)
+			if (name === "LH_Lamp") {
+				const key = `LH_Lamp:${meshName}`;
+				if (cache.has(key)) return cache.get(key);
+				return put(
+					key,
+					makeLampMaterial({
+						glowKey: "lighthouse",
+						seed: hashSeed("lighthouse"),
+					}),
+				);
+			}
+			if (name === "Light") {
+				const key = `Light:${meshName}`;
+				if (cache.has(key)) return cache.get(key);
+				return put(
+					key,
+					makeLampMaterial({
+						glowKey: "streetLamp",
+						seed: hashSeed(meshName || "street"),
+					}),
+				);
+			}
 
-	if (mat.name === "Light") {
-		return makeLampMaterial({
-			glowKey: "streetLamp",
-			seed: hashSeed(meshName || "street"),
-		});
-	}
+			if (cache.has(name)) return cache.get(name);
 
-	if (mat.name === "Road") {
-		mat.color.set(PATH_COLOR);
-		mat.roughness = 0.88;
-		mat.metalness = 0;
-		if (stoneMap) {
-			mat.map = stoneMap;
-			mat.map.repeat.set(10, 10);
+			const mat = source.clone();
+			mat.flatShading = true;
+			mat.needsUpdate = true;
+
+			if (name === "Lamp") {
+				mat.emissive.set("#000000");
+				mat.emissiveIntensity = 0;
+				return put(name, mat);
+			}
+
+			if (name === "HorizonGlow") {
+				mat.color.set("#000000");
+				mat.emissive.set(HORIZON_GLOW);
+				mat.emissiveIntensity = HORIZON_INTENSITY;
+				mat.toneMapped = false;
+				mat.transparent = true;
+				mat.opacity = HORIZON_OPACITY;
+				mat.depthWrite = false;
+				mat.fog = false;
+				return put(name, mat);
+			}
+
+			if (name === "Road") {
+				mat.color.set(PATH_COLOR);
+				mat.roughness = 0.42;
+				mat.metalness = 0;
+				mat.envMapIntensity = 0.55;
+				if (stoneMap) {
+					mat.map = stoneMap;
+					mat.map.repeat.set(10, 10);
+				}
+				return put(name, mat);
+			}
+
+			if (name === "Platform") {
+				mat.color.set(PLATFORM_COLOR);
+				mat.roughness = 0.5;
+				mat.metalness = 0;
+				mat.envMapIntensity = 0.5;
+				if (stoneMap) {
+					mat.map = stoneMap.clone();
+					mat.map.repeat.set(3, 3);
+					mat.map.needsUpdate = true;
+				}
+				return put(name, mat);
+			}
+
+			if (name === "Terrain") {
+				mat.color.set(TERRAIN_COLOR);
+				mat.roughness = 0.95;
+				mat.metalness = 0;
+				return put(name, mat);
+			}
+
+			if (name === "Water") {
+				mat.color.set(WATER_COLOR);
+				mat.roughness = 0.06;
+				mat.metalness = 0.55;
+				mat.envMapIntensity = 1.3;
+				mat.bumpMap = rippleMap;
+				mat.bumpScale = 0.35;
+				mat.userData.water = true;
+				return put(name, mat);
+			}
+
+			if (name === "Boulder") {
+				mat.color.set(BOULDER_COLOR);
+				mat.roughness = 0.7;
+				mat.envMapIntensity = 0.5;
+				return put(name, mat);
+			}
+
+			if (PINE_MATS.has(name)) {
+				tintFoliage(mat, name);
+				return put(name, mat);
+			}
+
+			return put(name, mat);
+		},
+	};
+}
+
+function isFoliageName(name) {
+	return /^(PineA|PineB|RoundTree)/i.test(name);
+}
+
+/** Materials we merge into one draw call each (dozens of tree meshes → few) */
+const MERGE_MATS = new Set([
+	"PineA_f",
+	"PineB_f",
+	"RoundTree_f",
+	"Tuft",
+	"Trunk",
+]);
+
+/**
+ * Bake world transforms and merge every mesh sharing a material into one Mesh.
+ * Biggest draw-call win for this forest scene.
+ */
+function mergeMeshesByMaterial(model, materialNames) {
+	model.updateMatrixWorld(true);
+
+	/** @type {Map<string, { material: THREE.Material, geos: THREE.BufferGeometry[], sources: THREE.Mesh[] }>} */
+	const buckets = new Map();
+
+	model.traverse((child) => {
+		if (!child.isMesh || !child.visible) return;
+		const mat = child.material;
+		if (!mat || Array.isArray(mat)) return;
+		if (!materialNames.has(mat.name)) return;
+		if (!child.geometry) return;
+
+		const key = mat.uuid;
+		if (!buckets.has(key)) {
+			buckets.set(key, { material: mat, geos: [], sources: [] });
 		}
-		return mat;
-	}
+		const bucket = buckets.get(key);
+		const geo = child.geometry.clone();
+		geo.applyMatrix4(child.matrixWorld);
+		bucket.geos.push(geo);
+		bucket.sources.push(child);
+	});
 
-	if (mat.name === "Platform") {
-		mat.color.set(PLATFORM_COLOR);
-		mat.roughness = 0.9;
-		mat.metalness = 0;
-		if (stoneMap) {
-			mat.map = stoneMap.clone();
-			mat.map.repeat.set(3, 3);
-			mat.map.needsUpdate = true;
+	for (const { material, geos, sources } of buckets.values()) {
+		if (geos.length < 2) {
+			for (const g of geos) g.dispose();
+			continue;
 		}
-		return mat;
-	}
 
-	if (mat.name === "Terrain") {
-		mat.color.set(TERRAIN_COLOR);
-		mat.roughness = 0.95;
-		mat.metalness = 0;
-		return mat;
-	}
+		const merged = mergeGeometries(geos, false);
+		for (const g of geos) g.dispose();
+		if (!merged) continue;
 
-	if (mat.name === "Water") {
-		mat.color.set(WATER_COLOR);
-		// Mirror-ish so the PMREM sky reflects; bump ripples animated per frame
-		mat.roughness = 0.06;
-		mat.metalness = 0.55;
-		mat.envMapIntensity = 1.3;
-		mat.bumpMap = createRippleTexture();
-		mat.bumpScale = 0.35;
-		mat.userData.water = true;
-		return mat;
-	}
+		merged.computeBoundingSphere();
+		merged.computeBoundingBox();
 
-	if (mat.name === "Boulder") {
-		mat.color.set(BOULDER_COLOR);
-		mat.roughness = 0.95;
-		return mat;
-	}
+		const mesh = new THREE.Mesh(merged, material);
+		mesh.name = `Merged_${material.name}`;
+		mesh.castShadow = true;
+		mesh.receiveShadow = true;
+		mesh.frustumCulled = true;
+		model.add(mesh);
 
-	if (PINE_MATS.has(mat.name)) {
-		tintFoliage(mat, mat.name);
-		return mat;
+		for (const src of sources) {
+			src.visible = false;
+			src.castShadow = false;
+			src.receiveShadow = false;
+		}
 	}
-
-	return mat;
 }
 
 export default function Mountain() {
 	const { scene } = useGLTF(MODEL_URL);
 	const model = useMemo(() => scene.clone(true), [scene]);
 	const stoneMap = useMemo(() => createStoneTexture(), []);
+	const rippleMap = useMemo(() => createRippleTexture(), []);
 	const glows = useRef({ streetLamp: [], lighthouse: [] });
 	const waterMats = useRef([]);
 
 	useLayoutEffect(() => {
+		const library = buildMaterialLibrary(stoneMap, rippleMap);
 		const nextGlows = { streetLamp: [], lighthouse: [] };
 		const nextWater = [];
+		const tracked = new Set();
 
 		model.traverse((child) => {
 			if (HIDDEN_NAMES.has(child.name)) {
@@ -257,34 +335,39 @@ export default function Mountain() {
 
 			if (!child.isMesh) return;
 
+			const foliage = isFoliageName(child.name);
 			const isLampGlass =
 				/^Street_Light/i.test(child.name) || child.name === "Cylinder.025";
+
+			// Trees cast again — shadow map is baked once (see ShadowBake)
 			child.castShadow = !isLampGlass;
 			child.receiveShadow = true;
 
-			const materials = (
-				Array.isArray(child.material) ? child.material : [child.material]
-			)
+			const sources = Array.isArray(child.material)
+				? child.material
+				: [child.material];
+			const materials = sources
 				.filter(Boolean)
-				.map((material) => prepareMaterial(material, stoneMap, child.name));
+				.map((material) => library.get(material, child.name));
 
 			if (materials.length === 0) return;
 
 			child.material = Array.isArray(child.material) ? materials : materials[0];
 
 			for (const mat of materials) {
+				if (tracked.has(mat)) continue;
+				tracked.add(mat);
 				const kind = mat.userData?.glow;
 				if (kind && nextGlows[kind]) nextGlows[kind].push(mat);
 				if (mat.userData?.water) nextWater.push(mat);
 			}
 
-			// Per-facet tonal variation — pick the strongest amount among the
-			// mesh's materials and bake it into vertex colors once
+			// Facet bake only on big ground meshes
 			const facetAmount = Math.max(
 				0,
 				...materials.map((m) => VARIED_MATS[m.name] ?? 0),
 			);
-			if (facetAmount > 0 && child.geometry) {
+			if (facetAmount > 0 && child.geometry && !foliage) {
 				child.geometry = addFacetVariation(
 					child.geometry,
 					facetAmount,
@@ -294,15 +377,13 @@ export default function Mountain() {
 					if (VARIED_MATS[m.name]) m.vertexColors = true;
 				}
 			}
-
-			if (child.geometry && !child.geometry.attributes.normal) {
-				child.geometry.computeVertexNormals();
-			}
 		});
+
+		mergeMeshesByMaterial(model, MERGE_MATS);
 
 		glows.current = nextGlows;
 		waterMats.current = nextWater;
-	}, [model, stoneMap]);
+	}, [model, stoneMap, rippleMap]);
 
 	useFrame(({ clock }) => {
 		const t = clock.elapsedTime;

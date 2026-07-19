@@ -39,21 +39,21 @@ export default function Lights() {
 				groundColor={HEMI_GROUND}
 				intensity={HEMI_INT}
 			/>
+			{/* High-res sun shadow — baked after a few frames via ShadowBake */}
 			<directionalLight
 				position={SUN_POSITION}
 				intensity={KEY_INT}
 				color={KEY_COLOR}
 				castShadow
-				shadow-mapSize={[2048, 2048]}
-				shadow-camera-near={1}
-				shadow-camera-far={200}
-				shadow-camera-left={-48}
+				shadow-mapSize={[4096, 4096]}
+				shadow-camera-near={2}
+				shadow-camera-far={130}
+				shadow-camera-left={-40}
 				shadow-camera-right={48}
-				shadow-camera-top={48}
-				shadow-camera-bottom={-48}
-				shadow-bias={-0.0001}
-				shadow-radius={5}
-				shadow-blurSamples={12}
+				shadow-camera-top={44}
+				shadow-camera-bottom={-30}
+				shadow-bias={-0.00015}
+				shadow-normalBias={0.035}
 			/>
 			<directionalLight
 				position={[50, 18, 30]}
@@ -71,7 +71,7 @@ export default function Lights() {
 				position={LIGHTHOUSE_LAMP}
 				intensity={LIGHTHOUSE_INTENSITY * LH_FILL_RATIO}
 				color="#ffb14a"
-				distance={28}
+				distance={24}
 				decay={2}
 			/>
 		</>

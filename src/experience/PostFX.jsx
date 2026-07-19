@@ -3,7 +3,6 @@ import {
 	BrightnessContrast,
 	EffectComposer,
 	HueSaturation,
-	N8AO,
 	ToneMapping,
 	Vignette,
 } from "@react-three/postprocessing";
@@ -20,26 +19,17 @@ import {
 	VIGNETTE_OFFSET,
 } from "./constants";
 
+/** Lean post stack — N8AO was a major FPS hit */
 export default function PostFX() {
 	return (
 		<EffectComposer
-			multisampling={4}
+			multisampling={0}
 			enableNormalPass={false}
 			frameBufferType={THREE.HalfFloatType}
 		>
-			{/* Contact shadows in crevices — the single biggest "rendered, not
-			    realtime" cue. Half-res keeps it cheap. */}
-			<N8AO
-				halfRes
-				quality="performance"
-				aoRadius={2}
-				intensity={2.6}
-				distanceFalloff={1}
-				color="#3a2e28"
-			/>
 			<Bloom
 				luminanceThreshold={BLOOM_THRESHOLD}
-				luminanceSmoothing={0.28}
+				luminanceSmoothing={0.3}
 				intensity={BLOOM_INTENSITY}
 				mipmapBlur
 				radius={BLOOM_RADIUS}
