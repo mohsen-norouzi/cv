@@ -37,29 +37,39 @@ export default function SectionCaption() {
 	return (
 		<aside
 			key={project.id}
-			className="pointer-events-none absolute bottom-0 left-0 z-20 w-[min(34rem,92vw)]"
+			className="pointer-events-none absolute bottom-0 left-0 z-20 w-full max-w-[34rem] md:w-[min(34rem,92vw)]"
 		>
-			{/* Soft vignette — no hard box edges */}
+			{/* Bottom-left wash — readable over stage light, not a black slab */}
 			<div
 				aria-hidden
-				className="pointer-events-none absolute -inset-x-12 -top-44 bottom-0"
+				className="pointer-events-none absolute -inset-x-9 -top-56 bottom-0 md:-inset-x-15 md:-top-60"
 				style={{
 					opacity: scrimOpacity,
 					background:
-						"radial-gradient(120% 105% at 0% 100%, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.68) 32%, rgba(0,0,0,0.38) 55%, rgba(0,0,0,0.14) 74%, transparent 90%)",
+						"radial-gradient(132% 118% at 0% 100%, rgba(0,0,0,0.96) 0%, rgba(0,0,0,0.82) 26%, rgba(0,0,0,0.52) 50%, rgba(0,0,0,0.2) 72%, transparent 90%)",
 				}}
 			/>
 			<div
 				aria-hidden
-				className="pointer-events-none absolute inset-y-0 left-0 w-[min(100%,32rem)] blur-2xl"
+				className="pointer-events-none absolute inset-y-0 left-0 w-full max-w-[30rem] blur-xl md:max-w-[36rem] md:blur-2xl"
 				style={{
-					opacity: scrimOpacity * 0.95,
+					opacity: scrimOpacity,
 					background:
-						"linear-gradient(to right, rgba(0,0,0,0.58) 0%, rgba(0,0,0,0.28) 50%, transparent 100%)",
+						"linear-gradient(to right, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.45) 42%, rgba(0,0,0,0.14) 72%, transparent 100%)",
+				}}
+			/>
+			{/* Soft floor lift on mobile only */}
+			<div
+				aria-hidden
+				className="pointer-events-none absolute inset-x-0 -top-40 bottom-0 md:hidden"
+				style={{
+					opacity: scrimOpacity * 0.85,
+					background:
+						"linear-gradient(to top, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.28) 48%, transparent 100%)",
 				}}
 			/>
 
-			<div className="relative px-8 pb-10 pt-10 md:px-12 md:pb-14 md:pt-12 lg:px-16">
+			<div className="relative px-5 pb-9 pt-12 sm:px-8 sm:pb-10 md:px-12 md:pb-14 md:pt-12 lg:px-16">
 				<FadeUp active={show} delay={0.02} duration={0.9}>
 					<p className="font-ui mb-2 text-[11px] font-semibold tracking-[0.28em] text-accent uppercase">
 						{project.id}
@@ -71,13 +81,13 @@ export default function SectionCaption() {
 				</FadeUp>
 
 				<FadeUp active={show} delay={0.12} duration={1} y={26}>
-					<h2 className="font-display text-[1.65rem] font-semibold tracking-tight text-white md:text-[1.85rem]">
+					<h2 className="font-display text-[1.45rem] font-semibold tracking-tight text-white sm:text-[1.65rem] md:text-[1.85rem]">
 						{project.title}
 					</h2>
 				</FadeUp>
 
 				<FadeUp active={show} delay={0.24} duration={1}>
-					<p className="font-ui mt-2.5 max-w-[20rem] text-[14px] leading-relaxed text-white/80 md:max-w-[22rem]">
+					<p className="font-ui mt-2.5 max-w-[20rem] text-[13.5px] leading-relaxed text-white/85 sm:text-[14px] md:max-w-[22rem] md:text-white/80">
 						{project.description}
 					</p>
 				</FadeUp>
