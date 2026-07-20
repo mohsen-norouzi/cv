@@ -82,12 +82,12 @@ export default function Navbar() {
 				type="button"
 				onClick={() => requestSnapTo(0)}
 				aria-label="Back to start"
-				className="cursor-pointer transition-opacity hover:opacity-75"
+				className="cursor-pointer drop-shadow-[0_2px_8px_rgba(0,0,0,0.65)] transition-opacity hover:opacity-75"
 			>
 				<Logo />
 			</button>
 
-			<nav className="flex items-center gap-5 md:gap-7">
+			<nav className="flex items-center gap-5 drop-shadow-[0_2px_8px_rgba(0,0,0,0.65)] md:gap-7">
 				{socials.map(({ label, href, Icon, external }) => (
 					<a
 						key={label}
@@ -99,7 +99,7 @@ export default function Navbar() {
 									rel: "noopener noreferrer",
 								}
 							: {})}
-						className="cursor-pointer text-white/70 transition-colors hover:text-white"
+						className="cursor-pointer text-white transition-opacity hover:opacity-80"
 					>
 						<Icon className="size-[18px]" />
 					</a>
@@ -107,7 +107,7 @@ export default function Navbar() {
 
 				<span
 					aria-hidden
-					className="mx-1 h-3.5 w-px bg-white/30 md:mx-2"
+					className="mx-1 h-3.5 w-px bg-white/45 md:mx-2"
 				/>
 
 				<a
@@ -115,7 +115,7 @@ export default function Navbar() {
 					download="Mohsen-Norouzi-Resume.pdf"
 					target="_blank"
 					rel="noopener noreferrer"
-					className="font-ui cursor-pointer text-[11px] font-medium tracking-[0.24em] text-white/70 uppercase transition-colors hover:text-white"
+					className="font-ui cursor-pointer text-[11px] font-medium tracking-[0.24em] text-white uppercase transition-opacity hover:opacity-80"
 				>
 					Resume
 				</a>
