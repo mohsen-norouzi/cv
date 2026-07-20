@@ -8,7 +8,6 @@ import {
 	SKY_TOP,
 	SUN_DIRECTION,
 } from "./constants";
-import { IS_MOBILE } from "./device";
 
 /**
  * Image-based lighting baked from the same palette as the SkyDome.
@@ -62,10 +61,7 @@ export default function EnvLight({ intensity = 0.5 }) {
 			`,
 		});
 
-		const dome = new THREE.Mesh(
-			new THREE.SphereGeometry(10, IS_MOBILE ? 16 : 32, IS_MOBILE ? 12 : 24),
-			skyMat,
-		);
+		const dome = new THREE.Mesh(new THREE.SphereGeometry(10, 32, 24), skyMat);
 		envScene.add(dome);
 
 		const pmrem = new THREE.PMREMGenerator(gl);

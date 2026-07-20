@@ -11,7 +11,7 @@ import {
 	KEY_INT,
 	RIM_INT,
 } from "./constants";
-import { IS_MOBILE } from "./device";
+import { IS_MOBILE, MOBILE_LIGHT_BOOST } from "./device";
 import {
 	computeFocus,
 	setFocus,
@@ -102,8 +102,8 @@ function createPoolTexture() {
 	return texture;
 }
 
-/** Beam dust — tuned final values (fewer motes on mobile) */
-const DUST_COUNT = IS_MOBILE ? 28 : 80;
+/** Beam dust — tuned final values */
+const DUST_COUNT = 80;
 const DUST_SIZE = 0.46;
 const DUST_OPACITY = 1;
 const DUST_DRIFT = 0.01;
@@ -333,28 +333,59 @@ export default function SceneFocus({
 		from.set(subject.x + ox, subject.y + oy, subject.z + oz);
 		to.set(subject.x + lx, subject.y + ly, subject.z + lz);
 
-		if (ambient.current) {
-			ambient.current.intensity = THREE.MathUtils.lerp(
-				AMBIENT_INT,
-				AMBIENT_INT * 0.12,
-				f,
-			);
-		}
-		if (hemi.current) {
-			hemi.current.intensity = THREE.MathUtils.lerp(HEMI_INT, HEMI_INT * 0.1, f);
-		}
-		if (keyLight.current) {
-			keyLight.current.intensity = THREE.MathUtils.lerp(KEY_INT, 0, f);
-			keyLight.current.visible = f < 0.95;
-		}
-		if (fill.current) {
-			fill.current.intensity = THREE.MathUtils.lerp(FILL_INT, FILL_INT * 0.08, f);
-		}
-		if (rim.current) {
-			rim.current.intensity = THREE.MathUtils.lerp(RIM_INT, RIM_INT * 0.1, f);
-		}
-		if (scene.environmentIntensity != null) {
-			scene.environmentIntensity = THREE.MathUtils.lerp(0.45, 0.18, f);
+		const boost = MOBILE_LIGHT_BOOST;
+
+		if (IS_MOBILE) {
+			// Steady daylight — no stage crush, no nuclear fill
+			if (ambient.current) ambient.current.intensity = AMBIENT_INT * boost * 1.35;
+			if (hemi.current) hemi.current.intensity = HEMI_INT * boost;
+			if (keyLight.current) {
+				keyLight.current.intensity = KEY_INT * boost * 0.85;
+				keyLight.current.visible = true;
+			}
+			if (fill.current) fill.current.intensity = FILL_INT * boost * 1.1;
+			if (rim.current) rim.current.intensity = RIM_INT * boost * 1.1;
+			if (scene.environmentIntensity != null) {
+				scene.environmentIntensity = 0;
+			}
+		} else {
+			const ambHi = AMBIENT_INT;
+			const hemiHi = HEMI_INT;
+			const keyHi = KEY_INT;
+			const fillHi = FILL_INT;
+			const rimHi = RIM_INT;
+
+			if (ambient.current) {
+				ambient.current.intensity = THREE.MathUtils.lerp(
+					ambHi,
+					ambHi * 0.12,
+					f,
+				);
+			}
+			if (hemi.current) {
+				hemi.current.intensity = THREE.MathUtils.lerp(
+					hemiHi,
+					hemiHi * 0.1,
+					f,
+				);
+			}
+			if (keyLight.current) {
+				keyLight.current.intensity = THREE.MathUtils.lerp(keyHi, 0, f);
+				keyLight.current.visible = f < 0.95;
+			}
+			if (fill.current) {
+				fill.current.intensity = THREE.MathUtils.lerp(
+					fillHi,
+					fillHi * 0.08,
+					f,
+				);
+			}
+			if (rim.current) {
+				rim.current.intensity = THREE.MathUtils.lerp(rimHi, rimHi * 0.1, f);
+			}
+			if (scene.environmentIntensity != null) {
+				scene.environmentIntensity = THREE.MathUtils.lerp(0.45, 0.18, f);
+			}
 		}
 
 		target.position.copy(to);

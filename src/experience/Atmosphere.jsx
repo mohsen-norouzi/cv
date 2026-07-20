@@ -9,14 +9,17 @@ export default function Atmosphere() {
 
 	useLayoutEffect(() => {
 		const fogColor = new THREE.Color(FOG_COLOR);
-		scene.fog = new THREE.FogExp2(FOG_COLOR, FOG_DENSITY);
-		scene.background = fogColor;
-		gl.setClearColor(fogColor);
-		gl.shadowMap.enabled = true;
-		// VSM looks best but costs ~2×; PCF is far safer on phones
-		gl.shadowMap.type = IS_MOBILE
-			? THREE.PCFShadowMap
-			: THREE.VSMShadowMap;
+		const density = IS_MOBILE ? FOG_DENSITY * 0.85 : FOG_DENSITY;
+		scene.fog = new THREE.FogExp2(FOG_COLOR, density);
+		scene.background = fogColor.clone();
+		// Match sky so portrait tops don’t flash black behind the dome
+		if (IS_MOBILE) scene.background.offsetHSL(0.02, 0.05, -0.08);
+		gl.setClearColor(scene.background);
+		gl.setClearAlpha(1);
+		gl.shadowMap.enabled = !IS_MOBILE;
+		if (!IS_MOBILE) {
+			gl.shadowMap.type = THREE.VSMShadowMap;
+		}
 
 		return () => {
 			scene.fog = null;

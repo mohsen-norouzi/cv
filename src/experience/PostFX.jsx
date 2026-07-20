@@ -25,10 +25,11 @@ import { IS_MOBILE } from "./device";
 import { getFocusAmount } from "./focusStore";
 
 /**
- * Post stack. Desktop keeps N8AO + half-float. Mobile drops AO and uses
- * 8-bit buffers — HalfFloat + N8AO routinely OOMs phones mid-load.
+ * Desktop: full post stack.
+ * Mobile: no composer (Android gray/black bugs). Leave NoToneMapping —
+ * ACES without the grade stack was crushing the scene to night-black.
  */
-export default function PostFX() {
+function DesktopPostFX() {
 	const vignette = useRef(null);
 	const grade = useRef(null);
 
@@ -47,26 +48,22 @@ export default function PostFX() {
 		<EffectComposer
 			multisampling={0}
 			enableNormalPass={false}
-			frameBufferType={
-				IS_MOBILE ? THREE.UnsignedByteType : THREE.HalfFloatType
-			}
+			frameBufferType={THREE.HalfFloatType}
 		>
-			{!IS_MOBILE && (
-				<N8AO
-					halfRes
-					quality="performance"
-					aoRadius={1.0}
-					intensity={2.4}
-					distanceFalloff={1.0}
-					color="#3b2f28"
-				/>
-			)}
+			<N8AO
+				halfRes
+				quality="performance"
+				aoRadius={1.0}
+				intensity={2.4}
+				distanceFalloff={1.0}
+				color="#3b2f28"
+			/>
 			<Bloom
 				luminanceThreshold={BLOOM_THRESHOLD}
 				luminanceSmoothing={0.3}
-				intensity={IS_MOBILE ? BLOOM_INTENSITY * 0.75 : BLOOM_INTENSITY}
+				intensity={BLOOM_INTENSITY}
 				mipmapBlur
-				radius={IS_MOBILE ? BLOOM_RADIUS * 0.7 : BLOOM_RADIUS}
+				radius={BLOOM_RADIUS}
 			/>
 			<HueSaturation saturation={SATURATION} />
 			<BrightnessContrast
@@ -82,4 +79,9 @@ export default function PostFX() {
 			<ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
 		</EffectComposer>
 	);
+}
+
+export default function PostFX() {
+	if (IS_MOBILE) return null;
+	return <DesktopPostFX />;
 }

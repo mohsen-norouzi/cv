@@ -2,7 +2,6 @@ import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { getScrollProgress } from "./scrollStore";
-import { IS_MOBILE } from "./device";
 
 /** Locked look — tuned in Leva, then baked */
 const MIST = {
@@ -252,12 +251,10 @@ function hash(i, salt) {
 function buildPuffs() {
 	const puffs = [];
 	let id = 0;
-	const density = IS_MOBILE ? 0.45 : 1;
 	for (const bank of BANKS) {
 		const color = new THREE.Color(bank.color);
 		const floor = bank.floor ?? 0;
-		const count = Math.max(1, Math.round(bank.count * density));
-		for (let i = 0; i < count; i++) {
+		for (let i = 0; i < bank.count; i++) {
 			const hx = hash(id, 1);
 			const hy = hash(id, 2);
 			const hz = hash(id, 3);

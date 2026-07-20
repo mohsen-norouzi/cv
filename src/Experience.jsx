@@ -9,18 +9,32 @@ import PostFX from "./experience/PostFX";
 import ShadowBake from "./experience/ShadowBake";
 import SkyDome from "./experience/SkyDome";
 
+/**
+ * Mobile: Lambert materials + no IBL/post (Android PBR was pure black).
+ * Soft fill lights only — SceneFocus still drives the main key.
+ */
 export default function Experience() {
 	return (
 		<>
 			<Atmosphere />
 			<SkyDome />
-			<EnvLight intensity={0.45} />
+			{!IS_MOBILE && <EnvLight intensity={0.45} />}
 			<CameraRig />
+			{IS_MOBILE && (
+				<>
+					<ambientLight intensity={0.55} color="#f0e0d0" />
+					<hemisphereLight
+						skyColor="#f6d4ac"
+						groundColor="#6a7a90"
+						intensity={0.7}
+					/>
+				</>
+			)}
 			<Lights />
 			<Mountain />
-			<ShadowBake frames={IS_MOBILE ? 3 : 6} />
-			<Mist />
-			<PostFX />
+			{!IS_MOBILE && <ShadowBake frames={6} />}
+			{!IS_MOBILE && <Mist />}
+			{!IS_MOBILE && <PostFX />}
 		</>
 	);
 }
