@@ -101,8 +101,30 @@ function createPoolTexture() {
 	return texture;
 }
 
+/** Beam dust — tuned final values */
+const DUST_COUNT = 80;
+const DUST_SIZE = 0.46;
+const DUST_OPACITY = 1;
+const DUST_DRIFT = 0.01;
+const DUST_FADE = 0.35;
+const DUST_SPREAD = 1;
+
+/** Place a mote somewhere inside the beam volume (not streaming from the lamp). */
+function seedDust(sp) {
+	sp.t = 0.08 + Math.random() * 0.84;
+	sp.r = Math.random();
+	sp.a = Math.random() * Math.PI * 2;
+	sp.vt = (Math.random() - 0.5) * 2;
+	sp.vr = (Math.random() - 0.5) * 2;
+	sp.va = (Math.random() - 0.5) * 2;
+	sp.life = Math.random();
+	sp.lifeDir = Math.random() > 0.5 ? 1 : -1;
+	sp.lifeSpeed = 0.5 + Math.random();
+	sp.sizeJitter = 0.7 + Math.random() * 0.6;
+}
+
 /**
- * One warm stage spot + soft shaft/pool. Values baked — no Leva.
+ * One warm stage spot + soft shaft/pool + floating dust dots.
  */
 export default function SceneFocus({
 	ambient,
@@ -123,19 +145,92 @@ export default function SceneFocus({
 	const light = useRef(null);
 	const beam = useRef(null);
 	const pool = useRef(null);
+	const dustRef = useRef(null);
 	const from = useMemo(() => new THREE.Vector3(), []);
 	const to = useMemo(() => new THREE.Vector3(), []);
 	const mid = useMemo(() => new THREE.Vector3(), []);
 	const dir = useMemo(() => new THREE.Vector3(), []);
 	const quat = useMemo(() => new THREE.Quaternion(), []);
 	const up = useMemo(() => new THREE.Vector3(0, 1, 0), []);
+	const side = useMemo(() => new THREE.Vector3(), []);
+	const bitangent = useMemo(() => new THREE.Vector3(), []);
+	const dustPos = useMemo(() => new THREE.Vector3(), []);
+	const axisTmp = useMemo(() => new THREE.Vector3(), []);
 	const beamTex = useMemo(() => createBeamTexture(), []);
 	const poolTex = useMemo(() => createPoolTexture(), []);
 
+	const dustState = useMemo(
+		() =>
+			Array.from({ length: DUST_COUNT }, () => {
+				const sp = {};
+				seedDust(sp);
+				return sp;
+			}),
+		[],
+	);
+
+	const dustGeo = useMemo(() => {
+		const geo = new THREE.BufferGeometry();
+		const positions = new Float32Array(DUST_COUNT * 3);
+		const alphas = new Float32Array(DUST_COUNT);
+		geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+		geo.setAttribute("aAlpha", new THREE.BufferAttribute(alphas, 1));
+		return geo;
+	}, []);
+
+	const dustMat = useMemo(
+		() =>
+			new THREE.ShaderMaterial({
+				transparent: true,
+				depthWrite: false,
+				depthTest: true,
+				blending: THREE.AdditiveBlending,
+				toneMapped: false,
+				uniforms: {
+					uColor: { value: new THREE.Color(SPOT_COLOR) },
+					uOpacity: { value: 0 },
+					uSize: { value: DUST_SIZE },
+					uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) },
+				},
+				vertexShader: /* glsl */ `
+					attribute float aAlpha;
+					uniform float uSize;
+					uniform float uPixelRatio;
+					varying float vAlpha;
+					void main() {
+						vAlpha = aAlpha;
+						vec4 mv = modelViewMatrix * vec4(position, 1.0);
+						gl_PointSize = max(0.5, uSize * uPixelRatio * (28.0 / max(0.1, -mv.z)));
+						gl_Position = projectionMatrix * mv;
+					}
+				`,
+				fragmentShader: /* glsl */ `
+					uniform vec3 uColor;
+					uniform float uOpacity;
+					varying float vAlpha;
+					void main() {
+						// Hard circular DOT
+						vec2 p = gl_PointCoord - 0.5;
+						float d = length(p);
+						if (d > 0.42) discard;
+						float edge = smoothstep(0.42, 0.28, d);
+						float a = edge * vAlpha * uOpacity;
+						if (a < 0.01) discard;
+						gl_FragColor = vec4(uColor, a);
+					}
+				`,
+			}),
+		[],
+	);
+
 	useLayoutEffect(() => {
 		scene.add(target);
-		return () => scene.remove(target);
-	}, [scene, target]);
+		return () => {
+			scene.remove(target);
+			dustGeo.dispose();
+			dustMat.dispose();
+		};
+	}, [scene, target, dustGeo, dustMat]);
 
 	useFrame((_, delta) => {
 		const { amount, stop } = computeFocus(getScrollProgress());
@@ -291,6 +386,69 @@ export default function SceneFocus({
 			pool.current.visible = on;
 			pool.current.scale.setScalar(spot.pool);
 		}
+
+		if (dustRef.current && dustMat) {
+			dustRef.current.visible = on;
+			dustMat.uniforms.uOpacity.value = DUST_OPACITY * s;
+
+			if (on) {
+				const len = Math.max(from.distanceTo(to), 0.01);
+				dir.copy(to).sub(from).normalize();
+				axisTmp.set(1, 0, 0);
+				if (Math.abs(dir.dot(axisTmp)) > 0.9) axisTmp.set(0, 0, 1);
+				side.crossVectors(dir, axisTmp).normalize();
+				bitangent.crossVectors(dir, side).normalize();
+
+				const posAttr = dustGeo.attributes.position;
+				const alphaAttr = dustGeo.attributes.aAlpha;
+
+				for (let i = 0; i < DUST_COUNT; i++) {
+					const sp = dustState[i];
+
+					// Slow random wander inside the volume
+					sp.t += sp.vt * DUST_DRIFT * delta;
+					sp.r += sp.vr * DUST_DRIFT * delta;
+					sp.a += sp.va * DUST_DRIFT * delta * 1.5;
+
+					if (sp.t < 0.05 || sp.t > 0.95) sp.vt *= -1;
+					if (sp.r < 0.05 || sp.r > 1) sp.vr *= -1;
+					sp.t = THREE.MathUtils.clamp(sp.t, 0.05, 0.95);
+					sp.r = THREE.MathUtils.clamp(sp.r, 0.05, 1);
+
+					// Random appear / disappear (ping-pong life)
+					sp.life += sp.lifeDir * sp.lifeSpeed * DUST_FADE * delta;
+					if (sp.life >= 1) {
+						sp.life = 1;
+						sp.lifeDir = -1;
+					} else if (sp.life <= 0) {
+						seedDust(sp);
+						sp.life = 0;
+						sp.lifeDir = 1;
+					}
+
+					let fade = 1;
+					if (sp.life < 0.25) fade = sp.life / 0.25;
+					else if (sp.life > 0.75) fade = (1 - sp.life) / 0.25;
+
+					const radius =
+						THREE.MathUtils.lerp(0.06, 1, sp.t) *
+						beamR *
+						sp.r *
+						DUST_SPREAD;
+					dustPos
+						.copy(from)
+						.addScaledVector(dir, sp.t * len)
+						.addScaledVector(side, Math.cos(sp.a) * radius)
+						.addScaledVector(bitangent, Math.sin(sp.a) * radius);
+
+					posAttr.setXYZ(i, dustPos.x, dustPos.y, dustPos.z);
+					alphaAttr.setX(i, fade * sp.sizeJitter);
+				}
+
+				posAttr.needsUpdate = true;
+				alphaAttr.needsUpdate = true;
+			}
+		}
 	});
 
 	return (
@@ -339,6 +497,14 @@ export default function SceneFocus({
 					/>
 				</mesh>
 			)}
+			<points
+				ref={dustRef}
+				geometry={dustGeo}
+				material={dustMat}
+				renderOrder={6}
+				frustumCulled={false}
+				visible={false}
+			/>
 		</>
 	);
 }
