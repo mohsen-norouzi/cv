@@ -5,8 +5,8 @@ import * as THREE from "three";
 import { BIG_LAMP_INTENSITY } from "./constants";
 import { getFocusAmount } from "./focusStore";
 import { flicker, hashSeed } from "./flicker";
+import { MODEL_URL } from "./modelUrl";
 
-const MODEL_URL = "/Try1.glb?v=7";
 /** Softer fill — hard pools of light were making lamps look weird */
 const FILL_RATIO = 1.35;
 const LANTERN_Y_OFFSET = 1.85;

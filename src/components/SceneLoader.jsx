@@ -1,6 +1,6 @@
 import { useProgress } from "@react-three/drei";
-import { useEffect, useState, useSyncExternalStore } from "react";
-import { enableMusic, primeMusic } from "../experience/audioStore";
+import { useState, useSyncExternalStore } from "react";
+import { enableMusic } from "../experience/audioStore";
 import {
 	getSceneReady,
 	subscribeSceneReady,
@@ -23,10 +23,6 @@ export default function SceneLoader() {
 
 	const assetsReady = sceneReady && !active && progress >= 100;
 	const pct = Math.min(100, Math.round(progress));
-
-	useEffect(() => {
-		void primeMusic();
-	}, []);
 
 	const enter = async () => {
 		if (!assetsReady || entering || fadeOut || gone) return;

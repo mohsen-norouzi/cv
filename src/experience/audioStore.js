@@ -1,9 +1,9 @@
 import gsap from "gsap";
 
 const LAYERS = [
-	{ src: "/sounds/ambient.mp3", target: 0.14, key: "ambient" },
+	{ src: "/sounds/ambient.m4a", target: 0.14, key: "ambient" },
 	/** Quiet bed under the music */
-	{ src: "/sounds/nature.mp3", target: 0.02, key: "nature" },
+	{ src: "/sounds/nature.m4a", target: 0.02, key: "nature" },
 ];
 
 const FADE_IN = 4;
@@ -74,27 +74,8 @@ export function subscribeMusic(fn) {
 	return () => listeners.delete(fn);
 }
 
-/** Muted prime for all layers (autoplay-safe). */
-export async function primeMusic() {
-	ensureAll();
-	const results = await Promise.all(
-		LAYERS.map(async ({ key }) => {
-			const a = players.get(key);
-			if (!a || !a.paused) return true;
-			a.muted = true;
-			setLayerVolume(key, 0);
-			try {
-				await a.play();
-				return true;
-			} catch {
-				return false;
-			}
-		}),
-	);
-	return results.some(Boolean);
-}
-
-/** Unmute + fade in — call from loader Enter gesture. */
+/** Unmute + fade in — call from loader Enter gesture. Audio only starts
+ * downloading here, so no sound bytes count toward the initial load. */
 export async function enableMusic() {
 	if (!wantMusic) return false;
 	if (starting) return false;
@@ -186,9 +167,4 @@ export function toggleMusic() {
 	}
 	wantMusic = true;
 	void enableMusic();
-}
-
-if (typeof window !== "undefined") {
-	ensureAll();
-	void primeMusic();
 }

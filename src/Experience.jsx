@@ -1,4 +1,3 @@
-import { Perf } from "r3f-perf";
 import Atmosphere from "./experience/Atmosphere";
 import CameraRig from "./experience/CameraRig";
 import EnvLight from "./experience/EnvLight";
@@ -12,7 +11,6 @@ import SkyDome from "./experience/SkyDome";
 export default function Experience() {
 	return (
 		<>
-			{/* <Perf /> */}
 			<Atmosphere />
 			<SkyDome />
 			<EnvLight intensity={0.45} />

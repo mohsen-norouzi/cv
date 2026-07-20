@@ -19,9 +19,8 @@ import {
 import { getFocusAmount, getFocusStop } from "./focusStore";
 import { flicker, hashSeed } from "./flicker";
 import { setSceneReady } from "./loadStore";
+import { MODEL_URL } from "./modelUrl";
 import { createStoneTexture } from "./stoneTexture";
-
-const MODEL_URL = "/Try1.glb?v=8";
 
 /** Project showcase meshes — slow Y-spin while that stop is focused */
 const GIRL_MESH = "tripo_node_1feaf1fd-79b2-4217-a867-f97ada61b588";
