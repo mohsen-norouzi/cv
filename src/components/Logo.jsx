@@ -1,10 +1,12 @@
 export default function Logo() {
 	return (
-		<span
-			className="font-ui text-[22px] font-semibold tracking-tight text-white"
-			aria-label="Home"
-		>
-			{"</>"}
-		</span>
+		<img
+			src="/logo.png"
+			alt="Mohsen"
+			width={24}
+			height={26}
+			className="h-6 w-auto brightness-0 invert"
+			draggable={false}
+		/>
 	);
 }
