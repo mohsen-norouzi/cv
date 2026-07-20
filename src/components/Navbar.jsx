@@ -112,7 +112,7 @@ export default function Navbar() {
 
 				<a
 					href="/resume.pdf"
-					download="Mohsen-Norouzi-Resume.pdf"
+					download="Mohsen-Resume.pdf"
 					target="_blank"
 					rel="noopener noreferrer"
 					className="font-ui cursor-pointer text-[11px] font-medium tracking-[0.24em] text-white uppercase transition-opacity hover:opacity-80"
