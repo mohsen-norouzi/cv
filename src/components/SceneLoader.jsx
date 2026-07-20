@@ -34,49 +34,185 @@ export default function SceneLoader() {
 
 	if (gone) return null;
 
+	const canEnter = assetsReady && !entering && !fadeOut;
+
 	return (
-		<button
-			type="button"
-			onClick={() => void enter()}
-			disabled={!assetsReady || entering}
-			className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-[#c9b8a8] text-center"
+		<div
+			className="splash"
 			style={{
 				opacity: fadeOut ? 0 : 1,
-				transition: "opacity 0.65s ease",
 				pointerEvents: fadeOut ? "none" : "auto",
-				cursor: assetsReady ? "pointer" : "wait",
+				cursor: canEnter ? "default" : "wait",
 			}}
 			aria-busy={!assetsReady}
 			aria-live="polite"
 		>
-			{!assetsReady ? (
-				<>
-					<p className="font-display text-[13px] font-semibold tracking-[0.28em] text-[#2a2a2a]/uppercase">
-						Loading
-					</p>
-					<div className="mt-5 h-px w-40 overflow-hidden bg-[#2a2a2a]/15">
-						<div
-							className="h-full bg-[#2a2a2a]/70 transition-[width] duration-200 ease-out"
-							style={{ width: `${pct}%` }}
-						/>
-					</div>
-					<p className="font-ui mt-3 text-[11px] tracking-[0.18em] text-[#2a2a2a]/55">
-						{pct}%
-					</p>
-				</>
-			) : (
-				<>
-					<p className="font-display text-[13px] font-semibold tracking-[0.28em] text-[#2a2a2a]/uppercase">
-						Ready
-					</p>
-					<p className="font-music mt-6 text-[2rem] text-[#2a2a2a] md:text-[2.35rem]">
-						Enter
-					</p>
-					<p className="font-ui mt-3 text-[11px] tracking-[0.18em] text-[#2a2a2a]/50 uppercase">
-						Click to begin
-					</p>
-				</>
-			)}
-		</button>
+			{/* Soft vignette + grain */}
+			<span className="splash-grain" aria-hidden />
+			<span className="splash-vignette" aria-hidden />
+
+			{/* Edge guides: side arcs + vertical rails (matches ref) */}
+			<div className="splash-frame" aria-hidden>
+				{/* Left round arc + dot */}
+				<svg
+					className="splash-side-arc splash-side-arc-l"
+					viewBox="0 0 240 1000"
+					preserveAspectRatio="none"
+				>
+					<title>Left arc</title>
+					<defs>
+						<linearGradient
+							id="splash-arc-fade-l"
+							gradientUnits="userSpaceOnUse"
+							x1="0"
+							y1="40"
+							x2="0"
+							y2="960"
+						>
+							<stop offset="0%" stopColor="#fff" stopOpacity="0" />
+							<stop offset="12%" stopColor="#fff" stopOpacity="1" />
+							<stop offset="88%" stopColor="#fff" stopOpacity="1" />
+							<stop offset="100%" stopColor="#fff" stopOpacity="0" />
+						</linearGradient>
+						<mask
+							id="splash-arc-mask-l"
+							maskUnits="userSpaceOnUse"
+							x="0"
+							y="0"
+							width="240"
+							height="1000"
+						>
+							<path
+								d="M 200 40 C 40 220, 40 780, 200 960"
+								fill="none"
+								stroke="url(#splash-arc-fade-l)"
+								strokeWidth="4"
+								strokeLinecap="round"
+							/>
+						</mask>
+					</defs>
+					<path
+						className="splash-guide-line"
+						d="M 200 40 C 40 220, 40 780, 200 960"
+						fill="none"
+						stroke="rgba(255,255,255,0.28)"
+						strokeWidth="0.7"
+						strokeLinecap="round"
+						mask="url(#splash-arc-mask-l)"
+					/>
+				</svg>
+				<span className="splash-page-dot splash-page-dot-w" />
+
+				{/* Right round arc + dot */}
+				<svg
+					className="splash-side-arc splash-side-arc-r"
+					viewBox="0 0 240 1000"
+					preserveAspectRatio="none"
+				>
+					<title>Right arc</title>
+					<defs>
+						<linearGradient
+							id="splash-arc-fade-r"
+							gradientUnits="userSpaceOnUse"
+							x1="0"
+							y1="40"
+							x2="0"
+							y2="960"
+						>
+							<stop offset="0%" stopColor="#fff" stopOpacity="0" />
+							<stop offset="12%" stopColor="#fff" stopOpacity="1" />
+							<stop offset="88%" stopColor="#fff" stopOpacity="1" />
+							<stop offset="100%" stopColor="#fff" stopOpacity="0" />
+						</linearGradient>
+						<mask
+							id="splash-arc-mask-r"
+							maskUnits="userSpaceOnUse"
+							x="0"
+							y="0"
+							width="240"
+							height="1000"
+						>
+							<path
+								d="M 40 40 C 200 220, 200 780, 40 960"
+								fill="none"
+								stroke="url(#splash-arc-fade-r)"
+								strokeWidth="4"
+								strokeLinecap="round"
+							/>
+						</mask>
+					</defs>
+					<path
+						className="splash-guide-line"
+						d="M 40 40 C 200 220, 200 780, 40 960"
+						fill="none"
+						stroke="rgba(255,255,255,0.28)"
+						strokeWidth="0.7"
+						strokeLinecap="round"
+						mask="url(#splash-arc-mask-r)"
+					/>
+				</svg>
+				<span className="splash-page-dot splash-page-dot-e" />
+
+				{/* Top vertical line + dot */}
+				<span className="splash-v-rail splash-v-rail-n">
+					<span className="splash-page-dot splash-page-dot-n" />
+					<span className="splash-v-rail-line" />
+				</span>
+
+				{/* Bottom vertical line + dot */}
+				<span className="splash-v-rail splash-v-rail-s">
+					<span className="splash-page-dot splash-page-dot-s" />
+					<span className="splash-v-rail-line" />
+				</span>
+			</div>
+
+			<div className="splash-content">
+				<p className="splash-greeting splash-in splash-in-1">
+					Hi, I&apos;m Mohsen
+				</p>
+
+				<h1 className="splash-headline splash-in splash-in-2">
+					Let&apos;s create something <em>meaningful.</em>
+				</h1>
+
+				<p className="splash-sub splash-in splash-in-3">
+					I design and build digital experiences that connect, inspire,
+					and leave a lasting impact.
+				</p>
+
+				<div className="splash-cta splash-in splash-in-4">
+					<button
+						type="button"
+						className={`splash-enter ${assetsReady ? "is-ready" : ""}`}
+						onClick={() => void enter()}
+						disabled={!canEnter}
+						aria-label={assetsReady ? "Enter" : `Loading ${pct}%`}
+					>
+						<span className="splash-crosshair" aria-hidden>
+							<span className="splash-crosshair-h" />
+							<span className="splash-crosshair-v" />
+							<span className="splash-dot splash-dot-n" />
+							<span className="splash-dot splash-dot-e" />
+							<span className="splash-dot splash-dot-s" />
+							<span className="splash-dot splash-dot-w" />
+						</span>
+
+						<span className="splash-orb">
+							{assetsReady ? (
+								<span className="splash-enter-label">Enter</span>
+							) : (
+								<span className="splash-enter-label splash-enter-pct">
+									{pct}%
+								</span>
+							)}
+						</span>
+					</button>
+
+					<span className="splash-hint">
+						{assetsReady ? "Click to begin" : "Loading"}
+					</span>
+				</div>
+			</div>
+		</div>
 	);
 }
