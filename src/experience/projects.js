@@ -18,7 +18,7 @@ export const PROJECTS = [
 			"Homemade cookies from Barcelona — a warm shopfront for small-batch bakes, orders, and the story behind the kitchen.",
 		role: "Design & development",
 		stack: "Brand site · E‑commerce",
-		year: "2025",
+		year: "2026",
 		url: "https://bavobakes.com",
 		urlLabel: "Visit bavobakes.com",
 	},
