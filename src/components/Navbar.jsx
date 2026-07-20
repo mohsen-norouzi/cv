@@ -1,9 +1,13 @@
 import Logo from "./Logo";
 
 const links = [
-	{ label: "Work", href: "#work", active: true },
-	{ label: "About", href: "#about", active: false },
 	{ label: "Contact", href: "#contact", active: false },
+	{
+		label: "Resume",
+		href: "/resume.pdf",
+		active: false,
+		download: "Mohsen-Norouzi-Resume.pdf",
+	},
 ];
 
 export default function Navbar() {
@@ -18,6 +22,13 @@ export default function Navbar() {
 					<a
 						key={link.label}
 						href={link.href}
+						{...(link.download
+							? {
+									download: link.download,
+									target: "_blank",
+									rel: "noopener noreferrer",
+								}
+							: {})}
 						className={`font-ui relative text-[11px] font-medium tracking-[0.24em] uppercase transition-colors ${
 							link.active
 								? "text-accent"

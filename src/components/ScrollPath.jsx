@@ -43,7 +43,6 @@ export default function ScrollPath() {
 				className="scroll-path pointer-events-auto"
 				aria-label="Section path"
 			>
-				<span className="scroll-path-label">Scroll</span>
 
 				<div className="scroll-path-track">
 					<span className="scroll-path-line" aria-hidden />
