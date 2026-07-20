@@ -11,7 +11,7 @@ let raf = 0;
 let animating = false;
 
 /** Pending leave sequence before the camera moves */
-let exitGate = null; // { direction: 1|-1 }
+let exitGate = null; // { direction: 1|-1, target?: number }
 
 /** Snap between stops */
 const DURATION_MS = 900;
@@ -65,15 +65,37 @@ export function requestSnap(direction) {
 		return;
 	}
 
-	snapScroll(direction);
+	snapTo(next);
+}
+
+/** Jump to an absolute section index (scroll path markers). */
+export function requestSnapTo(target) {
+	if (animating || exitGate) return;
+
+	const next = Math.min(
+		SCROLL_SECTION_COUNT - 1,
+		Math.max(0, Math.round(target)),
+	);
+	if (next === section) return;
+
+	if (section >= 1) {
+		exitGate = {
+			direction: next > section ? 1 : -1,
+			target: next,
+		};
+		return;
+	}
+
+	snapTo(next);
 }
 
 /** Called by SceneFocus once text + spot have fully hidden */
 export function continueSnapAfterExit() {
 	if (!exitGate) return;
-	const { direction } = exitGate;
+	const { direction, target } = exitGate;
 	exitGate = null;
-	snapScroll(direction);
+	if (typeof target === "number") snapTo(target);
+	else snapTo(section + direction);
 }
 
 /**
@@ -85,12 +107,21 @@ export function snapScroll(direction) {
 		SCROLL_SECTION_COUNT - 1,
 		Math.max(0, section + (direction > 0 ? 1 : -1)),
 	);
-	if (next === section && !animating) return;
+	snapTo(next);
+}
+
+/** Animate camera progress to an absolute section index. */
+function snapTo(next) {
+	const clamped = Math.min(
+		SCROLL_SECTION_COUNT - 1,
+		Math.max(0, next),
+	);
+	if (clamped === section && !animating) return;
 	if (animating) return;
 
-	section = next;
+	section = clamped;
 	const from = progress;
-	const to = next;
+	const to = clamped;
 	const start = performance.now();
 
 	if (raf) cancelAnimationFrame(raf);

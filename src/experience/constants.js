@@ -118,5 +118,5 @@ export const BLOOM_RADIUS = 0.55;
 export const SATURATION = 0.13;
 export const BRIGHTNESS = 0.03;
 export const CONTRAST = 0.17;
-export const VIGNETTE_OFFSET = 0.28;
-export const VIGNETTE_DARKNESS = 0.36;
+export const VIGNETTE_OFFSET = 0.18;
+export const VIGNETTE_DARKNESS = 0.22;

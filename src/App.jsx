@@ -5,7 +5,7 @@ import HeroContent from "./components/HeroContent";
 import MusicToggle from "./components/MusicToggle";
 import Navbar from "./components/Navbar";
 import SceneLoader from "./components/SceneLoader";
-import ScrollCue from "./components/ScrollCue";
+import ScrollPath from "./components/ScrollPath";
 import SectionCaption from "./components/SectionCaption";
 import Experience from "./Experience";
 import ScrollStealer from "./experience/ScrollStealer";
@@ -41,17 +41,17 @@ function App() {
 			<SceneLoader />
 
 			<div className="pointer-events-none absolute inset-0 z-10">
-				{/* Top readability for nav */}
+				{/* Soft edge fades — long falloffs, no hard bands */}
 				<div
 					aria-hidden
-					className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/30 to-transparent"
+					className="page-edge-fade pointer-events-none absolute inset-0"
 				/>
 				<div className="pointer-events-auto">
 					<Navbar />
 				</div>
 				<HeroContent />
 				<SectionCaption />
-				<ScrollCue />
+				<ScrollPath />
 				<MusicToggle />
 			</div>
 		</div>

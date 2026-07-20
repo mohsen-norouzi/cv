@@ -35,7 +35,7 @@ export default function PostFX() {
 	useFrame(() => {
 		const f = getFocusAmount();
 		if (vignette.current) {
-			vignette.current.darkness = VIGNETTE_DARKNESS + f * 0.35;
+			vignette.current.darkness = VIGNETTE_DARKNESS + f * 0.2;
 		}
 		if (grade.current) {
 			grade.current.brightness = BRIGHTNESS;

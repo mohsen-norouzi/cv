@@ -37,11 +37,19 @@ export default function HeroContent() {
 		>
 			<div
 				aria-hidden
-				className="pointer-events-none absolute inset-y-0 left-0 w-[min(62%,42rem)] bg-gradient-to-r from-black/72 via-black/42 to-transparent"
+				className="pointer-events-none absolute inset-y-0 left-0 w-[min(68%,46rem)]"
+				style={{
+					background:
+						"linear-gradient(to right, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.38) 28%, rgba(0,0,0,0.16) 55%, rgba(0,0,0,0.04) 78%, transparent 100%)",
+				}}
 			/>
 			<div
 				aria-hidden
-				className="pointer-events-none absolute inset-y-[18%] left-0 h-[64%] w-[min(48%,28rem)] bg-gradient-to-r from-black/35 to-transparent blur-2xl"
+				className="pointer-events-none absolute inset-y-[12%] left-0 h-[76%] w-[min(52%,32rem)] blur-3xl"
+				style={{
+					background:
+						"linear-gradient(to right, rgba(0,0,0,0.28) 0%, rgba(0,0,0,0.1) 50%, transparent 100%)",
+				}}
 			/>
 
 			<div className="relative max-w-lg pointer-events-auto">

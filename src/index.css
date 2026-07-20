@@ -30,6 +30,31 @@ body {
 	-moz-osx-font-smoothing: grayscale;
 }
 
+/* Soft page-edge fades — long falloffs so no hard shadow bands */
+.page-edge-fade {
+	background:
+		linear-gradient(
+			to bottom,
+			rgba(0, 0, 0, 0.34) 0%,
+			rgba(0, 0, 0, 0.16) 35%,
+			rgba(0, 0, 0, 0.04) 70%,
+			transparent 100%
+		),
+		linear-gradient(
+			to top,
+			rgba(0, 0, 0, 0.18) 0%,
+			rgba(0, 0, 0, 0.06) 40%,
+			transparent 100%
+		);
+	background-repeat: no-repeat;
+	background-size:
+		100% min(28vh, 14rem),
+		100% min(18vh, 8rem);
+	background-position:
+		top,
+		bottom;
+}
+
 .hero-accent {
 	color: var(--color-accent);
 }
@@ -689,5 +714,196 @@ body {
 	.splash-orb {
 		width: 4.75rem;
 		height: 4.75rem;
+	}
+}
+
+/* ── Scroll path ─────────────────────────────────────────────────── */
+
+.scroll-path-scrim {
+	pointer-events: none;
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	z-index: 25;
+	width: min(36vw, 18rem);
+	opacity: 0;
+	animation: splash-fade 0.9s ease 0.35s forwards;
+	background: linear-gradient(
+		to left,
+		rgba(0, 0, 0, 0.48) 0%,
+		rgba(0, 0, 0, 0.28) 22%,
+		rgba(0, 0, 0, 0.14) 45%,
+		rgba(0, 0, 0, 0.06) 68%,
+		rgba(0, 0, 0, 0.015) 85%,
+		rgba(0, 0, 0, 0) 100%
+	);
+}
+
+.scroll-path {
+	position: absolute;
+	top: 50%;
+	right: 1.5rem;
+	left: auto;
+	z-index: 30;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	gap: 1.1rem;
+	transform: translateY(-50%);
+	opacity: 0;
+	animation: splash-fade 0.9s ease 0.35s forwards;
+	filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.35));
+}
+
+@media (min-width: 768px) {
+	.scroll-path {
+		right: 2.25rem;
+		left: auto;
+	}
+}
+
+@media (min-width: 1024px) {
+	.scroll-path {
+		right: 2.75rem;
+		left: auto;
+	}
+}
+
+.scroll-path-label {
+	font-family: var(--font-ui);
+	font-size: 0.5625rem;
+	font-weight: 500;
+	letter-spacing: 0.32em;
+	text-indent: 0.32em;
+	text-transform: uppercase;
+	color: rgba(255, 255, 255, 0.78);
+	/* Sit above the number column */
+	padding-right: 0.05rem;
+}
+
+.scroll-path-track {
+	position: relative;
+	/* Line on the left, numbers to the right */
+	width: 2.75rem;
+	height: min(48vh, 20rem);
+}
+
+.scroll-path-line {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0.5rem;
+	width: 1px;
+	transform: translateX(-50%);
+	background: rgba(255, 255, 255, 0.32);
+}
+
+.scroll-path-marker {
+	position: absolute;
+	left: 1.15rem;
+	z-index: 2;
+	display: grid;
+	place-items: center;
+	min-width: 1.5rem;
+	padding: 0.2rem 0;
+	border: 0;
+	background: transparent;
+	transform: translateY(-50%);
+	font-family: var(--font-ui);
+	font-size: 0.625rem;
+	font-weight: 400;
+	letter-spacing: 0.14em;
+	text-indent: 0.06em;
+	color: rgba(255, 255, 255, 0.5);
+	cursor: pointer;
+	transition: color 0.35s ease;
+	-webkit-tap-highlight-color: transparent;
+}
+
+.scroll-path-marker:hover,
+.scroll-path-marker.is-active {
+	color: rgba(255, 255, 255, 0.95);
+}
+
+.scroll-path-dot {
+	position: absolute;
+	left: 0.5rem;
+	z-index: 1;
+	width: 3px;
+	height: 3px;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.75);
+	transform: translate(-50%, -50%);
+	box-shadow: 0 0 4px 1px rgba(255, 255, 255, 0.25);
+}
+
+.scroll-path-active {
+	position: absolute;
+	left: 0.5rem;
+	z-index: 3;
+	width: 1.35rem;
+	height: 1.35rem;
+	transform: translate(-50%, -50%);
+	pointer-events: none;
+}
+
+.scroll-path-active-core {
+	position: absolute;
+	inset: 50%;
+	width: 5px;
+	height: 5px;
+	border-radius: 50%;
+	background: #fff;
+	box-shadow:
+		0 0 0 1px rgba(255, 255, 255, 0.45),
+		0 0 8px 2px rgba(255, 255, 255, 0.35);
+	transform: translate(-50%, -50%);
+}
+
+.scroll-path-active-ring {
+	position: absolute;
+	inset: 50%;
+	width: 14px;
+	height: 14px;
+	border: 1px solid rgba(255, 255, 255, 0.45);
+	border-radius: 50%;
+	transform: translate(-50%, -50%);
+}
+
+.scroll-path-active-ring-outer {
+	width: 22px;
+	height: 22px;
+	border-color: rgba(255, 255, 255, 0.22);
+}
+
+@media (max-width: 640px) {
+	.scroll-path {
+		right: 0.75rem;
+		left: auto;
+		gap: 0.85rem;
+	}
+
+	.scroll-path-scrim {
+		width: min(40vw, 12rem);
+	}
+
+	.scroll-path-track {
+		height: min(40vh, 16rem);
+		width: 2.4rem;
+	}
+
+	.scroll-path-label {
+		font-size: 0.5rem;
+		letter-spacing: 0.26em;
+		text-indent: 0.26em;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.scroll-path,
+	.scroll-path-scrim {
+		animation: none;
+		opacity: 1;
 	}
 }
