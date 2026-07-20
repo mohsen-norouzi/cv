@@ -21,12 +21,12 @@ import {
 	VIGNETTE_DARKNESS,
 	VIGNETTE_OFFSET,
 } from "./constants";
+import { IS_MOBILE } from "./device";
 import { getFocusAmount } from "./focusStore";
 
 /**
- * Post stack. N8AO is back in its cheapest config — the earlier FPS hit was
- * AO stacked on 4x MSAA + per-frame VSM blur, both since removed. If GPU
- * time still spikes, this is the first thing to drop again.
+ * Post stack. Desktop keeps N8AO + half-float. Mobile drops AO and uses
+ * 8-bit buffers — HalfFloat + N8AO routinely OOMs phones mid-load.
  */
 export default function PostFX() {
 	const vignette = useRef(null);
@@ -47,22 +47,26 @@ export default function PostFX() {
 		<EffectComposer
 			multisampling={0}
 			enableNormalPass={false}
-			frameBufferType={THREE.HalfFloatType}
+			frameBufferType={
+				IS_MOBILE ? THREE.UnsignedByteType : THREE.HalfFloatType
+			}
 		>
-			<N8AO
-				halfRes
-				quality="performance"
-				aoRadius={1.0}
-				intensity={2.4}
-				distanceFalloff={1.0}
-				color="#3b2f28"
-			/>
+			{!IS_MOBILE && (
+				<N8AO
+					halfRes
+					quality="performance"
+					aoRadius={1.0}
+					intensity={2.4}
+					distanceFalloff={1.0}
+					color="#3b2f28"
+				/>
+			)}
 			<Bloom
 				luminanceThreshold={BLOOM_THRESHOLD}
 				luminanceSmoothing={0.3}
-				intensity={BLOOM_INTENSITY}
+				intensity={IS_MOBILE ? BLOOM_INTENSITY * 0.75 : BLOOM_INTENSITY}
 				mipmapBlur
-				radius={BLOOM_RADIUS}
+				radius={IS_MOBILE ? BLOOM_RADIUS * 0.7 : BLOOM_RADIUS}
 			/>
 			<HueSaturation saturation={SATURATION} />
 			<BrightnessContrast

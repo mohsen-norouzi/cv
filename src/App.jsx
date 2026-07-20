@@ -8,6 +8,7 @@ import SceneLoader from "./components/SceneLoader";
 import ScrollPath from "./components/ScrollPath";
 import SectionCaption from "./components/SectionCaption";
 import Experience from "./Experience";
+import { DPR_RANGE, IS_MOBILE } from "./experience/device";
 import ScrollStealer from "./experience/ScrollStealer";
 
 function App() {
@@ -18,7 +19,7 @@ function App() {
 				className="absolute inset-0 h-full w-full"
 				style={{ width: "100%", height: "100%" }}
 				shadows
-				dpr={[1, 1.25]}
+				dpr={DPR_RANGE}
 				camera={{
 					position: [2.5, 3.8, 34],
 					fov: 42,
@@ -26,11 +27,12 @@ function App() {
 					far: 250,
 				}}
 				gl={{
-					antialias: true,
+					antialias: !IS_MOBILE,
 					toneMapping: THREE.NoToneMapping,
 					outputColorSpace: THREE.SRGBColorSpace,
-					powerPreference: "high-performance",
+					powerPreference: IS_MOBILE ? "default" : "high-performance",
 					stencil: false,
+					alpha: false,
 				}}
 			>
 				<Suspense fallback={null}>

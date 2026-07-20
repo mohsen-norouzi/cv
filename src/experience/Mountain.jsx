@@ -19,7 +19,8 @@ import {
 import { getFocusAmount, getFocusStop } from "./focusStore";
 import { flicker, hashSeed } from "./flicker";
 import { setSceneReady } from "./loadStore";
-import { MODEL_URL } from "./modelUrl";
+import { MODEL_URL, MODEL_USE_DRACO, MODEL_USE_MESHOPT } from "./modelUrl";
+import { IS_MOBILE } from "./device";
 import { createStoneTexture } from "./stoneTexture";
 
 /** Project showcase meshes — slow Y-spin while that stop is focused */
@@ -514,7 +515,7 @@ function mergeMeshesByMaterial(model, materialNames) {
 }
 
 export default function Mountain() {
-	const { scene } = useGLTF(MODEL_URL);
+	const { scene } = useGLTF(MODEL_URL, MODEL_USE_DRACO, MODEL_USE_MESHOPT);
 	const model = useMemo(() => scene.clone(true), [scene]);
 	const stoneMap = useMemo(() => createStoneTexture(), []);
 	const rippleMap = useMemo(() => createRippleTexture(), []);
@@ -585,11 +586,13 @@ export default function Mountain() {
 				if (mat.userData?.horizonGlow) nextHorizon.push(mat);
 			}
 
-			// Facet bake only on big ground meshes
-			const facetAmount = Math.max(
-				0,
-				...materials.map((m) => VARIED_MATS[m.name] ?? 0),
-			);
+			// Facet bake only on big ground meshes (skip on mobile — heavy CPU/RAM)
+			const facetAmount = IS_MOBILE
+				? 0
+				: Math.max(
+						0,
+						...materials.map((m) => VARIED_MATS[m.name] ?? 0),
+					);
 			if (facetAmount > 0 && child.geometry && !foliage) {
 				child.geometry = addFacetVariation(
 					child.geometry,
@@ -688,4 +691,4 @@ export default function Mountain() {
 	return <primitive object={model} dispose={null} />;
 }
 
-useGLTF.preload(MODEL_URL);
+useGLTF.preload(MODEL_URL, MODEL_USE_DRACO, MODEL_USE_MESHOPT);

@@ -1,5 +1,6 @@
 import Atmosphere from "./experience/Atmosphere";
 import CameraRig from "./experience/CameraRig";
+import { IS_MOBILE } from "./experience/device";
 import EnvLight from "./experience/EnvLight";
 import Lights from "./experience/Lights";
 import Mist from "./experience/Mist";
@@ -17,7 +18,7 @@ export default function Experience() {
 			<CameraRig />
 			<Lights />
 			<Mountain />
-			<ShadowBake frames={6} />
+			<ShadowBake frames={IS_MOBILE ? 3 : 6} />
 			<Mist />
 			<PostFX />
 		</>

@@ -2,6 +2,7 @@ import { useThree } from "@react-three/fiber";
 import { useLayoutEffect } from "react";
 import * as THREE from "three";
 import { FOG_COLOR, FOG_DENSITY } from "./constants";
+import { IS_MOBILE } from "./device";
 
 export default function Atmosphere() {
 	const { scene, gl } = useThree();
@@ -12,8 +13,10 @@ export default function Atmosphere() {
 		scene.background = fogColor;
 		gl.setClearColor(fogColor);
 		gl.shadowMap.enabled = true;
-		// VSM = real blurred soft shadows (PCFSoft is deprecated in three r185)
-		gl.shadowMap.type = THREE.VSMShadowMap;
+		// VSM looks best but costs ~2×; PCF is far safer on phones
+		gl.shadowMap.type = IS_MOBILE
+			? THREE.PCFShadowMap
+			: THREE.VSMShadowMap;
 
 		return () => {
 			scene.fog = null;

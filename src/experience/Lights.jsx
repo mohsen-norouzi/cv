@@ -22,6 +22,7 @@ import { getFocusAmount } from "./focusStore";
 import { flicker } from "./flicker";
 import SceneFocus from "./SceneFocus";
 import StreetLamps from "./StreetLamps";
+import { SHADOW_MAP_SIZE } from "./device";
 
 const LH_FILL_RATIO = 1.4;
 
@@ -89,7 +90,7 @@ export default function Lights() {
 				intensity={KEY_INT}
 				color={KEY_COLOR}
 				castShadow
-				shadow-mapSize={[4096, 4096]}
+				shadow-mapSize={[SHADOW_MAP_SIZE, SHADOW_MAP_SIZE]}
 				shadow-camera-near={2}
 				shadow-camera-far={130}
 				shadow-camera-left={-40}
