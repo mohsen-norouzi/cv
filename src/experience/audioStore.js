@@ -80,6 +80,7 @@ export async function enableMusic() {
 	if (!wantMusic) return false;
 	if (starting) return false;
 	starting = true;
+	pausedByVisibility = false;
 	ensureAll();
 
 	try {
@@ -119,6 +120,7 @@ function stopWhoosh() {
 
 export function disableMusic() {
 	wantMusic = false;
+	pausedByVisibility = false;
 	ensureAll();
 	stopWhoosh();
 
@@ -167,4 +169,51 @@ export function toggleMusic() {
 	}
 	wantMusic = true;
 	void enableMusic();
+}
+
+/** Pause while the tab is in the background; resume with the same preference. */
+let pausedByVisibility = false;
+
+async function handleVisibility() {
+	if (typeof document === "undefined") return;
+
+	if (document.hidden) {
+		if (!enabled) return;
+		pausedByVisibility = true;
+		stopWhoosh();
+		for (const { key } of LAYERS) {
+			const proxy = proxies.get(key);
+			const audio = players.get(key);
+			if (proxy) gsap.killTweensOf(proxy);
+			if (audio && !audio.paused) audio.pause();
+		}
+		return;
+	}
+
+	if (!pausedByVisibility || !wantMusic || !enabled) {
+		pausedByVisibility = false;
+		return;
+	}
+	pausedByVisibility = false;
+
+	try {
+		for (const { key, target } of LAYERS) {
+			const a = players.get(key);
+			if (!a) continue;
+			if (a.paused) await a.play();
+			setLayerVolume(key, target);
+			const proxy = proxies.get(key);
+			if (proxy) proxy.v = target;
+		}
+	} catch {
+		/* autoplay blocked after background — user can tap Music */
+		enabled = false;
+		notify();
+	}
+}
+
+if (typeof document !== "undefined") {
+	document.addEventListener("visibilitychange", () => {
+		void handleVisibility();
+	});
 }
