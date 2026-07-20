@@ -59,6 +59,31 @@ body {
 	color: var(--color-accent);
 }
 
+@media (max-width: 640px) {
+	.page-edge-fade {
+		background:
+			linear-gradient(
+				to bottom,
+				rgba(0, 0, 0, 0.28) 0%,
+				rgba(0, 0, 0, 0.1) 45%,
+				transparent 100%
+			),
+			linear-gradient(
+				to top,
+				rgba(0, 0, 0, 0.14) 0%,
+				rgba(0, 0, 0, 0.05) 50%,
+				transparent 100%
+			);
+		background-repeat: no-repeat;
+		background-size:
+			100% min(22vh, 9rem),
+			100% min(14vh, 6rem);
+		background-position:
+			top,
+			bottom;
+	}
+}
+
 .font-music {
 	font-family: var(--font-music);
 	font-style: italic;

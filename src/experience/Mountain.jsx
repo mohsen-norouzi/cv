@@ -23,6 +23,41 @@ import { MODEL_URL, MODEL_USE_DRACO, MODEL_USE_MESHOPT } from "./modelUrl";
 import { IS_MOBILE } from "./device";
 import { createStoneTexture } from "./stoneTexture";
 
+/** Android: MeshStandard + env often draws black — Lambert is reliable. */
+function toMobileLambert(mat) {
+	if (!mat) return mat;
+	if (mat.isMeshLambertMaterial || mat.isMeshBasicMaterial) return mat;
+	if (mat.userData?.glow) {
+		mat.metalness = 0;
+		mat.envMapIntensity = 0;
+		mat.envMap = null;
+		mat.needsUpdate = true;
+		return mat;
+	}
+	if (!mat.isMeshStandardMaterial && !mat.isMeshPhysicalMaterial) return mat;
+
+	const next = new THREE.MeshLambertMaterial({
+		name: mat.name,
+		color: mat.color?.clone?.() ?? new THREE.Color("#c4b4a4"),
+		map: mat.map ?? null,
+		emissive: mat.emissive?.clone?.() ?? new THREE.Color("#000000"),
+		emissiveMap: mat.emissiveMap ?? null,
+		emissiveIntensity: mat.emissiveIntensity ?? 0,
+		transparent: !!mat.transparent,
+		opacity: mat.opacity ?? 1,
+		side: mat.side ?? THREE.FrontSide,
+		flatShading: true,
+		fog: true,
+		vertexColors: !!mat.vertexColors,
+		alphaMap: mat.alphaMap ?? null,
+		aoMap: mat.aoMap ?? null,
+		lightMap: mat.lightMap ?? null,
+	});
+	next.userData = { ...mat.userData };
+	next.needsUpdate = true;
+	return next;
+}
+
 /** Project showcase meshes — slow Y-spin while that stop is focused */
 const GIRL_MESH = "tripo_node_1feaf1fd-79b2-4217-a867-f97ada61b588";
 const BAKERY_MESH = "tripo_node_e70704d4-4ce1-4bf4-974e-d1eea2c8202b";
@@ -575,10 +610,22 @@ export default function Mountain() {
 
 			child.material = Array.isArray(child.material) ? materials : materials[0];
 
+			if (IS_MOBILE) {
+				if (Array.isArray(child.material)) {
+					child.material = child.material.map(toMobileLambert);
+				} else {
+					child.material = toMobileLambert(child.material);
+				}
+			}
+
 			if (child.name === "Crystal001") child.renderOrder = 2;
 
-			for (const mat of materials) {
-				if (tracked.has(mat)) continue;
+			const applied = Array.isArray(child.material)
+				? child.material
+				: [child.material];
+
+			for (const mat of applied) {
+				if (!mat || tracked.has(mat)) continue;
 				tracked.add(mat);
 				const kind = mat.userData?.glow;
 				if (kind && nextGlows[kind]) nextGlows[kind].push(mat);
@@ -586,13 +633,11 @@ export default function Mountain() {
 				if (mat.userData?.horizonGlow) nextHorizon.push(mat);
 			}
 
-			// Facet bake only on big ground meshes (skip on mobile — heavy CPU/RAM)
-			const facetAmount = IS_MOBILE
-				? 0
-				: Math.max(
-						0,
-						...materials.map((m) => VARIED_MATS[m.name] ?? 0),
-					);
+			// Facet bake only on big ground meshes
+			const facetAmount = Math.max(
+				0,
+				...applied.map((m) => VARIED_MATS[m?.name] ?? 0),
+			);
 			if (facetAmount > 0 && child.geometry && !foliage) {
 				child.geometry = addFacetVariation(
 					child.geometry,

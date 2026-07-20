@@ -22,7 +22,7 @@ import { getFocusAmount } from "./focusStore";
 import { flicker } from "./flicker";
 import SceneFocus from "./SceneFocus";
 import StreetLamps from "./StreetLamps";
-import { SHADOW_MAP_SIZE } from "./device";
+import { IS_MOBILE, MOBILE_LIGHT_BOOST, SHADOW_MAP_SIZE } from "./device";
 
 const LH_FILL_RATIO = 1.4;
 
@@ -74,22 +74,22 @@ export default function Lights() {
 		<>
 			<ambientLight
 				ref={ambient}
-				intensity={AMBIENT_INT}
+				intensity={AMBIENT_INT * MOBILE_LIGHT_BOOST}
 				color={AMBIENT_COLOR}
 			/>
 			<hemisphereLight
 				ref={hemi}
 				skyColor={HEMI_SKY}
 				groundColor={HEMI_GROUND}
-				intensity={HEMI_INT}
+				intensity={HEMI_INT * MOBILE_LIGHT_BOOST}
 			/>
-			{/* High-res sun shadow — baked after a few frames via ShadowBake */}
+			{/* Sun — shadows desktop-only; many Android GPUs blank the scene with shadow maps */}
 			<directionalLight
 				ref={keyLight}
 				position={SUN_POSITION}
-				intensity={KEY_INT}
+				intensity={KEY_INT * MOBILE_LIGHT_BOOST}
 				color={KEY_COLOR}
-				castShadow
+				castShadow={!IS_MOBILE}
 				shadow-mapSize={[SHADOW_MAP_SIZE, SHADOW_MAP_SIZE]}
 				shadow-camera-near={2}
 				shadow-camera-far={130}
@@ -103,13 +103,13 @@ export default function Lights() {
 			<directionalLight
 				ref={fill}
 				position={[50, 18, 30]}
-				intensity={FILL_INT}
+				intensity={FILL_INT * MOBILE_LIGHT_BOOST}
 				color={FILL_COLOR}
 			/>
 			<directionalLight
 				ref={rim}
 				position={[-20, 8, 40]}
-				intensity={RIM_INT}
+				intensity={RIM_INT * MOBILE_LIGHT_BOOST}
 				color={RIM_COLOR}
 			/>
 			<StreetLamps />

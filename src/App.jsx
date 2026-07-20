@@ -13,12 +13,12 @@ import ScrollStealer from "./experience/ScrollStealer";
 
 function App() {
 	return (
-		<div className="relative h-full w-full overflow-hidden bg-[#d7c4b2]">
+			<div className="relative h-full w-full overflow-hidden bg-[#e2cbb0]">
 			<ScrollStealer />
 			<Canvas
 				className="absolute inset-0 h-full w-full"
 				style={{ width: "100%", height: "100%" }}
-				shadows
+				shadows={!IS_MOBILE}
 				dpr={DPR_RANGE}
 				camera={{
 					position: [2.5, 3.8, 34],
@@ -27,12 +27,11 @@ function App() {
 					far: 250,
 				}}
 				gl={{
-					antialias: !IS_MOBILE,
+					antialias: true,
 					toneMapping: THREE.NoToneMapping,
 					outputColorSpace: THREE.SRGBColorSpace,
 					powerPreference: IS_MOBILE ? "default" : "high-performance",
 					stencil: false,
-					alpha: false,
 				}}
 			>
 				<Suspense fallback={null}>
