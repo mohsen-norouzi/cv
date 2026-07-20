@@ -362,7 +362,7 @@ body {
 	position: relative;
 	display: grid;
 	place-items: center;
-	/* Hit area includes crosshair + dots around the orb */
+	/* Hit area includes crosshair around the orb */
 	width: 8rem;
 	height: 8rem;
 	padding: 0;
@@ -821,9 +821,15 @@ body {
 	-webkit-tap-highlight-color: transparent;
 }
 
-.scroll-path-marker:hover,
-.scroll-path-marker.is-active {
+.scroll-path-marker:hover:not(:disabled) {
 	color: rgba(255, 255, 255, 0.95);
+}
+
+.scroll-path-marker.is-active,
+.scroll-path-marker:disabled {
+	color: rgba(255, 255, 255, 0.95);
+	cursor: default;
+	pointer-events: none;
 }
 
 .scroll-path-dot {

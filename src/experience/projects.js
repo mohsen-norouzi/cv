@@ -30,7 +30,7 @@ export const PROJECTS = [
 		role: "Let’s talk",
 		stack: "Design · Development · 3D",
 		year: "Soon",
-		url: "#contact",
-		urlLabel: "Start a project",
+		url: "mailto:hello@itsmohsen.com",
+		urlLabel: "Email me",
 	},
 ];

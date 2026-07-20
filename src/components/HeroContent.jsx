@@ -80,7 +80,7 @@ export default function HeroContent() {
 						<button
 							type="button"
 							onClick={() => requestSnap(1)}
-							className="font-ui inline-flex items-center gap-2 rounded-sm bg-accent px-5 py-3 text-[11px] font-semibold tracking-[0.18em] text-[#1f1a14] uppercase transition-opacity hover:opacity-90"
+							className="font-ui inline-flex cursor-pointer items-center gap-2 rounded-sm bg-accent px-5 py-3 text-[11px] font-semibold tracking-[0.18em] text-[#1f1a14] uppercase transition-opacity hover:opacity-90"
 						>
 							View my work
 							<span aria-hidden>→</span>
