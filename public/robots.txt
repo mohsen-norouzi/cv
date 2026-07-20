@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Heavy 3D / media assets — no indexing value
+Disallow: /Try1.glb
+Disallow: /sounds/
+Disallow: /textures/
+
+Sitemap: https://www.itsmohsen.com/sitemap.xml
