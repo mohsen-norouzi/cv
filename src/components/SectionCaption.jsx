@@ -42,11 +42,20 @@ export default function SectionCaption() {
 			{/* Soft vignette — no hard box edges */}
 			<div
 				aria-hidden
-				className="pointer-events-none absolute -inset-x-8 -top-24 bottom-0"
+				className="pointer-events-none absolute -inset-x-12 -top-44 bottom-0"
 				style={{
 					opacity: scrimOpacity,
 					background:
-						"radial-gradient(120% 95% at 0% 100%, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.45) 38%, rgba(0,0,0,0.12) 68%, transparent 82%)",
+						"radial-gradient(120% 105% at 0% 100%, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.68) 32%, rgba(0,0,0,0.38) 55%, rgba(0,0,0,0.14) 74%, transparent 90%)",
+				}}
+			/>
+			<div
+				aria-hidden
+				className="pointer-events-none absolute inset-y-0 left-0 w-[min(100%,32rem)] blur-2xl"
+				style={{
+					opacity: scrimOpacity * 0.95,
+					background:
+						"linear-gradient(to right, rgba(0,0,0,0.58) 0%, rgba(0,0,0,0.28) 50%, transparent 100%)",
 				}}
 			/>
 

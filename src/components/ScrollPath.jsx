@@ -66,23 +66,31 @@ export default function ScrollPath() {
 					/>
 				))}
 
-				{STOPS.map((stop) => (
-					<button
-						key={stop.label}
-						type="button"
-						className={`scroll-path-marker${
-							activeIndex === stop.index ? " is-active" : ""
-						}`}
-						style={{ top: `${(stop.index / max) * 100}%` }}
-						onClick={() => requestSnapTo(stop.index)}
-						aria-label={`Go to section ${stop.label}`}
-						aria-current={
-							activeIndex === stop.index ? "true" : undefined
-						}
-					>
-						{stop.label}
-					</button>
-				))}
+				{STOPS.map((stop) => {
+					const isActive = activeIndex === stop.index;
+					return (
+						<button
+							key={stop.label}
+							type="button"
+							className={`scroll-path-marker${
+								isActive ? " is-active" : ""
+							}`}
+							style={{ top: `${(stop.index / max) * 100}%` }}
+							onClick={() => {
+								if (!isActive) requestSnapTo(stop.index);
+							}}
+							disabled={isActive}
+							aria-label={
+								isActive
+									? `Current section ${stop.label}`
+									: `Go to section ${stop.label}`
+							}
+							aria-current={isActive ? "true" : undefined}
+						>
+							{stop.label}
+						</button>
+					);
+				})}
 				</div>
 			</nav>
 		</>

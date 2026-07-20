@@ -37,18 +37,18 @@ export default function HeroContent() {
 		>
 			<div
 				aria-hidden
-				className="pointer-events-none absolute inset-y-0 left-0 w-[min(68%,46rem)]"
+				className="pointer-events-none absolute inset-y-0 left-0 w-[min(72%,50rem)]"
 				style={{
 					background:
-						"linear-gradient(to right, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.38) 28%, rgba(0,0,0,0.16) 55%, rgba(0,0,0,0.04) 78%, transparent 100%)",
+						"linear-gradient(to right, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.55) 22%, rgba(0,0,0,0.32) 48%, rgba(0,0,0,0.12) 72%, transparent 100%)",
 				}}
 			/>
 			<div
 				aria-hidden
-				className="pointer-events-none absolute inset-y-[12%] left-0 h-[76%] w-[min(52%,32rem)] blur-3xl"
+				className="pointer-events-none absolute inset-y-[8%] left-0 h-[84%] w-[min(58%,36rem)] blur-3xl"
 				style={{
 					background:
-						"linear-gradient(to right, rgba(0,0,0,0.28) 0%, rgba(0,0,0,0.1) 50%, transparent 100%)",
+						"radial-gradient(ellipse 80% 70% at 20% 45%, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.2) 45%, transparent 72%)",
 				}}
 			/>
 
@@ -61,17 +61,18 @@ export default function HeroContent() {
 
 				<FadeUp active={show} delay={0.22} duration={0.95} y={28}>
 					<h1 className="font-display mb-5 text-[clamp(2.4rem,5.2vw,3.75rem)] leading-[1.12] font-bold tracking-[-0.03em] text-white">
-						I build digital{" "}
-						<span className="hero-accent">experiences</span> that make
-						impact
-						<span className="hero-accent">.</span>
+						Every project
+						<br />
+						gets its own
+						<br />
+						<span className="hero-accent">little universe.</span>
 					</h1>
 				</FadeUp>
 
 				<FadeUp active={show} delay={0.36} duration={0.9}>
 					<p className="font-ui mb-9 max-w-md text-[15px] leading-[1.7] font-normal text-white/85">
-						Web developer crafting fast, accessible and meaningful web
-						experiences.
+						Somewhere ahead, past the fog, there&apos;s a spot still
+						unclaimed.
 					</p>
 				</FadeUp>
 
@@ -80,17 +81,19 @@ export default function HeroContent() {
 						<button
 							type="button"
 							onClick={() => requestSnap(1)}
-							className="font-ui inline-flex items-center gap-2 rounded-sm bg-accent px-5 py-3 text-[11px] font-semibold tracking-[0.18em] text-[#1f1a14] uppercase transition-opacity hover:opacity-90"
+							className="font-ui inline-flex cursor-pointer items-center gap-2 rounded-sm bg-accent px-5 py-3 text-[11px] font-semibold tracking-[0.18em] text-[#1f1a14] uppercase transition-opacity hover:opacity-90"
 						>
-							View my work
+							Follow the path
 							<span aria-hidden>→</span>
 						</button>
 
 						<a
-							href="#about"
+							href="https://wa.me/34666601296"
+							target="_blank"
+							rel="noopener noreferrer"
 							className="font-ui text-[11px] font-medium tracking-[0.2em] text-white uppercase underline decoration-white/45 underline-offset-4 transition-colors hover:text-accent hover:decoration-accent"
 						>
-							About me
+							Meet the maker
 						</a>
 					</div>
 				</FadeUp>

@@ -18,7 +18,7 @@ export const PROJECTS = [
 			"Homemade cookies from Barcelona — a warm shopfront for small-batch bakes, orders, and the story behind the kitchen.",
 		role: "Design & development",
 		stack: "Brand site · E‑commerce",
-		year: "2025",
+		year: "2026",
 		url: "https://bavobakes.com",
 		urlLabel: "Visit bavobakes.com",
 	},
@@ -30,7 +30,7 @@ export const PROJECTS = [
 		role: "Let’s talk",
 		stack: "Design · Development · 3D",
 		year: "Soon",
-		url: "#contact",
-		urlLabel: "Start a project",
+		url: "mailto:hello@itsmohsen.com",
+		urlLabel: "Email me",
 	},
 ];
