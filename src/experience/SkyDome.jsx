@@ -1,0 +1,134 @@
+import { Billboard } from "@react-three/drei";
+import { useFrame } from "@react-three/fiber";
+import { useMemo, useRef } from "react";
+import * as THREE from "three";
+import {
+	SKY_COOL,
+	SKY_HORIZON,
+	SKY_SUN,
+	SKY_TOP,
+	SUN_DIRECTION,
+	SUN_POSITION,
+} from "./constants";
+import { getFocusAmount } from "./focusStore";
+
+function createSunTexture() {
+	const size = 512;
+	const canvas = document.createElement("canvas");
+	canvas.width = size;
+	canvas.height = size;
+	const ctx = canvas.getContext("2d");
+	if (!ctx) return null;
+
+	const c = size / 2;
+	const grad = ctx.createRadialGradient(c, c, 0, c, c, c);
+	grad.addColorStop(0, "rgba(255,248,230,1)");
+	grad.addColorStop(0.1, "rgba(255,210,140,0.95)");
+	grad.addColorStop(0.28, "rgba(255,160,80,0.55)");
+	grad.addColorStop(0.55, "rgba(255,120,60,0.18)");
+	grad.addColorStop(1, "rgba(255,100,50,0)");
+	ctx.fillStyle = grad;
+	ctx.fillRect(0, 0, size, size);
+
+	const texture = new THREE.CanvasTexture(canvas);
+	texture.colorSpace = THREE.SRGBColorSpace;
+	return texture;
+}
+
+export default function SkyDome() {
+	const sunMesh = useRef(null);
+
+	const skyMat = useMemo(() => {
+		return new THREE.ShaderMaterial({
+			side: THREE.BackSide,
+			depthWrite: false,
+			fog: false,
+			uniforms: {
+				topColor: { value: new THREE.Color(SKY_TOP) },
+				horizonColor: { value: new THREE.Color(SKY_HORIZON) },
+				coolColor: { value: new THREE.Color(SKY_COOL) },
+				sunColor: { value: new THREE.Color(SKY_SUN) },
+				sunDir: { value: SUN_DIRECTION.clone() },
+				/** 1 = full sun, 0 = sun killed for scene focus */
+				sunAmount: { value: 1 },
+			},
+			vertexShader: /* glsl */ `
+				varying vec3 vWorldPosition;
+				void main() {
+					vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+					vWorldPosition = worldPosition.xyz;
+					gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+				}
+			`,
+			fragmentShader: /* glsl */ `
+				uniform vec3 topColor;
+				uniform vec3 horizonColor;
+				uniform vec3 coolColor;
+				uniform vec3 sunColor;
+				uniform vec3 sunDir;
+				uniform float sunAmount;
+				varying vec3 vWorldPosition;
+
+				float dither(vec2 p) {
+					return fract(52.9829189 * fract(dot(p, vec2(0.06711056, 0.00583715))));
+				}
+
+				void main() {
+					vec3 dir = normalize(vWorldPosition);
+					float h = dir.y;
+					float heightMix = smoothstep(-0.05, 0.75, h);
+
+					float sunAz = max(dot(normalize(vec3(dir.x, 0.0, dir.z)), normalize(vec3(sunDir.x, 0.0, sunDir.z))), 0.0);
+					float sunGlow = pow(sunAz, 1.5);
+					float sunDisk = pow(max(dot(dir, normalize(sunDir)), 0.0), 32.0);
+
+					// Keep the warm sky palette; only fade the hot sun contribution
+					vec3 horizonCol = mix(coolColor, horizonColor, 0.5 + 0.5 * sunGlow);
+					horizonCol = mix(horizonCol, sunColor, (sunGlow * 0.65 + sunDisk * 0.5) * sunAmount);
+
+					vec3 col = mix(horizonCol, topColor, heightMix);
+					col = mix(col, sunColor, sunGlow * (1.0 - heightMix) * 0.25 * sunAmount);
+
+					col += (dither(gl_FragCoord.xy) - 0.5) / 96.0;
+
+					gl_FragColor = vec4(col, 1.0);
+				}
+			`,
+		});
+	}, []);
+
+	const sunTexture = useMemo(() => createSunTexture(), []);
+
+	useFrame(() => {
+		const sunAmount = 1 - getFocusAmount() * 0.95;
+		skyMat.uniforms.sunAmount.value = sunAmount;
+		if (sunMesh.current) {
+			sunMesh.current.material.opacity = sunAmount;
+			sunMesh.current.visible = sunAmount > 0.05;
+		}
+	});
+
+	return (
+		<group>
+			<mesh material={skyMat} renderOrder={-10} frustumCulled={false}>
+				<sphereGeometry args={[180, 48, 32]} />
+			</mesh>
+			{sunTexture && (
+				<Billboard follow position={SUN_POSITION}>
+					<mesh ref={sunMesh} renderOrder={-9}>
+						<planeGeometry args={[120, 120]} />
+						<meshBasicMaterial
+							map={sunTexture}
+							transparent
+							depthWrite={false}
+							fog={false}
+							toneMapped={false}
+							blending={THREE.AdditiveBlending}
+							opacity={1}
+						/>
+					</mesh>
+				</Billboard>
+			)}
+		</group>
+	);
+}

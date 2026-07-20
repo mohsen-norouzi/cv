@@ -1,17 +1,60 @@
 import { Canvas } from "@react-three/fiber";
+import { Suspense } from "react";
 import * as THREE from "three";
-import "./App.css";
+import HeroContent from "./components/HeroContent";
+import MusicToggle from "./components/MusicToggle";
+import Navbar from "./components/Navbar";
+import SceneLoader from "./components/SceneLoader";
+import ScrollPath from "./components/ScrollPath";
+import SectionCaption from "./components/SectionCaption";
 import Experience from "./Experience";
+import ScrollStealer from "./experience/ScrollStealer";
 
 function App() {
 	return (
-		<Canvas
-			shadows
-			camera={{ position: [0, 0, 10] }}
-			gl={{ shadowMapType: THREE.PCFSoftShadowMap }}
-		>
-			<Experience />
-		</Canvas>
+		<div className="relative h-full w-full overflow-hidden bg-[#d7c4b2]">
+			<ScrollStealer />
+			<Canvas
+				className="absolute inset-0 h-full w-full"
+				style={{ width: "100%", height: "100%" }}
+				shadows
+				dpr={[1, 1.25]}
+				camera={{
+					position: [2.5, 3.8, 34],
+					fov: 42,
+					near: 0.1,
+					far: 250,
+				}}
+				gl={{
+					antialias: true,
+					toneMapping: THREE.NoToneMapping,
+					outputColorSpace: THREE.SRGBColorSpace,
+					powerPreference: "high-performance",
+					stencil: false,
+				}}
+			>
+				<Suspense fallback={null}>
+					<Experience />
+				</Suspense>
+			</Canvas>
+
+			<SceneLoader />
+
+			<div className="pointer-events-none absolute inset-0 z-10">
+				{/* Soft edge fades — long falloffs, no hard bands */}
+				<div
+					aria-hidden
+					className="page-edge-fade pointer-events-none absolute inset-0"
+				/>
+				<div className="pointer-events-auto">
+					<Navbar />
+				</div>
+				<HeroContent />
+				<SectionCaption />
+				<ScrollPath />
+				<MusicToggle />
+			</div>
+		</div>
 	);
 }
 
