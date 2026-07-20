@@ -21,7 +21,9 @@ export default function SceneLoader() {
 	const [gone, setGone] = useState(false);
 	const [entering, setEntering] = useState(false);
 
-	const assetsReady = sceneReady && !active && progress >= 100;
+	// Scene ready is the hard gate — progress can stall on some phones
+	// after the GLB is already decoded and materials applied.
+	const assetsReady = sceneReady && (progress >= 99 || !active);
 	const pct = Math.min(100, Math.round(progress));
 
 	const enter = async () => {

@@ -11,6 +11,7 @@ import {
 	KEY_INT,
 	RIM_INT,
 } from "./constants";
+import { IS_MOBILE } from "./device";
 import {
 	computeFocus,
 	setFocus,
@@ -101,8 +102,8 @@ function createPoolTexture() {
 	return texture;
 }
 
-/** Beam dust — tuned final values */
-const DUST_COUNT = 80;
+/** Beam dust — tuned final values (fewer motes on mobile) */
+const DUST_COUNT = IS_MOBILE ? 28 : 80;
 const DUST_SIZE = 0.46;
 const DUST_OPACITY = 1;
 const DUST_DRIFT = 0.01;

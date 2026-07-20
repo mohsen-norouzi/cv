@@ -5,13 +5,14 @@ import * as THREE from "three";
 import { BIG_LAMP_INTENSITY } from "./constants";
 import { getFocusAmount } from "./focusStore";
 import { flicker, hashSeed } from "./flicker";
-import { MODEL_URL } from "./modelUrl";
+import { MODEL_URL, MODEL_USE_DRACO, MODEL_USE_MESHOPT } from "./modelUrl";
+import { IS_MOBILE } from "./device";
 
 /** Softer fill — hard pools of light were making lamps look weird */
 const FILL_RATIO = 1.35;
 const LANTERN_Y_OFFSET = 1.85;
 /** Cap realtime lights — each point light multiplies fragment cost */
-const MAX_LAMPS = 3;
+const MAX_LAMPS = IS_MOBILE ? 2 : 3;
 const HALO_SIZE = 3.6;
 
 /** Soft circular glow — no star rays (those read as UI sparkles, not lanterns) */
@@ -39,7 +40,7 @@ function createHaloTexture() {
 }
 
 export default function StreetLamps() {
-	const { scene } = useGLTF(MODEL_URL);
+	const { scene } = useGLTF(MODEL_URL, MODEL_USE_DRACO, MODEL_USE_MESHOPT);
 	const { camera } = useThree();
 	const [lamps, setLamps] = useState([]);
 	const lightRefs = useRef([]);
