@@ -5,6 +5,7 @@ import HeroContent from "./components/HeroContent";
 import MusicToggle from "./components/MusicToggle";
 import Navbar from "./components/Navbar";
 import SceneLoader from "./components/SceneLoader";
+import ScrollCue from "./components/ScrollCue";
 import ScrollPath from "./components/ScrollPath";
 import SectionCaption from "./components/SectionCaption";
 import Experience from "./Experience";
@@ -53,6 +54,7 @@ function App() {
 				<HeroContent />
 				<SectionCaption />
 				<ScrollPath />
+				<ScrollCue />
 				<MusicToggle />
 			</div>
 		</div>

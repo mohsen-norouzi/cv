@@ -1,10 +1,14 @@
 import { useSyncExternalStore } from "react";
+import { IS_MOBILE } from "../experience/device";
 import {
 	getSceneReady,
 	subscribeSceneReady,
 } from "../experience/loadStore";
 import { getScrollProgress, subscribeScroll } from "../experience/scrollStore";
 
+/**
+ * First-scroll hint — fades out once the visitor starts moving.
+ */
 export default function ScrollCue() {
 	const progress = useSyncExternalStore(
 		subscribeScroll,
@@ -19,10 +23,11 @@ export default function ScrollCue() {
 
 	const opacity = sceneReady ? Math.max(0, 1 - progress * 1.8) : 0;
 	const hidden = opacity < 0.02;
+	const label = IS_MOBILE ? "Swipe to explore" : "Scroll to explore";
 
 	return (
 		<div
-			className="absolute bottom-8 left-8 z-30 flex items-center gap-3 md:bottom-10 md:left-12 lg:left-16"
+			className="absolute bottom-8 left-8 z-30 flex items-center gap-3 drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)] md:bottom-10 md:left-12 lg:left-16"
 			style={{
 				opacity,
 				visibility: hidden ? "hidden" : "visible",
@@ -56,7 +61,7 @@ export default function ScrollCue() {
 				/>
 			</svg>
 			<span className="font-ui text-[10px] font-medium tracking-[0.28em] text-white/75 uppercase">
-				Scroll to explore
+				{label}
 			</span>
 		</div>
 	);
