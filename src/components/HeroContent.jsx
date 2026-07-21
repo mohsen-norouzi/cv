@@ -53,7 +53,7 @@ export default function HeroContent() {
 				}}
 			/>
 
-			<div className="relative max-w-lg pointer-events-auto">
+			<div className="relative max-w-lg pointer-events-auto pr-10 sm:pr-0">
 				<div className="relative z-[1]">
 					<FadeUp active={show} delay={0.1} duration={0.9}>
 						<p className="font-ui mb-4 text-[11px] font-medium tracking-[0.22em] text-white/90 uppercase sm:mb-5 sm:text-[12px]">
@@ -79,7 +79,7 @@ export default function HeroContent() {
 					</FadeUp>
 
 					<FadeUp active={show} delay={0.48} duration={0.85}>
-						<div className="flex flex-wrap items-center gap-5 sm:gap-7">
+						<div className="flex flex-col items-start gap-4 pr-12 sm:flex-row sm:items-center sm:gap-7 sm:pr-0">
 							<button
 								type="button"
 								onClick={() => requestSnap(1)}
