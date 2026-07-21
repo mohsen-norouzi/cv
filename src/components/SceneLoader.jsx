@@ -188,7 +188,7 @@ export default function SceneLoader() {
 						className={`splash-enter ${assetsReady ? "is-ready" : ""}`}
 						onClick={() => void enter()}
 						disabled={!canEnter}
-						aria-label={assetsReady ? "Enter" : `Loading ${pct}%`}
+						aria-label={assetsReady ? "Enter the path" : `Loading ${pct}%`}
 					>
 						<span className="splash-crosshair" aria-hidden>
 							<span className="splash-crosshair-h" />
@@ -211,7 +211,7 @@ export default function SceneLoader() {
 					</button>
 
 					<span className="splash-hint">
-						{assetsReady ? "Click to begin" : "Loading"}
+						{assetsReady ? "Scroll through my work" : "Loading"}
 					</span>
 				</div>
 			</div>
