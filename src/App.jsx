@@ -7,7 +7,7 @@ function App() {
 	return (
 		<Canvas
 			shadows
-			camera={{ position: [0, 0, 10] }}
+			camera={{ position: [3, 2, 5], fov: 45 }}
 			gl={{ shadowMapType: THREE.PCFSoftShadowMap }}
 		>
 			<Experience />
