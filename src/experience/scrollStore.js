@@ -1,3 +1,4 @@
+import { reducedMotion } from "./motion";
 import { playWhoosh } from "./audioStore";
 
 const listeners = new Set();
@@ -112,16 +113,20 @@ export function snapScroll(direction) {
 
 /** Animate camera progress to an absolute section index. */
 function snapTo(next) {
-	const clamped = Math.min(
-		SCROLL_SECTION_COUNT - 1,
-		Math.max(0, next),
-	);
+	const clamped = Math.min(SCROLL_SECTION_COUNT - 1, Math.max(0, next));
 	if (clamped === section && !animating) return;
 	if (animating) return;
 
 	section = clamped;
 	const from = progress;
 	const to = clamped;
+	if (reducedMotion()) {
+		if (raf) cancelAnimationFrame(raf);
+		raf = 0;
+		animating = false;
+		setScrollProgress(to);
+		return;
+	}
 	const start = performance.now();
 
 	if (raf) cancelAnimationFrame(raf);

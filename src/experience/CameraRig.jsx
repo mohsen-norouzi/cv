@@ -1,3 +1,4 @@
+import { reducedMotion } from "./motion";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
@@ -50,7 +51,7 @@ function easeInOut(t) {
 }
 
 export default function CameraRig() {
-	const { camera } = useThree();
+	const { camera, size } = useThree();
 	const offset = useRef(new THREE.Vector2());
 	const look = useRef(new THREE.Vector3());
 	const pos = useRef(new THREE.Vector3());
@@ -85,21 +86,23 @@ export default function CameraRig() {
 
 		camera.position.copy(CAM_START);
 		camera.lookAt(CAM_TARGET);
-		camera.fov = CAM_FOV;
+		camera.fov = size.width < 700 ? 58 : CAM_FOV;
 		camera.updateProjectionMatrix();
 		pos.current.copy(CAM_START);
 		look.current.copy(CAM_TARGET);
 		targetPos.current.copy(CAM_START);
 		targetLook.current.copy(CAM_TARGET);
-	}, [camera]);
+	}, [camera, size.width]);
 
 	useFrame(({ pointer }, delta) => {
-		smoothP.current = THREE.MathUtils.damp(
-			smoothP.current,
-			getScrollProgress(),
-			FOLLOW_DAMP,
-			delta,
-		);
+		smoothP.current = reducedMotion()
+			? getScrollProgress()
+			: THREE.MathUtils.damp(
+					smoothP.current,
+					getScrollProgress(),
+					FOLLOW_DAMP,
+					delta,
+				);
 		const p = smoothP.current;
 
 		sampleSegment(posCurves, p, targetPos.current);
@@ -116,6 +119,18 @@ export default function CameraRig() {
 				.addScaledVector(_dir, LOOK_DIST);
 		} else {
 			sampleSegment(lookCurves, p, targetLook.current);
+		}
+
+		if (size.width < 700) {
+			const segment = Math.min(2, Math.floor(p)),
+				fraction = p - segment;
+			const shifts = [0, 3.2, 3.5, 3.0];
+			targetLook.current.x += THREE.MathUtils.lerp(
+				shifts[segment],
+				shifts[segment + 1],
+				fraction,
+			);
+			targetLook.current.y += 3.1 * Math.min(1, p);
 		}
 
 		pos.current.x = THREE.MathUtils.damp(
@@ -157,8 +172,14 @@ export default function CameraRig() {
 		);
 
 		// Soft parallax at every settled stop; off while snapping between them
+		if (reducedMotion()) {
+			pos.current.copy(targetPos.current);
+			look.current.copy(targetLook.current);
+		}
 		const settled =
-			!isScrollAnimating() && Math.abs(p - Math.round(p)) < 0.02;
+			!reducedMotion() &&
+			!isScrollAnimating() &&
+			Math.abs(p - Math.round(p)) < 0.02;
 		const para = settled ? 1 : 0;
 		offset.current.x = THREE.MathUtils.damp(
 			offset.current.x,

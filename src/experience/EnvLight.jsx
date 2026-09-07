@@ -65,7 +65,7 @@ export default function EnvLight({ intensity = 0.5 }) {
 		envScene.add(dome);
 
 		const pmrem = new THREE.PMREMGenerator(gl);
-		const envTarget = pmrem.fromScene(envScene, 0.08);
+		const envTarget = pmrem.fromScene(envScene, 0.025);
 		scene.environment = envTarget.texture;
 		scene.environmentIntensity = intensity;
 

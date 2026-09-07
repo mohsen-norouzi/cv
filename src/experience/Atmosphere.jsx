@@ -18,7 +18,7 @@ export default function Atmosphere() {
 		gl.setClearAlpha(1);
 		gl.shadowMap.enabled = !IS_MOBILE;
 		if (!IS_MOBILE) {
-			gl.shadowMap.type = THREE.VSMShadowMap;
+			gl.shadowMap.type = THREE.PCFShadowMap;
 		}
 
 		return () => {

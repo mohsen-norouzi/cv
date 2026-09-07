@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { isScrollAnimating, requestSnap } from "./scrollStore";
+import { isScrollAnimating, requestSnap, requestSnapTo } from "./scrollStore";
 
 /** Accumulated wheel delta needed to fire a snap (trackpads send tiny ticks). */
 const WHEEL_ACCUM_THRESHOLD = 24;
@@ -41,6 +41,12 @@ export default function ScrollStealer() {
 		};
 
 		const onWheel = (event) => {
+			if (
+				event.ctrlKey ||
+				event.metaKey ||
+				event.target.closest(".scene-fallback")
+			)
+				return;
 			event.preventDefault();
 
 			// Any wheel while locked / animating just extends the lock (eat inertia).
@@ -63,6 +69,8 @@ export default function ScrollStealer() {
 		};
 
 		const onTouchMove = (event) => {
+			if (event.touches.length > 1 || event.target.closest(".scene-fallback"))
+				return;
 			event.preventDefault();
 		};
 
@@ -77,6 +85,32 @@ export default function ScrollStealer() {
 			trySnap(dy > 0 ? 1 : -1);
 		};
 
+		const onKey = (event) => {
+			if (
+				event.altKey ||
+				event.ctrlKey ||
+				event.metaKey ||
+				event.target.closest('input,textarea,select,[contenteditable="true"]')
+			)
+				return;
+			if (event.key === "ArrowDown" || event.key === "PageDown") {
+				event.preventDefault();
+				trySnap(1);
+			}
+			if (event.key === "ArrowUp" || event.key === "PageUp") {
+				event.preventDefault();
+				trySnap(-1);
+			}
+			if (event.key === "Home") {
+				event.preventDefault();
+				requestSnapTo(0);
+			}
+			if (event.key === "End") {
+				event.preventDefault();
+				requestSnapTo(3);
+			}
+		};
+		window.addEventListener("keydown", onKey);
 		window.addEventListener("wheel", onWheel, { passive: false });
 		window.addEventListener("touchstart", onTouchStart, { passive: true });
 		window.addEventListener("touchmove", onTouchMove, { passive: false });
@@ -85,6 +119,7 @@ export default function ScrollStealer() {
 		return () => {
 			window.clearTimeout(idleTimer);
 			window.removeEventListener("wheel", onWheel);
+			window.removeEventListener("keydown", onKey);
 			window.removeEventListener("touchstart", onTouchStart);
 			window.removeEventListener("touchmove", onTouchMove);
 			window.removeEventListener("touchend", onTouchEnd);

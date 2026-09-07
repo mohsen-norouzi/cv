@@ -83,7 +83,7 @@ export default function SkyDome() {
 					float sunDisk = pow(max(dot(dir, normalize(sunDir)), 0.0), 32.0);
 
 					// Keep the warm sky palette; only fade the hot sun contribution
-					vec3 horizonCol = mix(coolColor, horizonColor, 0.5 + 0.5 * sunGlow);
+					vec3 horizonCol = mix(coolColor, horizonColor, sunGlow);
 					horizonCol = mix(horizonCol, sunColor, (sunGlow * 0.65 + sunDisk * 0.5) * sunAmount);
 
 					vec3 col = mix(horizonCol, topColor, heightMix);
@@ -91,7 +91,9 @@ export default function SkyDome() {
 
 					col += (dither(gl_FragCoord.xy) - 0.5) / 96.0;
 
-					gl_FragColor = vec4(col, 1.0);
+					gl_FragColor = vec4(col * 1.0, 1.0);
+ #include <tonemapping_fragment>
+ #include <colorspace_fragment>
 				}
 			`,
 		});
@@ -111,7 +113,7 @@ export default function SkyDome() {
 	return (
 		<group>
 			<mesh material={skyMat} renderOrder={-10} frustumCulled={false}>
-				<sphereGeometry args={[180, 48, 32]} />
+				<sphereGeometry args={[1500, 48, 32]} />
 			</mesh>
 			{sunTexture && (
 				<Billboard follow position={SUN_POSITION}>

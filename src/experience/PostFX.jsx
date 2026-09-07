@@ -46,7 +46,7 @@ function DesktopPostFX() {
 
 	return (
 		<EffectComposer
-			multisampling={0}
+			multisampling={4}
 			enableNormalPass={false}
 			frameBufferType={THREE.HalfFloatType}
 		>
@@ -54,9 +54,9 @@ function DesktopPostFX() {
 				halfRes
 				quality="performance"
 				aoRadius={1.0}
-				intensity={2.4}
+				intensity={1.5}
 				distanceFalloff={1.0}
-				color="#3b2f28"
+				color="#333c4c"
 			/>
 			<Bloom
 				luminanceThreshold={BLOOM_THRESHOLD}
