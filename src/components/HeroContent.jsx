@@ -6,18 +6,19 @@ import {
 	subscribeScroll,
 } from "../experience/scrollStore";
 import FadeUp from "./FadeUp";
-export default function HeroContent() {
-	const progress = useSyncExternalStore(
+
+const getHeroOpacity = () => Math.max(0, 1 - getScrollProgress() * 2.5);
+export default function HeroContent({ entered = true }) {
+	const opacity = useSyncExternalStore(
 		subscribeScroll,
-		getScrollProgress,
-		getScrollProgress,
+		getHeroOpacity,
+		getHeroOpacity,
 	);
 	const ready = useSyncExternalStore(
 		subscribeSceneReady,
 		getSceneReady,
 		getSceneReady,
 	);
-	const opacity = Math.max(0, 1 - progress * 2.5);
 	return (
 		<section
 			className="hero"
@@ -25,12 +26,12 @@ export default function HeroContent() {
 			aria-label="Introduction"
 		>
 			<div className="hero-copy">
-				<FadeUp active={ready} delay={0.1}>
+				<FadeUp active={ready && entered} delay={0.1}>
 					<p className="eyebrow">
 						HI, I'M <span>MOHSEN</span>
 					</p>
 				</FadeUp>
-				<FadeUp active={ready} delay={0.2}>
+				<FadeUp active={ready && entered} delay={0.2}>
 					<h1>
 						I build digital
 						<br />
@@ -39,7 +40,7 @@ export default function HeroContent() {
 						that make impact<span className="full-stop">.</span>
 					</h1>
 				</FadeUp>
-				<FadeUp active={ready} delay={0.3}>
+				<FadeUp active={ready && entered} delay={0.3}>
 					<div className="hero-rule" />
 					<p className="hero-description">
 						Web designer & developer.
@@ -48,7 +49,7 @@ export default function HeroContent() {
 						<br />A little sense of wonder.
 					</p>
 				</FadeUp>
-				<FadeUp active={ready} delay={0.4}>
+				<FadeUp active={ready && entered} delay={0.4}>
 					<div className="hero-actions">
 						<button
 							type="button"

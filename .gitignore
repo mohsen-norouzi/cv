@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Lighting bake intermediates
+assets/lighting/*.exr
+assets/bake-status.json
+assets/*.blend1

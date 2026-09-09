@@ -4,17 +4,19 @@ import {
 	requestSnapTo,
 	subscribeScroll,
 } from "../experience/scrollStore";
+
 const stops = [
 	"The coast",
 	"Ekaterina Shelehova",
 	"Bavo Bakes",
 	"Your next project",
 ];
+const getActiveChapter = () => Math.round(getScrollProgress());
 export default function ScrollPath() {
 	const p = useSyncExternalStore(
 		subscribeScroll,
-		getScrollProgress,
-		getScrollProgress,
+		getActiveChapter,
+		getActiveChapter,
 	);
 	return (
 		<nav className="chapter-nav" aria-label="Explore the portfolio">

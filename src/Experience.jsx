@@ -1,28 +1,34 @@
+import { lazy } from "react";
 import Atmosphere from "./experience/Atmosphere";
 import CameraRig from "./experience/CameraRig";
-import CoastalWorld from "./experience/CoastalWorld";
 import CoastalMist from "./experience/CoastalMist";
-import Ocean from "./experience/Ocean";
-import EnvLight from "./experience/EnvLight";
-import SkyDome from "./experience/SkyDome";
-import ShadowBake from "./experience/ShadowBake";
-import PostFX from "./experience/PostFX";
-import TourFocus from "./experience/TourFocus";
-import ProjectLabels from "./experience/ProjectLabels";
+import CoastalWorld from "./experience/CoastalWorld";
 import { IS_MOBILE } from "./experience/device";
+import EnvLight from "./experience/EnvLight";
+import Ocean from "./experience/Ocean";
+import ProjectLabels from "./experience/ProjectLabels";
+import RenderLifecycle from "./experience/RenderLifecycle";
+import SceneFocus from "./experience/SceneFocus";
+import ShadowBake from "./experience/ShadowBake";
+import SkyDome from "./experience/SkyDome";
+import TourFocus from "./experience/TourFocus";
+import WorldFocus from "./experience/WorldFocus";
+
+const PostFX = lazy(() => import("./experience/PostFX"));
 
 export default function Experience() {
 	return (
 		<>
+			<RenderLifecycle />
 			<Atmosphere />
 			<SkyDome />
 			<CameraRig />
-			<EnvLight intensity={0.38} />
-			<ambientLight color="#c8d3e4" intensity={0.14} />
-			<hemisphereLight args={["#d7dfef", "#666957", 0.65]} />
+			<EnvLight intensity={0.45} />
+			<ambientLight color="#c8d3e4" intensity={0.09} />
+			<hemisphereLight args={["#d7dfef", "#666957", 0.35]} />
 			<directionalLight
-				position={[-45, 23, 25]}
-				intensity={3.2}
+				position={[-35, 24, 75]}
+				intensity={2.5}
 				color="#ffdbab"
 				castShadow={!IS_MOBILE}
 				shadow-mapSize={[4096, 4096]}
@@ -36,7 +42,7 @@ export default function Experience() {
 			/>
 			<directionalLight
 				position={[35, 18, -25]}
-				intensity={0.65}
+				intensity={0.25}
 				color="#a4bce3"
 			/>
 			<Ocean />
@@ -44,6 +50,8 @@ export default function Experience() {
 			<CoastalMist />
 			<ProjectLabels />
 			<TourFocus />
+			<SceneFocus />
+			<WorldFocus />
 			{!IS_MOBILE && <ShadowBake frames={8} />}
 			{!IS_MOBILE && <PostFX />}
 		</>

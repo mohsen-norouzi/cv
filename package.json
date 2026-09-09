@@ -10,14 +10,16 @@
 		"format": "biome format --write .",
 		"lint": "biome lint --write .",
 		"check": "biome check --write .",
-		"models:coast": "node scripts/export-coast.mjs"
+		"models:coast": "node scripts/export-coast.mjs",
+		"models:lighting": "node scripts/encode-lightmaps.mjs && npm run models:optimize",
+		"models:optimize": "node scripts/optimize-assets.mjs",
+		"test:focus": "node --test tests/focus-transition.test.mjs"
 	},
 	"dependencies": {
 		"@react-three/drei": "^10.7.7",
 		"@react-three/fiber": "^9.6.1",
 		"@react-three/postprocessing": "^3.0.4",
 		"gsap": "^3.15.0",
-		"leva": "^0.10.1",
 		"n8ao": "^2.0.0",
 		"postprocessing": "^6.39.2",
 		"r3f-perf": "^7.2.3",
@@ -31,6 +33,7 @@
 		"@types/react": "^19.2.17",
 		"@types/react-dom": "^19.2.3",
 		"@vitejs/plugin-react": "^6.0.3",
+		"meshoptimizer": "1.1.1",
 		"tailwindcss": "^4.3.3",
 		"vite": "^8.1.1"
 	}

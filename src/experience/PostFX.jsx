@@ -2,6 +2,7 @@ import { useFrame } from "@react-three/fiber";
 import {
 	Bloom,
 	BrightnessContrast,
+	DepthOfField,
 	EffectComposer,
 	HueSaturation,
 	N8AO,
@@ -9,7 +10,7 @@ import {
 	Vignette,
 } from "@react-three/postprocessing";
 import { ToneMappingMode } from "postprocessing";
-import { useRef } from "react";
+import { useCallback, useRef } from "react";
 import * as THREE from "three";
 import {
 	BLOOM_INTENSITY,
@@ -23,18 +24,42 @@ import {
 } from "./constants";
 import { IS_MOBILE } from "./device";
 import { getFocusAmount } from "./focusStore";
+import { getScrollProgress } from "./scrollStore";
 
 /**
  * Desktop: full post stack.
  * Mobile: no composer (Android gray/black bugs). Leave NoToneMapping —
  * ACES without the grade stack was crushing the scene to night-black.
  */
+const FOCUS_DISTANCES = [46, 13, 17, 14];
+
 function DesktopPostFX() {
 	const vignette = useRef(null);
 	const grade = useRef(null);
+	const lens = useRef(null);
+	// React 19 passes refs as props. The library's generic effect wrapper
+	// serializes props on rerender, so an object ref containing an Effect's
+	// circular scene graph crashes it. Stable callback refs stay serializable.
+	const setGrade = useCallback((effect) => {
+		grade.current = effect;
+	}, []);
+	const setVignette = useCallback((effect) => {
+		vignette.current = effect;
+	}, []);
 
 	useFrame(() => {
 		const f = getFocusAmount();
+		if (lens.current) {
+			const p = THREE.MathUtils.clamp(getScrollProgress(), 0, 3),
+				i = Math.min(2, Math.floor(p));
+			const distance = THREE.MathUtils.lerp(
+				FOCUS_DISTANCES[i],
+				FOCUS_DISTANCES[i + 1],
+				p - i,
+			);
+			lens.current.circleOfConfusionMaterial.focusDistance = distance;
+			lens.current.circleOfConfusionMaterial.focusRange = distance * 0.6;
+		}
 		if (vignette.current) {
 			vignette.current.darkness = VIGNETTE_DARKNESS + f * 0.2;
 		}
@@ -52,11 +77,18 @@ function DesktopPostFX() {
 		>
 			<N8AO
 				halfRes
-				quality="performance"
+				quality="medium"
 				aoRadius={1.0}
-				intensity={1.5}
+				intensity={0.5}
 				distanceFalloff={1.0}
 				color="#333c4c"
+			/>
+			<DepthOfField
+				ref={lens}
+				focusDistance={46}
+				focusRange={27}
+				bokehScale={1.7}
+				height={480}
 			/>
 			<Bloom
 				luminanceThreshold={BLOOM_THRESHOLD}
@@ -67,12 +99,12 @@ function DesktopPostFX() {
 			/>
 			<HueSaturation saturation={SATURATION} />
 			<BrightnessContrast
-				ref={grade}
+				ref={setGrade}
 				brightness={BRIGHTNESS}
 				contrast={CONTRAST}
 			/>
 			<Vignette
-				ref={vignette}
+				ref={setVignette}
 				offset={VIGNETTE_OFFSET}
 				darkness={VIGNETTE_DARKNESS}
 			/>

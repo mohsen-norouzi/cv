@@ -1,4 +1,5 @@
 import { Component } from "react";
+import { setLoadProgress } from "../experience/loadStore";
 
 export function SceneFallback() {
 	return (
@@ -31,6 +32,10 @@ export default class SceneErrorBoundary extends Component {
 	static getDerivedStateFromError() {
 		return { failed: true };
 	}
+	componentDidCatch() {
+		setLoadProgress(0, 1);
+	}
+
 	render() {
 		return this.state.failed ? <SceneFallback /> : this.props.children;
 	}

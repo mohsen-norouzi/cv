@@ -27,13 +27,13 @@ export function buildCoast() {
 	const rocks = ["#515964", "#414e5c", "#666e70", "#56616c", "#374755"].map(
 		(c, i) => mat(`Cliff ${i}`, c),
 	);
-	const moss = ["#60694a", "#576449", "#6a714e", "#4d5d46"].map((c, i) =>
+	const moss = ["#707a3d", "#53673f", "#849047", "#405c40"].map((c, i) =>
 		mat(`Heather ${i}`, c),
 	);
-	const stone = ["#bcb5a9", "#cfc3ad", "#a7a8a5", "#d4c8b4", "#bcbdb8"].map(
-		(c, i) => mat(`Limestone ${i}`, c, 0.84),
+	const stone = ["#a69b91", "#baab99", "#85888b", "#b7a99e", "#a5a4a2"].map(
+		(c, i) => mat(`Limestone ${i}`, c, 0.36),
 	);
-	const leaf = ["#394c41", "#465744", "#536048", "#69704b"].map((c, i) =>
+	const leaf = ["#314a34", "#445b36", "#5c713d", "#778044"].map((c, i) =>
 		mat(`Needles ${i}`, c),
 	);
 	const wood = mat("Weathered oak", "#51473c");
@@ -94,13 +94,14 @@ export function buildCoast() {
 			p = COAST_PATH.getPoint(t);
 		for (let j = 0; j <= cols; j++) {
 			const u = j / cols;
-			const x = p.x - 5.2 + u * 48;
+			const x = p.x - 5.2 + u * 22;
 			let y = p.y - 0.62 + Math.sin(i * 1.63 + j * 0.71) * 0.27;
 			const z = p.z + Math.sin(j * 2.3 + i * 0.8) * 0.65;
 			if (j === 0) y = -1.1;
 			else if (j === 1) y -= 0.5 + rand();
 			if (j > 5) y += (u - 0.22) * range(2, 7);
-			if (j === cols) y -= 1.2;
+			if (j === cols) y = -1.1;
+			else if (j === cols - 1) y -= 2.2;
 			if (i === 0 || i === rows) y -= 1.2;
 			vertices.push(x, y, z);
 		}
@@ -157,7 +158,7 @@ export function buildCoast() {
 		const t = range(0.06, 0.97),
 			p = COAST_PATH.getPoint(t),
 			side = rand() > 0.38 ? -1 : 1;
-		const x = p.x + (side < 0 ? range(-6.5, -4.8) : range(9, 15));
+		const x = p.x + (side < 0 ? range(-6.5, -4.8) : range(7, 11));
 		const h = Math.max(1.6, p.y * 0.6);
 		rock(
 			[x, p.y - h * 0.64 - 0.25, p.z],
@@ -171,68 +172,55 @@ export function buildCoast() {
 				moss[i % moss.length],
 			);
 	}
-	// Individually cut, gently bevelled stones; a readable rhythm all the way uphill.
-	const steps = 78;
-	for (let i = 0; i < steps; i++) {
+	// Shared cross-sections make every joint fit, including the inside of bends.
+	const paving = ["#b8aa9e", "#b4a69c", "#bcaea0", "#afa39b"].map((c, i) =>
+		mat(`Paving ${i}`, c, 0.25),
+	);
+	const steps = 68;
+	const sections = Array.from({ length: steps + 1 }, (_, i) => {
 		const t = i / steps,
-			p = COAST_PATH.getPointAt(t),
-			next = COAST_PATH.getPointAt(Math.min(1, (i + 1) / steps));
-		const tangent = next.clone().sub(p);
-		const length = tangent.length();
-		const yaw = Math.atan2(tangent.x, tangent.z);
-		const width = 3.2 - t * 0.75;
-		const joint = range(0.44, 0.56),
-			widths = [width * joint, width * (1 - joint)];
-		for (let slab = 0; slab < 2; slab++) {
-			const w = widths[slab] - 0.018,
-				l = length * 1.03,
-				offset = slab === 0 ? -width / 2 + w / 2 : width / 2 - w / 2;
-			const shape = new THREE.Shape();
-			shape.moveTo(-w / 2 + 0.055, -l / 2);
-			shape.lineTo(w / 2 - 0.09, -l / 2 + 0.025);
-			shape.lineTo(w / 2, -l / 2 + 0.11);
-			shape.lineTo(w / 2 - 0.035, l / 2 - 0.03);
-			shape.lineTo(-w / 2 + 0.07, l / 2);
-			shape.lineTo(-w / 2, -l / 2 + 0.13);
-			shape.closePath();
-			const g = new THREE.ExtrudeGeometry(shape, {
-				depth: 0.23,
-				bevelEnabled: true,
-				bevelSegments: 1,
-				steps: 1,
-				bevelSize: 0.035,
-				bevelThickness: 0.035,
-			});
-			g.rotateX(-Math.PI / 2);
-			const a = g.attributes.position;
-			for (let k = 0; k < a.count; k++)
-				a.setY(k, a.getY(k) + (a.getZ(k) * tangent.y) / Math.max(0.01, length));
-			g.computeVertexNormals();
-			add(
-				g,
-				stone[Math.floor(rand() * stone.length)],
-				[
-					p.x + Math.cos(yaw) * offset,
-					p.y - 0.24,
-					p.z - Math.sin(yaw) * offset,
-				],
-				[1, 1, 1],
-				[0, yaw, 0],
-			);
+			p = COAST_PATH.getPointAt(t);
+		const d = COAST_PATH.getTangentAt(t);
+		const n = new THREE.Vector3(d.z, 0, -d.x).normalize();
+		return [-1, 1].map((side) =>
+			p.clone().addScaledVector(n, (side * (3.2 - t * 0.75)) / 2),
+		);
+	});
+	for (let i = 0; i < steps; i++) {
+		// A single full-width, gently bevelled block. All vertices are in world space.
+		const quad = [
+			sections[i][0],
+			sections[i][1],
+			sections[i + 1][1],
+			sections[i + 1][0],
+		];
+		const center = quad
+			.reduce((v, p) => v.add(p), new THREE.Vector3())
+			.multiplyScalar(0.25);
+		const outer = quad.map((p) => p.clone().lerp(center, 0.004));
+		const top = outer.map((p) => p.clone().lerp(center, 0.012));
+		const shoulder = outer.map((p) =>
+			p.clone().add(new THREE.Vector3(0, -0.024, 0)),
+		);
+		const bottom = outer.map((p) =>
+			p.clone().add(new THREE.Vector3(0, -0.42, 0)),
+		);
+		const vertices = [],
+			tri = (a, b, c) =>
+				vertices.push(...a.toArray(), ...b.toArray(), ...c.toArray());
+		tri(top[0], top[2], top[1]);
+		tri(top[0], top[3], top[2]);
+		for (let j = 0; j < 4; j++) {
+			const k = (j + 1) % 4;
+			tri(top[j], shoulder[k], shoulder[j]);
+			tri(top[j], top[k], shoulder[k]);
+			tri(shoulder[j], bottom[k], bottom[j]);
+			tri(shoulder[j], shoulder[k], bottom[k]);
 		}
-		if (i % 2 === 0) {
-			const side = i % 4 === 0 ? 1 : -1;
-			box(
-				[
-					p.x + Math.cos(yaw) * width * 0.52 * side,
-					p.y - 0.09,
-					p.z - Math.sin(yaw) * width * 0.52 * side,
-				],
-				[0.18, 0.24, length * 0.9],
-				stone[2],
-				[0, yaw, 0],
-			);
-		}
+		const g = new THREE.BufferGeometry();
+		g.setAttribute("position", new THREE.Float32BufferAttribute(vertices, 3));
+		g.computeVertexNormals();
+		add(g, paving[i % 4]);
 	}
 	// Project terraces: segmented limestone, with substantial rock beneath them.
 	for (const {
@@ -241,9 +229,9 @@ export function buildCoast() {
 		radius: r,
 	} of LANDMARKS) {
 		rock([x, y * 0.45 - 1, z], [r * 1.25, y * 0.62, r * 1.2], rocks[1]);
-		cylinder([x, y - 0.5, z], r * 1.1, r * 1.13, 0.44, stone[2], 14);
-		cylinder([x, y - 0.21, z], r, r * 1.03, 0.25, stone[0], 18);
-		cylinder([x, y - 0.065, z], r * 0.91, r * 0.94, 0.12, stone[1], 24);
+		cylinder([x, y - 0.72, z], r * 1.16, r * 1.19, 0.62, stone[2], 14);
+		cylinder([x, y - 0.32, z], r, r * 1.02, 0.36, stone[0], 18);
+		cylinder([x, y - 0.07, z], r * 0.89, r * 0.9, 0.14, stone[1], 24);
 		for (let j = 0; j < 12; j++) {
 			const a = (j * Math.PI) / 6;
 			box(
@@ -284,35 +272,24 @@ export function buildCoast() {
 		const side = i % 2 ? 1 : -1;
 		lantern([p.x + d.z * 1.83 * side, p.y, p.z - d.x * 1.83 * side], t > 0.65);
 	}
-	// Branchy alpine pines, with asymmetric whorls instead of three stacked cones.
+	// Consistent crowns, with lighting providing the tonal variation.
 	function pine(x, y, z, h) {
-		cylinder([x, y + h * 0.4, z], h * 0.016, h * 0.046, h * 0.8, wood, 7);
-		const phase = range(0, 6.28);
-		for (let k = 0; k < 7; k++) {
-			const f = k / 7,
-				cy = y + h * (0.26 + f * 0.67),
-				radius = h * (0.25 - f * 0.2);
-			const g = new THREE.ConeGeometry(radius, h * (0.33 - f * 0.12), 7, 1);
-			const a = g.attributes.position;
-			for (let n = 0; n < a.count; n++) {
-				const ax = a.getX(n),
-					az = a.getZ(n),
-					jitter = 1 + 0.16 * Math.sin(ax * 11 + az * 17 + k);
-				a.setXYZ(n, ax * jitter, a.getY(n), az * jitter);
-			}
-			g.computeVertexNormals();
+		cylinder([x, y + h * 0.35, z], h * 0.022, h * 0.048, h * 0.7, wood, 7);
+		const phase = range(0, 6.28),
+			material = leaf[Math.floor(rand() * leaf.length)];
+		for (let k = 0; k < 3; k++) {
+			const f = k / 3;
 			add(
-				g,
-				leaf[
-					((Math.floor(x + z + k) % leaf.length) + leaf.length) % leaf.length
-				],
-				[
-					x + Math.sin(k * 2 + phase) * h * 0.035,
-					cy,
-					z + Math.cos(k * 2 + phase) * h * 0.03,
-				],
+				new THREE.ConeGeometry(
+					h * (0.25 - f * 0.21),
+					h * (0.58 - f * 0.23),
+					5,
+					1,
+				),
+				material,
+				[x + f * h * 0.018, y + h * (0.4 + f * 0.7), z],
 				[1, 1, 1],
-				[range(-0.04, 0.04), phase + k * 0.61, range(-0.06, 0.06)],
+				[0, phase + k * 0.12, 0],
 			);
 		}
 	}
@@ -334,9 +311,9 @@ export function buildCoast() {
 	}
 	pine(16, 2.4, 26, 5.7);
 	pine(20, 3.1, 22, 5);
-	pine(24, 2.6, 28, 6.7);
+	pine(19, 2.6, 28, 5.4);
 	// Heather, grass blades and small stone scree along the path.
-	for (let i = 0; i < 360; i++) {
+	for (let i = 0; i < 200; i++) {
 		const t = rand(),
 			p = COAST_PATH.getPoint(t),
 			x = p.x + (rand() < 0.5 ? -1 : 1) * range(1.8, 4.7),
@@ -356,18 +333,58 @@ export function buildCoast() {
 				rocks[i % 5],
 				0,
 			);
-		else
-			for (let j = 0; j < 3; j++) {
-				const h = range(0.18, 0.6),
-					a = range(0, 6.28);
-				add(
-					new THREE.ConeGeometry(0.085, h, 3),
-					moss[i % 4],
-					[x + Math.sin(a) * 0.14, y + h * 0.27, z + Math.cos(a) * 0.14],
-					[1, 1, 1],
-					[Math.sin(a) * 0.4, a, Math.cos(a) * 0.4],
-				);
+		else {
+			for (let j = 0; j < 6; j++) {
+				const angle = (j * Math.PI) / 3 + range(-0.3, 0.3),
+					h = range(0.35, 0.8),
+					spread = range(0.25, 0.55);
+				const g = new THREE.BufferGeometry();
+				// Folded, tapered leaves catch the sunset on one face and remain shaded on the other.
+				const v = [
+					0,
+					0,
+					0,
+					-0.1,
+					h * 0.42,
+					spread * 0.43,
+					0,
+					h * 0.6,
+					spread * 0.47,
+					0,
+					0,
+					0,
+					0,
+					h * 0.6,
+					spread * 0.47,
+					0.1,
+					h * 0.42,
+					spread * 0.43,
+					-0.1,
+					h * 0.42,
+					spread * 0.43,
+					0,
+					h,
+					spread,
+					0,
+					h * 0.6,
+					spread * 0.47,
+					0,
+					h * 0.6,
+					spread * 0.47,
+					0,
+					h,
+					spread,
+					0.1,
+					h * 0.42,
+					spread * 0.43,
+				];
+				g.setAttribute("position", new THREE.Float32BufferAttribute(v, 3));
+				g.computeVertexNormals();
+				const m = moss[i % 4];
+				m.side = THREE.DoubleSide;
+				add(g, m, [x, y, z], [1, 1, 1], [0, angle, 0]);
 			}
+		}
 	}
 	// Overlapping ridges behind the headland, with a coherent geological silhouette.
 	for (let layer = 0; layer < 3; layer++) {
@@ -382,8 +399,7 @@ export function buildCoast() {
 				const u = ix / nx,
 					v = iz / nz;
 				const envelope =
-					Math.pow(Math.sin(Math.PI * u), 0.8) *
-					Math.pow(Math.sin(Math.PI * v), 0.6);
+					Math.sin(Math.PI * u) ** 0.8 * Math.sin(Math.PI * v) ** 0.6;
 				const ridge =
 					14 +
 					9 * Math.sin(x * 0.12 + z * 0.065) +
@@ -406,7 +422,7 @@ export function buildCoast() {
 		g.computeVertexNormals();
 		const m = mat(
 			`Mountain ridge ${layer}`,
-			["#9599ab", "#adb0bf", "#c0c1cc"][layer],
+			["#666b80", "#798498", "#949eaf"][layer],
 		);
 		add(g, m);
 	}

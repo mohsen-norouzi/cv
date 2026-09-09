@@ -10,7 +10,7 @@ import {
 	SUN_DIRECTION,
 	SUN_POSITION,
 } from "./constants";
-import { getFocusAmount } from "./focusStore";
+import { getFocusAmount, worldBrightness } from "./focusStore";
 
 function createSunTexture() {
 	const size = 512;
@@ -51,6 +51,7 @@ export default function SkyDome() {
 				sunDir: { value: SUN_DIRECTION.clone() },
 				/** 1 = full sun, 0 = sun killed for scene focus */
 				sunAmount: { value: 1 },
+				worldBrightness,
 			},
 			vertexShader: /* glsl */ `
 				varying vec3 vWorldPosition;
@@ -67,6 +68,7 @@ export default function SkyDome() {
 				uniform vec3 sunColor;
 				uniform vec3 sunDir;
 				uniform float sunAmount;
+				uniform float worldBrightness;
 				varying vec3 vWorldPosition;
 
 				float dither(vec2 p) {
@@ -91,7 +93,7 @@ export default function SkyDome() {
 
 					col += (dither(gl_FragCoord.xy) - 0.5) / 96.0;
 
-					gl_FragColor = vec4(col * 1.0, 1.0);
+					gl_FragColor = vec4(col * worldBrightness, 1.0);
  #include <tonemapping_fragment>
  #include <colorspace_fragment>
 				}

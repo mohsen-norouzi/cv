@@ -6,7 +6,7 @@ import {
 } from "../experience/audioStore";
 
 /**
- * EQ bars + “Music” mute toggle (ambient starts from the loader Enter click).
+ * EQ bars + music toggle. The opening Enter button starts the ambient song.
  */
 export default function MusicToggle() {
 	const on = useSyncExternalStore(

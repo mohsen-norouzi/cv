@@ -36,8 +36,8 @@ const binary = await new GLTFExporter().parseAsync(root, {
 	binary: true,
 	onlyVisible: true,
 });
-const output = new URL("../public/coast-hq.glb", import.meta.url);
+const output = new URL("../assets/coast-source.glb", import.meta.url);
 await writeFile(output, Buffer.from(binary));
 console.log(
-	`Saved coast-hq.glb: ${meshes} meshes, ${triangles.toLocaleString()} triangles, ${(binary.byteLength / 1024 / 1024).toFixed(2)} MB.`,
+	`Saved assets/coast-source.glb: ${meshes} meshes, ${triangles.toLocaleString()} triangles, ${(binary.byteLength / 1024 / 1024).toFixed(2)} MB.`,
 );

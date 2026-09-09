@@ -1,7 +1,7 @@
 /**
  * Focus state for project stops.
- * `amount` — camera/world focus (follows scroll)
- * `spotReveal` / `textReveal` — staged after arrival (spotlight → copy)
+ * `amount` — scene dimming that begins with the zoom
+ * `spotReveal` starts close to the destination; `textReveal` waits for arrival
  */
 let amount = 0;
 let stop = 0;
@@ -60,3 +60,13 @@ export function computeFocus(progress) {
 	const eased = near * near * (3 - 2 * near);
 	return { amount: eased, stop: nearest };
 }
+
+// Camera movement is independent of scroll easing and pointer parallax.
+let cameraSettled = false;
+export const getCameraSettled = () => cameraSettled;
+export function setCameraSettled(value) {
+	cameraSettled = value;
+}
+
+// Shared shader uniform; changing this does not compile shaders or add passes.
+export const worldBrightness = { value: 1 };

@@ -1,8 +1,17 @@
-import { useProgress } from "@react-three/drei";
 import { useEffect, useState, useSyncExternalStore } from "react";
-import { getSceneReady, subscribeSceneReady } from "../experience/loadStore";
-export default function SceneLoader() {
-	const { progress, errors } = useProgress();
+import { enableMusic } from "../experience/audioStore";
+import {
+	getLoadProgress,
+	getSceneReady,
+	subscribeLoadProgress,
+	subscribeSceneReady,
+} from "../experience/loadStore";
+export default function SceneLoader({ entered, onEnter }) {
+	const { progress, errors } = useSyncExternalStore(
+		subscribeLoadProgress,
+		getLoadProgress,
+		getLoadProgress,
+	);
 	const ready = useSyncExternalStore(
 		subscribeSceneReady,
 		getSceneReady,
@@ -10,28 +19,43 @@ export default function SceneLoader() {
 	);
 	const [gone, setGone] = useState(false);
 	useEffect(() => {
-		if (!ready) return;
+		if (!entered) return;
 		const timer = setTimeout(() => setGone(true), 650);
 		return () => clearTimeout(timer);
-	}, [ready]);
+	}, [entered]);
 	if (gone) return null;
 	return (
-		<div
-			className={`coast-loader ${ready ? "loaded" : ""}`}
-			role="status"
-			aria-live="polite"
+		<section
+			className={`coast-loader ${entered ? "loaded" : ""}`}
+			aria-label="Mohsen’s portfolio"
+			inert={entered}
 		>
 			<span className="loader-monogram">M.</span>
-			<span className="eyebrow">A LITTLE WORLD OF WORK</span>
+			<span className="eyebrow">MOHSEN / SELECTED WORK</span>
 			<div className="loader-track">
 				<span style={{ width: `${ready ? 100 : Math.max(5, progress)}%` }} />
 			</div>
-			<p>
-				{errors.length
+			<p role="status" aria-live="polite">
+				{errors
 					? "The landscape couldn’t load. Please refresh to try again."
-					: "Finding our way to the coast…"}
+					: ready
+						? "Web design & development."
+						: "Loading portfolio…"}
 			</p>
-			{errors.length > 0 && <a href="/resume.pdf">View my resume ↗</a>}
-		</div>
+			<button
+				type="button"
+				className="primary-action entry-action"
+				disabled={!ready || entered}
+				onClick={() => {
+					// Start playback directly in this gesture, before any animation,
+					// state update, or asynchronous work can consume activation.
+					void enableMusic();
+					onEnter();
+				}}
+			>
+				Enter <span aria-hidden="true">⟶</span>
+			</button>
+			{errors > 0 && <a href="/resume.pdf">View my resume ↗</a>}
+		</section>
 	);
 }

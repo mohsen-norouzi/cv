@@ -21,6 +21,7 @@ const proxies = new Map();
 let wantMusic = true;
 let enabled = false;
 let starting = false;
+let startVersion = 0;
 const listeners = new Set();
 
 function notify() {
@@ -74,41 +75,54 @@ export function subscribeMusic(fn) {
 	return () => listeners.delete(fn);
 }
 
-/** Unmute + fade in — call from loader Enter gesture. Audio only starts
- * downloading here, so no sound bytes count toward the initial load. */
+/** Start both layers inside the same click/tap gesture, then fade in.
+ * No audio downloads are needed until the visitor interacts. */
 export async function enableMusic() {
-	if (!wantMusic) return false;
-	if (starting) return false;
+	if (!wantMusic || starting) return false;
+	if (enabled) return true;
 	starting = true;
+	const version = ++startVersion;
 	pausedByVisibility = false;
 	ensureAll();
 
 	try {
-		for (const { key } of LAYERS) {
-			const a = players.get(key);
-			if (!a) continue;
-			a.muted = true;
+		// Do not await one layer before starting the other: some browsers only
+		// authorize playback while the original user gesture is still active.
+		const attempts = LAYERS.map(({ key }) => {
+			const audio = players.get(key);
+			gsap.killTweensOf(proxies.get(key));
+			audio.muted = false;
 			setLayerVolume(key, 0);
-			if (a.paused) await a.play();
-			a.muted = false;
-		}
+			try {
+				return audio.paused ? audio.play() : Promise.resolve();
+			} catch (error) {
+				return Promise.reject(error);
+			}
+		});
+		const results = await Promise.allSettled(attempts);
+		if (version !== startVersion || !wantMusic) return false;
 
-		enabled = true;
+		// Nature is an optional quiet bed; a failure there must not silence
+		// a successfully loaded song or make the music button lie about it.
+		enabled = results[0].status === "fulfilled";
+		if (!enabled) {
+			for (const audio of players.values()) audio.pause();
+			notify();
+			return false;
+		}
 		notify();
-
-		for (const { key, target } of LAYERS) {
-			const proxy = proxies.get(key);
-			if (proxy) proxy.v = 0;
-			setLayerVolume(key, 0);
-			fadeLayer(key, target, FADE_IN, "power1.out");
+		if (document.hidden) {
+			pausedByVisibility = true;
+			for (const audio of players.values()) audio.pause();
+			return true;
 		}
+		LAYERS.forEach(({ key, target }, index) => {
+			if (results[index].status === "fulfilled")
+				fadeLayer(key, target, FADE_IN, "power1.out");
+		});
 		return true;
-	} catch {
-		enabled = false;
-		notify();
-		return false;
 	} finally {
-		starting = false;
+		if (version === startVersion) starting = false;
 	}
 }
 
@@ -119,6 +133,8 @@ function stopWhoosh() {
 }
 
 export function disableMusic() {
+	startVersion += 1;
+	starting = false;
 	wantMusic = false;
 	pausedByVisibility = false;
 	ensureAll();
@@ -156,14 +172,14 @@ export function playWhoosh() {
 		whoosh.pause();
 		whoosh.currentTime = 0;
 		whoosh.volume = WHOOSH_VOL;
-		void whoosh.play();
+		void whoosh.play().catch(() => {});
 	} catch {
 		/* ignore */
 	}
 }
 
 export function toggleMusic() {
-	if (enabled) {
+	if (enabled || starting) {
 		disableMusic();
 		return;
 	}
@@ -195,21 +211,8 @@ async function handleVisibility() {
 		return;
 	}
 	pausedByVisibility = false;
-
-	try {
-		for (const { key, target } of LAYERS) {
-			const a = players.get(key);
-			if (!a) continue;
-			if (a.paused) await a.play();
-			setLayerVolume(key, target);
-			const proxy = proxies.get(key);
-			if (proxy) proxy.v = target;
-		}
-	} catch {
-		/* autoplay blocked after background — user can tap Music */
-		enabled = false;
-		notify();
-	}
+	enabled = false;
+	await enableMusic();
 }
 
 if (typeof document !== "undefined") {

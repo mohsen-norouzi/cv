@@ -4,12 +4,13 @@ import {
 	requestSnap,
 	subscribeScroll,
 } from "../experience/scrollStore";
+
+const getCueState = () => {
+	const p = getScrollProgress();
+	return p < 0.1 ? 0 : p >= 3 ? 3 : 1;
+};
 export default function ScrollCue() {
-	const p = useSyncExternalStore(
-		subscribeScroll,
-		getScrollProgress,
-		getScrollProgress,
-	);
+	const p = useSyncExternalStore(subscribeScroll, getCueState, getCueState);
 	return (
 		<footer className="site-footer">
 			<button

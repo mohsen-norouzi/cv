@@ -1,29 +1,31 @@
 import { Html } from "@react-three/drei";
 import { useSyncExternalStore } from "react";
+import { LANDMARKS } from "./coastLayout";
+import { getSceneReady, subscribeSceneReady } from "./loadStore";
 import {
 	getScrollProgress,
-	subscribeScroll,
 	requestSnapTo,
+	subscribeScroll,
 } from "./scrollStore";
-import { getSceneReady, subscribeSceneReady } from "./loadStore";
-import { LANDMARKS } from "./coastLayout";
+
 const copy = [
 	["Artist portfolio", "Ekaterina Shelehova"],
 	["Brand & e-commerce", "Bavo Bakes"],
 	["The next chapter", "Your project here"],
 ];
+const getLabelsVisible = () => getScrollProgress() <= 0.15;
 export default function ProjectLabels() {
 	const p = useSyncExternalStore(
 		subscribeScroll,
-		getScrollProgress,
-		getScrollProgress,
+		getLabelsVisible,
+		getLabelsVisible,
 	);
 	const ready = useSyncExternalStore(
 		subscribeSceneReady,
 		getSceneReady,
 		getSceneReady,
 	);
-	if (!ready || p > 0.15) return null;
+	if (!ready || !p) return null;
 	return LANDMARKS.map((landmark, i) => (
 		<Html
 			key={landmark.name}

@@ -10,11 +10,11 @@
 }
 .page-edge-fade {
 	background:
-		linear-gradient(180deg, rgba(240, 235, 232, 0.55), transparent 17%),
+		linear-gradient(180deg, rgba(240, 235, 232, 0.25), transparent 17%),
 		linear-gradient(
 			90deg,
-			rgba(253, 239, 218, 0.73),
-			rgba(250, 235, 215, 0.35) 25%,
+			rgba(253, 239, 218, 0.35),
+			rgba(250, 235, 215, 0.18) 25%,
 			rgba(248, 229, 212, 0.04) 40%,
 			transparent 49%
 		);
@@ -417,6 +417,15 @@
 	color: #8e8173;
 	margin: 22px;
 }
+.entry-action {
+	min-width: 190px;
+	justify-content: space-between;
+}
+.entry-action:disabled {
+	opacity: 0.4;
+	cursor: wait;
+	pointer-events: none;
+}
 :focus-visible {
 	outline: 2px solid #93632d;
 	outline-offset: 6px;
@@ -720,5 +729,35 @@
 		border-radius: 3px;
 		padding: 0 8px;
 		backdrop-filter: blur(8px);
+	}
+}
+
+/* Follow the staged world lighting without rerendering the interface each frame. */
+.portfolio {
+	--scene-focus: 0;
+	--ink: color-mix(in srgb, #292d32, #f5f0e8 calc(var(--scene-focus) * 100%));
+	--gold: color-mix(in srgb, #ad773a, #e2b978 calc(var(--scene-focus) * 100%));
+}
+.page-edge-fade {
+	opacity: calc(1 - var(--scene-focus));
+}
+.brand img {
+	filter: brightness(0) invert(var(--scene-focus));
+}
+.project-description {
+	color: color-mix(in srgb, #41474b, #dedbd5 calc(var(--scene-focus) * 100%));
+}
+.back-link {
+	color: color-mix(in srgb, #66625e, #d0ccc6 calc(var(--scene-focus) * 100%));
+}
+.project-details dt {
+	color: color-mix(in srgb, #7b776f, #c7bfb4 calc(var(--scene-focus) * 100%));
+}
+@media (min-width: 701px) {
+	.chapter-nav :where(button) {
+		color: color-mix(in srgb, #4d535c, #e1dcd3 calc(var(--scene-focus) * 100%));
+	}
+	.chapter-nav :where(button[aria-current], button:hover) {
+		color: color-mix(in srgb, #99632e, #e2b978 calc(var(--scene-focus) * 100%));
 	}
 }

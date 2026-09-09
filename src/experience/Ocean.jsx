@@ -1,60 +1,106 @@
-import { reducedMotion } from "./motion";
 import { useFrame } from "@react-three/fiber";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import * as THREE from "three";
+import { Water } from "three/examples/jsm/objects/Water.js";
 import { SKY_COOL, SKY_HORIZON, SKY_SUN, SUN_DIRECTION } from "./constants";
+import { IS_MOBILE } from "./device";
+import { worldBrightness } from "./focusStore";
+import { reducedMotion } from "./motion";
+
+const WATER_COLOR = new THREE.Color("#597d86");
+const SUN_COLOR = new THREE.Color("#ffdfb8");
+
+// Tileable, multi-scale capillary waves. This is a normal map, not a painted reflection.
+function waveNormals() {
+	const size = 256,
+		pixels = new Uint8Array(size * size * 4);
+	for (let y = 0; y < size; y++)
+		for (let x = 0; x < size; x++) {
+			const u = (x / size) * Math.PI * 2,
+				v = (y / size) * Math.PI * 2;
+			const dx =
+				0.1 * Math.cos(u * 9 + v * 3) +
+				0.055 * Math.cos(u * 17 - v * 7) +
+				0.025 * Math.sin(u * 29 + v * 11);
+			const dy =
+				0.16 * Math.cos(u * 3 + v * 12) +
+				0.06 * Math.sin(u * 7 - v * 21) +
+				0.025 * Math.cos(u * 11 + v * 31);
+			const n = new THREE.Vector3(dx, dy, 1).normalize(),
+				i = (y * size + x) * 4;
+			pixels[i] = (n.x * 0.5 + 0.5) * 255;
+			pixels[i + 1] = (n.y * 0.5 + 0.5) * 255;
+			pixels[i + 2] = (n.z * 0.5 + 0.5) * 255;
+			pixels[i + 3] = 255;
+		}
+	const texture = new THREE.DataTexture(pixels, size, size, THREE.RGBAFormat);
+	texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+	texture.magFilter = THREE.LinearFilter;
+	texture.minFilter = THREE.LinearMipmapLinearFilter;
+	texture.generateMipmaps = true;
+	texture.needsUpdate = true;
+	return texture;
+}
 
 export default function Ocean() {
-	const material = useMemo(
-		() =>
-			new THREE.ShaderMaterial({
-				uniforms: {
-					uTime: { value: 0 },
-					uSun: { value: SUN_DIRECTION.clone() },
-					uCool: { value: new THREE.Color(SKY_COOL) },
-					uHorizon: { value: new THREE.Color(SKY_HORIZON) },
-					uSunColor: { value: new THREE.Color(SKY_SUN) },
-				},
-				vertexShader: `varying vec3 vWorld; void main(){vec4 p=modelMatrix*vec4(position,1.);vWorld=p.xyz;gl_Position=projectionMatrix*viewMatrix*p;}`,
-				fragmentShader: `
-      uniform float uTime; uniform vec3 uSun; uniform vec3 uCool; uniform vec3 uHorizon; uniform vec3 uSunColor; varying vec3 vWorld;
-      void main(){
-        vec2 p=vWorld.xz; float t=uTime*.25;
-        float a=sin(p.x*1.8+p.y*.55+t)*.06+sin(p.x*3.9-p.y*1.1-t*1.6)*.026;
-        float b=cos(p.x*.7+p.y*2.7+t*.7)*.07+cos(p.x*2.3+p.y*4.5+t)*.02;
-        vec3 n=normalize(vec3(a,1.,b)); vec3 view=normalize(cameraPosition-vWorld);
-        float fresnel=pow(1.-max(dot(view,n),0.),3.);
-        vec3 deep=vec3(.23,.32,.39),sky=vec3(.61,.65,.71);
-        vec3 color=mix(deep,sky,.38+fresnel*.6);
-        float sun=pow(max(dot(reflect(-uSun,n),view),0.),160.);
-        float wave=sin(p.x*2.+p.y*3.2+t)*sin(p.x*1.3-p.y*2.7+t*.4);
-        color+=vec3(.055,.065,.075)*wave;
-        color+=vec3(1.,.72,.42)*sun*.8;
-        float mist=1.-exp(-length(cameraPosition-vWorld)*.009);
-        vec3 dir=normalize(vWorld-cameraPosition);
-        float az=max(dot(normalize(vec3(dir.x,0.,dir.z)),normalize(vec3(uSun.x,0.,uSun.z))),0.);
-        float glow=pow(az,1.5);
-        vec3 horizon=mix(uCool,uHorizon,glow);
-        horizon=mix(horizon,uSunColor,glow*.65);
-        horizon=mix(horizon,uSunColor,glow*.25);
-        color=mix(color,horizon,mist);
-        gl_FragColor=vec4(color,1.);
-        #include <tonemapping_fragment>
-        #include <colorspace_fragment>
-      }`,
-			}),
-		[],
-	);
-	useFrame(({ clock }) => {
-		material.uniforms.uTime.value = reducedMotion() ? 0 : clock.elapsedTime;
+	const water = useMemo(() => {
+		const surface = new Water(new THREE.PlaneGeometry(3000, 3000), {
+			textureWidth: IS_MOBILE ? 512 : 1024,
+			textureHeight: IS_MOBILE ? 512 : 1024,
+			waterNormals: waveNormals(),
+			sunDirection: SUN_DIRECTION,
+			sunColor: "#ffdfb8",
+			waterColor: "#597d86",
+			distortionScale: 1.1,
+			fog: true,
+		});
+		surface.rotation.x = -Math.PI / 2;
+		surface.position.set(0, -0.85, -60);
+		surface.material.uniforms.size.value = 2.4;
+		surface.material.uniforms.worldBrightness = worldBrightness;
+		surface.material.uniforms.coastCool = { value: new THREE.Color(SKY_COOL) };
+		surface.material.uniforms.coastHorizon = {
+			value: new THREE.Color(SKY_HORIZON),
+		};
+		surface.material.uniforms.coastSun = { value: new THREE.Color(SKY_SUN) };
+		surface.material.fragmentShader = surface.material.fragmentShader
+			.replace(
+				"uniform float alpha;",
+				"uniform float alpha; uniform vec3 coastCool; uniform vec3 coastHorizon; uniform vec3 coastSun; uniform float worldBrightness;",
+			)
+			.replace("vec3( 1.5, 1.0, 1.5 )", "vec3( 0.5, 1.0, 0.7 )")
+			.replace(
+				"vec3 outgoingLight = albedo;",
+				`
+				vec3 horizonDir=normalize(worldPosition.xyz-eye);
+				float az=max(dot(normalize(vec3(horizonDir.x,0.,horizonDir.z)),normalize(vec3(sunDirection.x,0.,sunDirection.z))),0.);
+				float glow=pow(az,1.5);
+				vec3 horizon=mix(coastCool,coastHorizon,glow);
+				horizon=mix(horizon,coastSun,glow*.65);
+				horizon=mix(horizon,coastSun,glow*.25);
+				vec3 outgoingLight=mix(albedo,horizon*worldBrightness,1.-exp(-distance*.0035));`,
+			)
+			.replace("#include <fog_fragment>", "");
+		return surface;
+	}, []);
+	useFrame((_, delta) => {
+		water.material.uniforms.sunColor.value
+			.copy(SUN_COLOR)
+			.multiplyScalar(worldBrightness.value);
+		water.material.uniforms.waterColor.value
+			.copy(WATER_COLOR)
+			.multiplyScalar(worldBrightness.value);
+		if (!reducedMotion())
+			water.material.uniforms.time.value += Math.min(delta, 0.05) * 0.32;
 	});
-	return (
-		<mesh
-			rotation={[-Math.PI / 2, 0, 0]}
-			position={[0, -0.85, -60]}
-			material={material}
-		>
-			<planeGeometry args={[4000, 4000]} />
-		</mesh>
+	useEffect(
+		() => () => {
+			water.geometry.dispose();
+			water.material.uniforms.normalSampler.value.dispose();
+			water.material.uniforms.mirrorSampler.value.dispose();
+			water.material.dispose();
+		},
+		[water],
 	);
+	return <primitive object={water} />;
 }

@@ -15,8 +15,8 @@ export const SKY_COOL = "#c7c5d9";
 export const SKY_SUN = "#ffe9cb";
 
 /** Low left, raking across the scene — every facet gets a lit and a shade side */
-export const SUN_POSITION = new THREE.Vector3(-70, 22, 25);
-export const SUN_DIRECTION = new THREE.Vector3(-0.9, 0.22, 0.36).normalize();
+export const SUN_POSITION = new THREE.Vector3(-98, 53, 210);
+export const SUN_DIRECTION = new THREE.Vector3(-35, 19, 75).normalize();
 
 /** From Try1.glb CamTarget */
 export const CAM_TARGET = new THREE.Vector3(-7, 10, -3);
@@ -115,7 +115,7 @@ export const RIM_COLOR = "#ffd2a8";
 export const BLOOM_THRESHOLD = 1.2;
 export const BLOOM_INTENSITY = 0.55;
 export const BLOOM_RADIUS = 0.55;
-export const SATURATION = -0.055;
+export const SATURATION = 0.015;
 export const BRIGHTNESS = 0.015;
 export const CONTRAST = 0.075;
 export const VIGNETTE_OFFSET = 0.18;

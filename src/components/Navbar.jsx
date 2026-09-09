@@ -1,15 +1,17 @@
 import { useSyncExternalStore } from "react";
-import Logo from "./Logo";
 import {
 	getScrollProgress,
-	subscribeScroll,
 	requestSnapTo,
+	subscribeScroll,
 } from "../experience/scrollStore";
+import Logo from "./Logo";
+
+const getWorkActive = () => getScrollProgress() > 0;
 export default function Navbar() {
 	const progress = useSyncExternalStore(
 		subscribeScroll,
-		getScrollProgress,
-		getScrollProgress,
+		getWorkActive,
+		getWorkActive,
 	);
 	return (
 		<header className="site-header">
@@ -27,7 +29,7 @@ export default function Navbar() {
 			<nav aria-label="Main navigation">
 				<button
 					type="button"
-					className={progress > 0 ? "nav-work active" : "nav-work"}
+					className={progress ? "nav-work active" : "nav-work"}
 					onClick={() => requestSnapTo(1)}
 				>
 					Work

@@ -1,39 +1,40 @@
-import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { MathUtils } from "three";
-import { computeFocus, setFocus, setFocusReveal } from "./focusStore";
+import { useRef } from "react";
+import { BAKERY_VIEW_POS, CRYSTAL_VIEW_POS, GIRL_VIEW_POS } from "./constants";
+import { getCameraSettled, setFocus, setFocusReveal } from "./focusStore";
+import { advanceFocus, createFocusTransition } from "./focusTransition";
+import { reducedMotion } from "./motion";
 import {
-	getScrollProgress,
+	continueSnapAfterExit,
+	getScrollSection,
 	isExitPending,
 	isScrollAnimating,
-	continueSnapAfterExit,
 } from "./scrollStore";
+import { spotlightSettings } from "./spotlightSettings";
+
+const VIEWS = [null, GIRL_VIEW_POS, BAKERY_VIEW_POS, CRYSTAL_VIEW_POS];
 
 export default function TourFocus() {
-	const reveal = useRef(0),
-		settled = useRef(0),
-		last = useRef(0);
-	useFrame((_, dt) => {
-		const { amount, stop } = computeFocus(getScrollProgress());
-		setFocus(amount * 0.18, stop);
-		if (stop !== last.current) {
-			settled.current = 0;
-			last.current = stop;
-		}
-		if (isExitPending()) {
-			reveal.current = MathUtils.damp(reveal.current, 0, 12, dt);
-			if (reveal.current < 0.1) continueSnapAfterExit();
-		} else {
-			if (!isScrollAnimating() && amount > 0.99) settled.current += dt;
-			else settled.current = 0;
-			reveal.current = MathUtils.damp(
-				reveal.current,
-				settled.current > 0.75 ? 1 : 0,
-				5,
-				dt,
-			);
-		}
-		setFocusReveal(reveal.current, reveal.current);
-	});
+	const state = useRef(createFocusTransition());
+	useFrame(({ camera }, dt) => {
+		// Dim immediately, but reveal the selected light only near its final view.
+		// Use the actual camera position, not the faster scroll animation.
+		const stop = getScrollSection();
+		const exitComplete = advanceFocus(state.current, {
+			stop,
+			near:
+				stop > 0 &&
+				camera.position.distanceTo(VIEWS[stop]) <=
+					spotlightSettings.timing.revealDistance,
+			fadeSpeed: spotlightSettings.timing.fadeSpeed,
+			arrived: getCameraSettled() && !isScrollAnimating(),
+			exiting: isExitPending(),
+			reduced: reducedMotion(),
+			dt: Math.min(dt, 0.05),
+		});
+		setFocus(state.current.world, stop);
+		setFocusReveal(state.current.spot, state.current.text);
+		if (exitComplete) continueSnapAfterExit();
+	}, -1);
 	return null;
 }
