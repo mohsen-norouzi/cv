@@ -40,6 +40,7 @@ export function sampleDirectFlight(flight, progress, position, look) {
 	const t = THREE.MathUtils.clamp(progress, 0, 1);
 	position.lerpVectors(flight.from, flight.to, t);
 	if (t === 0 || t === 1) {
+		position.copy(t === 0 ? flight.from : flight.to);
 		look.copy(t === 0 ? flight.fromLook : flight.toLook);
 		return;
 	}

@@ -1,6 +1,7 @@
 import { writeFile } from "node:fs/promises";
 import { GLTFExporter } from "three/examples/jsm/exporters/GLTFExporter.js";
 import { buildCoast } from "../src/experience/buildCoast.js";
+import { LANDMARKS } from "../src/experience/coastLayout.js";
 
 // GLTFExporter uses FileReader for its binary buffer even when there are no images.
 class NodeFileReader {
@@ -18,9 +19,17 @@ class NodeFileReader {
 	}
 }
 globalThis.FileReader ??= NodeFileReader;
-const { root, lanterns } = buildCoast();
+const { root, lanterns, audit } = buildCoast();
 root.name = "Mohsen — HQ coast";
 root.userData.lanterns = lanterns;
+await writeFile(
+	new URL("../assets/coast-layout.json", import.meta.url),
+	JSON.stringify(LANDMARKS, null, 2),
+);
+await writeFile(
+	new URL("../assets/placement-audit.json", import.meta.url),
+	JSON.stringify(audit, null, 2),
+);
 let triangles = 0,
 	meshes = 0;
 root.traverse((object) => {

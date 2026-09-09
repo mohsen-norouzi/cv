@@ -31,7 +31,11 @@ def run():
     bpy.ops.import_scene.gltf(filepath=str(ROOT/'public/Try1.glb'))
     imported=set(bpy.context.scene.objects)-before
     subjects=[]
-    specs=[('tripo_node_1feaf1fd-79b2-4217-a867-f97ada61b588',(-3.3,-17.6,3.75),2.65),('tripo_node_e70704d4-4ce1-4bf4-974e-d1eea2c8202b',(11.1,-7.5,6.6),3.1),('Stylized Cartoon Stone Bench',(11.5,9,11),1.)]
+    layout=json.loads((ROOT/'assets/coast-layout.json').read_text())
+    names=['tripo_node_1feaf1fd-79b2-4217-a867-f97ada61b588','tripo_node_e70704d4-4ce1-4bf4-974e-d1eea2c8202b','Stylized Cartoon Stone Bench']
+    specs=[]
+    for name,landmark,height in zip(names,layout,[2.65,3.1,1.]):
+      x,y,z=landmark['position'];specs.append((name,(x,-z,y),height))
     for name,pos,height in specs:
       obj=next((o for o in imported if o.name.startswith(name)),None)
       if obj is None: continue

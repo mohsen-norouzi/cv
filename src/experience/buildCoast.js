@@ -2,6 +2,11 @@ import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
 import { COAST_PATH, LANDMARKS } from "./coastLayout.js";
+import {
+	createRoadSampler,
+	roadHalfWidth,
+	terraceOuterRadius,
+} from "./placement.js";
 
 export function buildCoast() {
 	let seed = 7319;
@@ -13,6 +18,79 @@ export function buildCoast() {
 	const root = new THREE.Group();
 	const buckets = new Map();
 	const lanterns = [];
+	const audit = {
+		terraces: [],
+		plants: [],
+		lanterns: [],
+		rocks: [],
+		rejected: 0,
+	};
+	const nearestRoad = createRoadSampler(COAST_PATH);
+	const surfaces = [];
+	const ray = new THREE.Raycaster(
+		new THREE.Vector3(),
+		new THREE.Vector3(0, -1, 0),
+	);
+	const groundAt = (x, z) => {
+		ray.ray.origin.set(x, 80, z);
+		return (
+			ray
+				.intersectObjects(surfaces, false)
+				.find((hit) => hit.face.normal.y > 0.45) ?? null
+		);
+	};
+	const connectors = LANDMARKS.map((landmark) => {
+		const [x, y, z] = landmark.position;
+		const road = nearestRoad(x, z);
+		const outward = new THREE.Vector3(
+			x - road.point.x,
+			0,
+			z - road.point.z,
+		).normalize();
+		return {
+			landmark,
+			road,
+			outward,
+			start: road.point.clone().addScaledVector(outward, road.halfWidth - 0.06),
+			end: new THREE.Vector3(x, y, z).addScaledVector(
+				outward,
+				-landmark.radius * 0.75,
+			),
+		};
+	});
+	const corridorDistance = (x, z, start, end) => {
+		const dx = end.x - start.x,
+			dz = end.z - start.z;
+		const t = THREE.MathUtils.clamp(
+			((x - start.x) * dx + (z - start.z) * dz) / (dx * dx + dz * dz),
+			0,
+			1,
+		);
+		return Math.hypot(x - start.x - t * dx, z - start.z - t * dz);
+	};
+	const clearAt = (x, z, radius, top = Infinity) => {
+		const road = nearestRoad(x, z);
+		if (
+			road.distance < road.halfWidth + radius + 0.18 &&
+			top > road.point.y - radius * 0.4 - 0.5
+		)
+			return false;
+		for (const landmark of LANDMARKS) {
+			if (
+				Math.hypot(x - landmark.position[0], z - landmark.position[2]) <
+					terraceOuterRadius(landmark) + radius + 0.25 &&
+				top > landmark.position[1] - 1.08
+			)
+				return false;
+		}
+		for (const connector of connectors)
+			if (
+				corridorDistance(x, z, connector.start, connector.end) < radius + 0.8 &&
+				top > Math.min(connector.start.y, connector.end.y) - 0.5
+			)
+				return false;
+		return true;
+	};
 	const materials = {};
 	const mat = (name, color, roughness = 0.9) => {
 		const m = new THREE.MeshStandardMaterial({
@@ -67,7 +145,7 @@ export function buildCoast() {
 		add(new THREE.BoxGeometry(1, 1, 1), m, p, s, r);
 	const cylinder = (p, top, bottom, height, m, n = 12) =>
 		add(new THREE.CylinderGeometry(top, bottom, height, n), m, p);
-	const rock = (p, s, m, detail = 1) => {
+	const rock = (p, scale, m, detail = 1, options = {}) => {
 		const g = new THREE.IcosahedronGeometry(1, detail);
 		const a = g.attributes.position;
 		for (let i = 0; i < a.count; i++) {
@@ -77,12 +155,46 @@ export function buildCoast() {
 			const d = 1 + 0.15 * Math.sin(x * 13 + y * 9 + z * 7);
 			a.setXYZ(i, x * d, y * d, z * d);
 		}
-		g.computeVertexNormals();
-		add(g, m, p, s, [
+		const rotation = new THREE.Euler(
 			range(-0.14, 0.14),
 			range(0, Math.PI),
 			range(-0.13, 0.13),
-		]);
+		);
+		g.applyMatrix4(
+			new THREE.Matrix4().compose(
+				new THREE.Vector3(...p),
+				new THREE.Quaternion().setFromEuler(rotation),
+				new THREE.Vector3(...scale),
+			),
+		);
+		let footprint = 0,
+			top = -Infinity;
+		for (let i = 0; i < a.count; i++) {
+			if (options.maxY !== undefined)
+				a.setY(i, Math.min(a.getY(i), options.maxY));
+			footprint = Math.max(
+				footprint,
+				Math.hypot(a.getX(i) - p[0], a.getZ(i) - p[2]),
+			);
+			top = Math.max(top, a.getY(i));
+		}
+		if (!options.keep && !clearAt(p[0], p[2], footprint, top)) {
+			audit.rejected++;
+			g.dispose();
+			return false;
+		}
+		g.computeVertexNormals();
+		const surface = new THREE.Mesh(g, m);
+		surface.updateMatrixWorld(true);
+		surfaces.push(surface);
+		add(g, m);
+		audit.rocks.push({
+			position: p,
+			radius: footprint,
+			top,
+			structural: !!options.keep,
+		});
+		return true;
 	};
 	// A continuous, irregular peninsula with vertical coastal faces.
 	const rows = 63,
@@ -103,6 +215,15 @@ export function buildCoast() {
 			if (j === cols) y = -1.1;
 			else if (j === cols - 1) y -= 2.2;
 			if (i === 0 || i === rows) y -= 1.2;
+			const road = nearestRoad(x, z);
+			if (road.distance < road.halfWidth + 1.35)
+				y = Math.min(y, road.point.y - 0.55);
+			for (const landmark of LANDMARKS)
+				if (
+					Math.hypot(x - landmark.position[0], z - landmark.position[2]) <
+					terraceOuterRadius(landmark) + 1.35
+				)
+					y = Math.min(y, landmark.position[1] - 1.12);
 			vertices.push(x, y, z);
 		}
 	}
@@ -152,6 +273,8 @@ export function buildCoast() {
 	terrain.castShadow = true;
 	terrain.receiveShadow = true;
 	root.add(terrain);
+	terrain.updateMatrixWorld(true);
+	surfaces.push(terrain);
 	ground.dispose();
 	// Tall fractured outcrops give the coastline an actual silhouette.
 	for (let i = 0; i < 62; i++) {
@@ -183,7 +306,7 @@ export function buildCoast() {
 		const d = COAST_PATH.getTangentAt(t);
 		const n = new THREE.Vector3(d.z, 0, -d.x).normalize();
 		return [-1, 1].map((side) =>
-			p.clone().addScaledVector(n, (side * (3.2 - t * 0.75)) / 2),
+			p.clone().addScaledVector(n, side * roadHalfWidth(t)),
 		);
 	});
 	for (let i = 0; i < steps; i++) {
@@ -221,6 +344,30 @@ export function buildCoast() {
 		g.setAttribute("position", new THREE.Float32BufferAttribute(vertices, 3));
 		g.computeVertexNormals();
 		add(g, paving[i % 4]);
+		// Retaining masonry carries the paving into the hillside instead of leaving
+		// a floating slab wherever the ground slopes away from the road edge.
+		const bedTop = quad.map((p) =>
+			p.clone().add(new THREE.Vector3(0, -0.415, 0)),
+		);
+		const floor =
+			Math.min(
+				...quad.map((p) => groundAt(p.x, p.z)?.point.y ?? -1.3),
+				groundAt(center.x, center.z)?.point.y ?? -1.3,
+				...bedTop.map((p) => p.y - 0.1),
+			) - 0.08;
+		const bedBottom = bedTop.map((p) => new THREE.Vector3(p.x, floor, p.z));
+		vertices.length = 0;
+		tri(bedTop[0], bedTop[2], bedTop[1]);
+		tri(bedTop[0], bedTop[3], bedTop[2]);
+		for (let j = 0; j < 4; j++) {
+			const k = (j + 1) % 4;
+			tri(bedTop[j], bedBottom[k], bedBottom[j]);
+			tri(bedTop[j], bedTop[k], bedBottom[k]);
+		}
+		const bed = new THREE.BufferGeometry();
+		bed.setAttribute("position", new THREE.Float32BufferAttribute(vertices, 3));
+		bed.computeVertexNormals();
+		add(bed, rocks[1]);
 	}
 	// Project terraces: segmented limestone, with substantial rock beneath them.
 	for (const {
@@ -228,7 +375,25 @@ export function buildCoast() {
 		position: [x, y, z],
 		radius: r,
 	} of LANDMARKS) {
-		rock([x, y * 0.45 - 1, z], [r * 1.25, y * 0.62, r * 1.2], rocks[1]);
+		// A continuous retaining foundation meets the underside of the lowest tier.
+		const floor = -1.3,
+			ceiling = y - 1.03;
+		cylinder(
+			[x, (floor + ceiling) / 2, z],
+			r * 1.19,
+			r * 1.28,
+			ceiling - floor,
+			rocks[1],
+			14,
+		);
+		audit.terraces.push({
+			name,
+			position: [x, y, z],
+			radius: r,
+			outerRadius: r * 1.19,
+			roadClearance:
+				nearestRoad(x, z).distance - nearestRoad(x, z).halfWidth - r * 1.19,
+		});
 		cylinder([x, y - 0.72, z], r * 1.16, r * 1.19, 0.62, stone[2], 14);
 		cylinder([x, y - 0.32, z], r, r * 1.02, 0.36, stone[0], 18);
 		cylinder([x, y - 0.07, z], r * 0.89, r * 0.9, 0.14, stone[1], 24);
@@ -246,11 +411,41 @@ export function buildCoast() {
 		anchor.position.set(x, y, z);
 		root.add(anchor);
 	}
+	// Short fitted approach steps bridge the deliberate gap between road and terrace.
+	for (const { start, end, outward, landmark } of connectors) {
+		const length = Math.hypot(end.x - start.x, end.z - start.z);
+		const count = Math.max(2, Math.ceil(length / 0.48));
+		const angle = Math.atan2(outward.x, outward.z);
+		for (let i = 0; i < count; i++) {
+			const center = start.clone().lerp(end, (i + 0.5) / count);
+			const top = THREE.MathUtils.lerp(
+				start.y,
+				landmark.position[1],
+				(i + 1) / count,
+			);
+			const hit = groundAt(center.x, center.z);
+			const bottom = Math.min(top - 0.42, hit?.point.y ?? -1.3) - 0.06;
+			box(
+				[center.x, (bottom + top) / 2, center.z],
+				[1.2, top - bottom, length / count + 0.025],
+				stone[0],
+				[0, angle, 0],
+			);
+		}
+	}
+
 	function lantern(p, small = false) {
 		const [x, y, z] = p,
 			h = small ? 0.62 : 0.93;
 		cylinder([x, y + 0.12, z], 0.16, 0.22, 0.24, rocks[2], 8);
-		cylinder([x, y + h * 0.45, z], 0.055, 0.075, h * 0.65, bronze, 6);
+		cylinder(
+			[x, y + 0.15 + (h - 0.3) / 2, z],
+			0.055,
+			0.075,
+			h - 0.3,
+			bronze,
+			6,
+		);
 		box([x, y + h, z], [0.22, 0.35, 0.22], glass);
 		box([x, y + h + 0.2, z], [0.35, 0.06, 0.35], bronze);
 		add(
@@ -267,13 +462,49 @@ export function buildCoast() {
 	}
 	for (let i = 0; i < 19; i++) {
 		const t = 0.035 + i * 0.049,
-			p = COAST_PATH.getPointAt(t),
-			d = COAST_PATH.getTangentAt(t);
+			p = COAST_PATH.getPointAt(t);
+		const d = COAST_PATH.getTangentAt(t).setY(0).normalize();
 		const side = i % 2 ? 1 : -1;
-		lantern([p.x + d.z * 1.83 * side, p.y, p.z - d.x * 1.83 * side], t > 0.65);
+		const x = p.x + d.z * (roadHalfWidth(t) + 0.2) * side;
+		const z = p.z - d.x * (roadHalfWidth(t) + 0.2) * side;
+		const hit = groundAt(x, z),
+			floor = Math.min(p.y - 0.4, hit?.point.y ?? -1.3) - 0.06;
+		const angle = Math.atan2(d.x, d.z);
+		// The socket overlaps the road edge by 9 cm and rests on a stone footing.
+		box([x, p.y - 0.2, z], [0.58, 0.4, 0.64], stone[2], [0, angle, 0]);
+		box(
+			[x, (floor + p.y - 0.38) / 2, z],
+			[0.5, p.y - 0.38 - floor, 0.54],
+			rocks[2],
+			[0, angle, 0],
+		);
+		lantern([x, p.y, z], t > 0.65);
+		audit.lanterns.push({
+			position: [x, p.y, z],
+			ground: hit?.point.y ?? null,
+			footingBottom: floor,
+			roadT: t,
+		});
 	}
 	// Consistent crowns, with lighting providing the tonal variation.
-	function pine(x, y, z, h) {
+	function pine(x, _y, z, h) {
+		if (!clearAt(x, z, h * 0.26)) {
+			audit.rejected++;
+			return;
+		}
+		const hit = groundAt(x, z);
+		if (!hit || hit.point.y < -0.1 || hit.face.normal.y < 0.65) {
+			audit.rejected++;
+			return;
+		}
+		const y = hit.point.y - 0.035;
+		audit.plants.push({
+			kind: "pine",
+			position: [x, y, z],
+			ground: hit.point.y,
+			normalY: hit.face.normal.y,
+			radius: h * 0.26,
+		});
 		cylinder([x, y + h * 0.35, z], h * 0.022, h * 0.048, h * 0.7, wood, 7);
 		const phase = range(0, 6.28),
 			material = leaf[Math.floor(rand() * leaf.length)];
@@ -325,7 +556,16 @@ export function buildCoast() {
 			)
 		)
 			continue;
-		const y = p.y - 0.36;
+		if (!clearAt(x, z, 0.6)) {
+			audit.rejected++;
+			continue;
+		}
+		const hit = groundAt(x, z);
+		if (!hit || hit.point.y < -0.1 || hit.face.normal.y < 0.65) {
+			audit.rejected++;
+			continue;
+		}
+		const y = hit.point.y - 0.025;
 		if (i % 4 === 0)
 			rock(
 				[x, y, z],
@@ -334,6 +574,13 @@ export function buildCoast() {
 				0,
 			);
 		else {
+			audit.plants.push({
+				kind: "grass",
+				position: [x, y, z],
+				ground: hit.point.y,
+				normalY: hit.face.normal.y,
+				radius: 0.6,
+			});
 			for (let j = 0; j < 6; j++) {
 				const angle = (j * Math.PI) / 3 + range(-0.3, 0.3),
 					h = range(0.35, 0.8),
@@ -429,7 +676,10 @@ export function buildCoast() {
 	// Offshore lighthouse, neutral masonry and a dark copper lantern room.
 	const lx = -23,
 		lz = -8;
-	rock([lx, -0.15, lz], [3.8, 2.3, 3.6], rocks[2]);
+	rock([lx, -0.15, lz], [3.8, 2.3, 3.6], rocks[2], 1, {
+		keep: true,
+		maxY: 1.675,
+	});
 	cylinder([lx, 1.85, lz], 0.9, 1.08, 0.35, stone[2], 16);
 	cylinder([lx, 4.1, lz], 0.45, 0.76, 4.2, stone[1], 18);
 	cylinder([lx, 6.25, lz], 0.79, 0.76, 0.22, stone[2], 18);
@@ -461,15 +711,21 @@ export function buildCoast() {
 		]);
 		box([x, y + h * 0.77, z + r * 0.91], [0.14, 0.38, 0.03], glass);
 	};
-	rock([19, 18, -38], [5, 5.8, 5.2], rocks[3]);
-	box([19, 22.8, -38], [4.8, 2.8, 3.2], castle);
-	box([19, 25, -38], [3.6, 2.8, 2.7], castle);
+	rock([19, 18, -40.7], [5, 5.8, 2.9], rocks[3], 1, { keep: true, maxY: 21.1 });
+	box([19, 20.3, -40.7], [5.8, 2.2, 4.8], stone[2]);
+	// A level approach and two shallow risers connect the road to the gate.
+	for (let i = 0; i < 6; i++) {
+		const top = 21 + Math.max(0, i - 3) * 0.2;
+		box([19, (19 + top) / 2, -36.2 - i * 0.4], [2.4, top - 19, 0.42], stone[0]);
+	}
+	box([19, 22.8, -40.7], [4.8, 2.8, 3.2], castle);
+	box([19, 25, -40.7], [3.6, 2.8, 2.7], castle);
 	for (const [x, z, r, h] of [
-		[16.8, -36.4, 0.6, 3.5],
-		[21.2, -36.4, 0.65, 4.2],
-		[17, -39.6, 0.55, 4.8],
-		[21.2, -39.6, 0.65, 4.9],
-		[19, -38, 0.7, 6.4],
+		[16.8, -39.1, 0.6, 3.5],
+		[21.2, -39.1, 0.65, 4.2],
+		[17, -42.3, 0.55, 4.8],
+		[21.2, -42.3, 0.65, 4.9],
+		[19, -40.7, 0.7, 6.4],
 	])
 		tower(x, 21.4, z, r, h);
 	// Merge static geometry by material: hundreds of details, a few dozen draw calls.
@@ -483,5 +739,5 @@ export function buildCoast() {
 		mesh.receiveShadow = material !== glass;
 		root.add(mesh);
 	}
-	return { root, lanterns };
+	return { root, lanterns, audit };
 }

@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { fitTerraces } from "./placement.js";
 
 // Deterministic, editable scene geometry. Coordinates are shared with the camera tour.
 export const COAST_PATH = new THREE.CatmullRomCurve3(
@@ -19,8 +20,8 @@ export const COAST_PATH = new THREE.CatmullRomCurve3(
 	"catmullrom",
 	0.35,
 );
-export const LANDMARKS = [
+export const LANDMARKS = fitTerraces(COAST_PATH, [
 	{ name: "Singer", position: [-3.3, 3.75, 17.6], radius: 2.15 },
 	{ name: "Bakery", position: [11.1, 6.6, 7.5], radius: 2.65 },
 	{ name: "Next", position: [11.5, 11.0, -9], radius: 2.05 },
-];
+]);

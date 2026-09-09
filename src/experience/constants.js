@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { LANDMARKS } from "./coastLayout.js";
 
 /** Soft warm haze — matches HTML page backdrop (keep App bg in sync) */
 /** Thin — depth comes from discrete mist banks, not a uniform veil */
@@ -28,24 +29,41 @@ export const CAM_FOV = 42;
  * Singer girl (tripo_node_…) on the path platform.
  * Locked end pose: standing on the road, facing her.
  */
-export const GIRL_POSITION = new THREE.Vector3(-3.3, 3.75, 17.6);
-export const GIRL_VIEW_POS = new THREE.Vector3(5, 7.4, 28);
-export const GIRL_LOOK_AT = new THREE.Vector3(-6.5, 5.1, 17.6);
+export const GIRL_POSITION = new THREE.Vector3(...LANDMARKS[0].position);
+const GIRL_SHIFT = GIRL_POSITION.clone().sub(
+	new THREE.Vector3(-3.3, 3.75, 17.6),
+);
+export const GIRL_VIEW_POS = new THREE.Vector3(5, 7.4, 28).add(GIRL_SHIFT);
+export const GIRL_LOOK_AT = new THREE.Vector3(-6.5, 5.1, 17.6).add(GIRL_SHIFT);
 
 /**
  * Bakery (second tripo_node_…) further up the path.
  */
-export const BAKERY_POSITION = new THREE.Vector3(11.1, 6.6, 7.5);
-export const BAKERY_VIEW_POS = new THREE.Vector3(19, 10.8, 21);
-export const BAKERY_LOOK_AT = new THREE.Vector3(7.6, 8.1, 7.5);
+export const BAKERY_POSITION = new THREE.Vector3(...LANDMARKS[1].position);
+const BAKERY_SHIFT = BAKERY_POSITION.clone().sub(
+	new THREE.Vector3(11.1, 6.6, 7.5),
+);
+export const BAKERY_VIEW_POS = new THREE.Vector3(19, 10.8, 21).add(
+	BAKERY_SHIFT,
+);
+export const BAKERY_LOOK_AT = new THREE.Vector3(7.6, 8.1, 7.5).add(
+	BAKERY_SHIFT,
+);
 
 /**
  * Final stop — stone bench on the upper path platform.
  * View stands on the road (path curves right here), looking back at the bench.
  */
-export const CRYSTAL_POSITION = new THREE.Vector3(11.5, 11, -9);
-export const CRYSTAL_VIEW_POS = new THREE.Vector3(20, 14.8, 3);
-export const CRYSTAL_LOOK_AT = new THREE.Vector3(8.5, 11.8, -9);
+export const CRYSTAL_POSITION = new THREE.Vector3(...LANDMARKS[2].position);
+const CRYSTAL_SHIFT = CRYSTAL_POSITION.clone().sub(
+	new THREE.Vector3(11.5, 11, -9),
+);
+export const CRYSTAL_VIEW_POS = new THREE.Vector3(20, 14.8, 3).add(
+	CRYSTAL_SHIFT,
+);
+export const CRYSTAL_LOOK_AT = new THREE.Vector3(8.5, 11.8, -9).add(
+	CRYSTAL_SHIFT,
+);
 
 /**
  * Camera path waypoints between snap stops.
