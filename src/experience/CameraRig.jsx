@@ -15,10 +15,21 @@ import {
 	CAM_TARGET,
 	CRYSTAL_LOOK_AT,
 	CRYSTAL_VIEW_POS,
+	GIRL_LOOK_AT,
+	GIRL_VIEW_POS,
 } from "./constants";
+import {
+	beginDirectFlight,
+	createDirectFlight,
+	sampleDirectFlight,
+} from "./directFlight";
 import { setCameraSettled } from "./focusStore";
 import { reducedMotion } from "./motion";
-import { getScrollProgress, isScrollAnimating } from "./scrollStore";
+import {
+	getCameraRoute,
+	getScrollProgress,
+	isScrollAnimating,
+} from "./scrollStore";
 
 const MOBILE_LOOK_SHIFTS = [0, 3.2, 3.5, 3.0];
 const PARALLAX_X = 0.45;
@@ -29,6 +40,22 @@ const DAMP = 2.8;
 /** Bakery → crystal segment index */
 const CRYSTAL_SEG = 2;
 const LOOK_DIST = 10;
+const STOP_POSITIONS = [
+	CAM_START,
+	GIRL_VIEW_POS,
+	BAKERY_VIEW_POS,
+	CRYSTAL_VIEW_POS,
+];
+const STOP_LOOKS = [
+	CAM_TARGET,
+	GIRL_LOOK_AT,
+	BAKERY_LOOK_AT,
+	CRYSTAL_LOOK_AT.clone()
+		.sub(CRYSTAL_VIEW_POS)
+		.normalize()
+		.multiplyScalar(LOOK_DIST)
+		.add(CRYSTAL_VIEW_POS),
+];
 const _fwd = new THREE.Vector3(0, 0, -1);
 const _dir = new THREE.Vector3();
 
@@ -59,6 +86,8 @@ export default function CameraRig() {
 	const targetPos = useRef(new THREE.Vector3());
 	const targetLook = useRef(new THREE.Vector3());
 	const smoothP = useRef(0);
+	const routeId = useRef(0);
+	const directFlight = useMemo(createDirectFlight, []);
 	const follow = useRef({ elapsed: 0 });
 	const qStart = useRef(new THREE.Quaternion());
 	const qEnd = useRef(new THREE.Quaternion());
@@ -101,6 +130,28 @@ export default function CameraRig() {
 	}, [camera, size.width]);
 
 	useFrame(({ pointer }, delta) => {
+		const route = getCameraRoute();
+		if (route.id !== routeId.current) {
+			routeId.current = route.id;
+			if (route.direct) {
+				// Begin at the actual pose, even if the previous glide was finishing.
+				targetPos.current.copy(STOP_POSITIONS[route.to]);
+				targetLook.current.copy(STOP_LOOKS[route.to]);
+				if (size.width < 700) {
+					targetLook.current.x += MOBILE_LOOK_SHIFTS[route.to];
+					targetLook.current.y += route.to > 0 ? 3.1 : 0;
+				}
+				beginDirectFlight(
+					directFlight,
+					pos.current,
+					look.current,
+					targetPos.current,
+					targetLook.current,
+				);
+				smoothP.current = route.from;
+				follow.current.elapsed = 0;
+			}
+		}
 		const reduced = reducedMotion();
 		const moving = isScrollAnimating();
 		const finishing = follow.current.elapsed < CAMERA_FINISH_SECONDS;
@@ -112,37 +163,47 @@ export default function CameraRig() {
 		);
 		const p = smoothP.current;
 
-		sampleSegment(posCurves, p, targetPos.current);
-
-		const seg = Math.min(posCurves.length - 1, Math.floor(p));
-		const t = THREE.MathUtils.clamp(p - seg, 0, 1);
-
-		if (seg === CRYSTAL_SEG) {
-			// Slerp facing — avoids look-at points crossing the camera (yaw whip).
-			qNow.current.copy(qStart.current).slerp(qEnd.current, easeInOut(t));
-			_dir.copy(_fwd).applyQuaternion(qNow.current);
-			targetLook.current.copy(targetPos.current).addScaledVector(
-				_dir,
-				// Meet the preceding look-at curve exactly, including portrait offsets.
-				THREE.MathUtils.lerp(
-					startLookDistance.current,
-					LOOK_DIST,
-					easeInOut(t),
-				),
+		if (route.direct) {
+			const span = route.to - route.from;
+			sampleDirectFlight(
+				directFlight,
+				span === 0 ? 1 : (p - route.from) / span,
+				targetPos.current,
+				targetLook.current,
 			);
 		} else {
-			sampleSegment(lookCurves, p, targetLook.current);
-		}
+			sampleSegment(posCurves, p, targetPos.current);
 
-		if (size.width < 700) {
-			const segment = Math.min(2, Math.floor(p)),
-				fraction = p - segment;
-			targetLook.current.x += THREE.MathUtils.lerp(
-				MOBILE_LOOK_SHIFTS[segment],
-				MOBILE_LOOK_SHIFTS[segment + 1],
-				fraction,
-			);
-			targetLook.current.y += 3.1 * Math.min(1, p);
+			const seg = Math.min(posCurves.length - 1, Math.floor(p));
+			const t = THREE.MathUtils.clamp(p - seg, 0, 1);
+
+			if (seg === CRYSTAL_SEG) {
+				// Slerp facing — avoids look-at points crossing the camera (yaw whip).
+				qNow.current.copy(qStart.current).slerp(qEnd.current, easeInOut(t));
+				_dir.copy(_fwd).applyQuaternion(qNow.current);
+				targetLook.current.copy(targetPos.current).addScaledVector(
+					_dir,
+					// Meet the preceding look-at curve exactly, including portrait offsets.
+					THREE.MathUtils.lerp(
+						startLookDistance.current,
+						LOOK_DIST,
+						easeInOut(t),
+					),
+				);
+			} else {
+				sampleSegment(lookCurves, p, targetLook.current);
+			}
+
+			if (size.width < 700) {
+				const segment = Math.min(2, Math.floor(p)),
+					fraction = p - segment;
+				targetLook.current.x += THREE.MathUtils.lerp(
+					MOBILE_LOOK_SHIFTS[segment],
+					MOBILE_LOOK_SHIFTS[segment + 1],
+					fraction,
+				);
+				targetLook.current.y += 3.1 * Math.min(1, p);
+			}
 		}
 
 		pos.current.lerp(targetPos.current, alpha);

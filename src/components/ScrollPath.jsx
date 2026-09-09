@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 import {
-	getScrollProgress,
+	getScrollSection,
 	requestSnapTo,
 	subscribeScroll,
 } from "../experience/scrollStore";
@@ -11,7 +11,7 @@ const stops = [
 	"Bavo Bakes",
 	"Your next project",
 ];
-const getActiveChapter = () => Math.round(getScrollProgress());
+const getActiveChapter = () => getScrollSection();
 export default function ScrollPath() {
 	const p = useSyncExternalStore(
 		subscribeScroll,

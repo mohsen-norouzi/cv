@@ -1,5 +1,5 @@
-import { reducedMotion } from "./motion";
-import { playWhoosh } from "./audioStore";
+import { playWhoosh } from "./audioStore.js";
+import { reducedMotion } from "./motion.js";
 
 const listeners = new Set();
 
@@ -10,6 +10,8 @@ let section = 0;
 let progress = 0;
 let raf = 0;
 let animating = false;
+let cameraRoute = { id: 0, from: 0, to: 0, direct: false };
+export const getCameraRoute = () => cameraRoute;
 
 /** Pending leave sequence before the camera moves */
 let exitGate = null; // { direction: 1|-1, target?: number }
@@ -87,7 +89,7 @@ export function requestSnapTo(target) {
 		return;
 	}
 
-	snapTo(next);
+	snapTo(next, true);
 }
 
 /** Called by SceneFocus once text + spot have fully hidden */
@@ -95,7 +97,7 @@ export function continueSnapAfterExit() {
 	if (!exitGate) return;
 	const { direction, target } = exitGate;
 	exitGate = null;
-	if (typeof target === "number") snapTo(target);
+	if (typeof target === "number") snapTo(target, true);
 	else snapTo(section + direction);
 }
 
@@ -112,7 +114,7 @@ export function snapScroll(direction) {
 }
 
 /** Animate camera progress to an absolute section index. */
-function snapTo(next) {
+function snapTo(next, direct = false) {
 	const clamped = Math.min(SCROLL_SECTION_COUNT - 1, Math.max(0, next));
 	if (clamped === section && !animating) return;
 	if (animating) return;
@@ -120,6 +122,7 @@ function snapTo(next) {
 	section = clamped;
 	const from = progress;
 	const to = clamped;
+	cameraRoute = { id: cameraRoute.id + 1, from, to, direct };
 	if (reducedMotion()) {
 		if (raf) cancelAnimationFrame(raf);
 		raf = 0;
