@@ -81,6 +81,12 @@ export default function CoastalWorld() {
 		root.traverse((object) => {
 			if (object.userData.lanterns) lanterns = object.userData.lanterns;
 			if (!object.isMesh) return;
+			// The old opaque ridge backdrops read as rigid white clouds in the haze.
+			// Keep the authored asset intact; the live sky now provides the backdrop.
+			if (object.material.name.startsWith("Mountain ridge")) {
+				object.visible = false;
+				return;
+			}
 			let node = object,
 				group;
 			while (node && !group) {

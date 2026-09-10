@@ -3,6 +3,8 @@ import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { getFocusAmount, worldBrightness } from "./focusStore";
 import { skyPalette, updateSkyPalette } from "./skyPalette";
+import { reducedMotion } from "./motion";
+import { weatherNoise } from "./weatherNoise";
 
 // Sky, celestial discs and sparse stars share one draw call and follow the camera.
 export default function SkyDome() {
@@ -27,12 +29,16 @@ export default function SkyDome() {
 					sidereal: { value: 0 },
 					latitude: { value: 0 },
 					worldBrightness,
+					cloudTime: { value: 0 },
+					cloudOrigin: { value: new THREE.Vector3() },
 				},
 				vertexShader: `varying vec3 vDirection;
    void main(){vDirection=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
 				fragmentShader: `
    uniform vec3 topColor,horizonColor,coolColor,sunColor,sunDir,moonDir;
    uniform float sunAmount,moonAmount,daylight,stars,sidereal,latitude,worldBrightness;
+   uniform float cloudTime; uniform vec3 cloudOrigin;
+   ${weatherNoise}
    varying vec3 vDirection;
    float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
    void main(){
@@ -65,6 +71,26 @@ export default function SkyDome() {
      vec3 moon=vec3(.78,.85,1.)*(.025+lit*.95)*textureDetail;
      col=mix(col,moon,moonAmount*(1.-daylight*(1.-lit))*(1.-smoothstep(.95,1.,r2)));
     }
+    // Intersect two horizontal cloud decks. Wind advects their density,
+    // while perspective compresses the distant banks toward the horizon.
+    if(dir.y>.005){
+     vec2 wind=vec2(cloudTime*.012,cloudTime*.0035);
+     vec2 cloudUV=(cloudOrigin.xz+dir.xz*(145.-cloudOrigin.y)/max(dir.y,.025))*.008;
+     vec2 warp=vec2(weatherNoise(cloudUV*.4+wind*.3),weatherNoise(cloudUV*.4+8.));
+     float n=weatherFbm(cloudUV-wind+warp*.6);
+     float broad=weatherNoise(cloudUV*.25-wind*.35);
+     float density=smoothstep(.43,.69,n+broad*.09);
+     float lifted=weatherFbm(cloudUV-wind+warp*.6+sunDir.xz*.35);
+     float silver=clamp((n-lifted)*3.+.45,0.,1.);
+     float veil=weatherFbm(cloudUV*.55+vec2(33.,14.)-wind*.65);
+     float high=smoothstep(.56,.76,veil)*.35;
+     float alpha=(density*.91+high)*(smoothstep(.005,.075,dir.y));
+     vec3 shade=mix(coolColor*.78,horizonColor,.35);
+     vec3 lit=mix(horizonColor*1.12,sunColor*1.25,glow*.55*sunAmount);
+     vec3 cloudColor=mix(shade,lit,silver);
+     cloudColor+=sunColor*pow(sd,12.)*density*(1.-density)*sunAmount*.6;
+     col=mix(col,cloudColor,clamp(alpha,0.,.95));
+    }
     col+=(hash(gl_FragCoord.xy)-.5)/650.;
     gl_FragColor=vec4(col*worldBrightness,1.);
     #include <tonemapping_fragment>
@@ -74,10 +100,12 @@ export default function SkyDome() {
 		[],
 	);
 	useEffect(() => () => material.dispose(), [material]);
-	useFrame(({ camera }) => {
+	useFrame(({ camera }, delta) => {
 		const sky = updateSkyPalette(),
 			u = material.uniforms;
 		dome.current.position.copy(camera.position);
+		u.cloudOrigin.value.copy(camera.position);
+		if (!reducedMotion()) u.cloudTime.value += Math.min(delta, 0.05);
 		u.sunDir.value.fromArray(sky.sunDirection);
 		u.moonDir.value.fromArray(sky.moonDirection);
 		u.sunAmount.value = sky.sunVisible * (1 - getFocusAmount() * 0.85);

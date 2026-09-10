@@ -25,7 +25,11 @@ export default function LighthouseBeam({ position, landscape }) {
 	const blockers = useMemo(() => {
 		const meshes = [];
 		landscape.traverse((object) => {
-			if (object.isMesh && !object.material.name.includes("Lantern glass"))
+			if (
+				object.isMesh &&
+				object.visible &&
+				!object.material.name.includes("Lantern glass")
+			)
 				meshes.push(object);
 		});
 		return meshes;

@@ -10,7 +10,8 @@
 		"format": "biome format --write .",
 		"lint": "biome lint --write .",
 		"check": "biome check --write .",
-		"models:coast": "node scripts/export-coast.mjs",
+		"models:coast": "node scripts/export-coast.mjs && node scripts/export-shore.mjs",
+		"models:shore": "node scripts/export-shore.mjs",
 		"models:lighting": "node scripts/encode-lightmaps.mjs && npm run models:optimize",
 		"models:optimize": "node scripts/optimize-assets.mjs",
 		"test:focus": "node --test tests/focus-transition.test.mjs"

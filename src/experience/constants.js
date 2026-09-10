@@ -4,7 +4,7 @@ import { LANDMARKS } from "./coastLayout.js";
 /** Soft warm haze — matches HTML page backdrop (keep App bg in sync) */
 /** Thin — depth comes from discrete mist banks, not a uniform veil */
 export const FOG_COLOR = "#bfc1cf";
-export const FOG_DENSITY = 0.0055;
+export const FOG_DENSITY = 0.0036;
 
 /** Powder blue at zenith — the reference sky is light, never navy */
 export const SKY_TOP = "#a8b5d0";
