@@ -1,4 +1,15 @@
 import gsap from "gsap";
+import { environmentAudio } from "./environmentAudio.js";
+let natureTarget = 0.02;
+
+export function setAudioEnvironment(sky) {
+	const mix = environmentAudio.setSky(sky);
+	const target = 0.02 * mix.day;
+	if (Math.abs(target - natureTarget) < 0.00005) return;
+	natureTarget = target;
+	if (enabled && !starting && !document.hidden)
+		fadeLayer("nature", target, 2, "power1.out");
+}
 
 const LAYERS = [
 	{ src: "/sounds/ambient.m4a", target: 0.14, key: "ambient" },
@@ -84,6 +95,7 @@ export async function enableMusic() {
 	const version = ++startVersion;
 	pausedByVisibility = false;
 	ensureAll();
+	void environmentAudio.enable();
 
 	try {
 		// Do not await one layer before starting the other: some browsers only
@@ -106,6 +118,7 @@ export async function enableMusic() {
 		// a successfully loaded song or make the music button lie about it.
 		enabled = results[0].status === "fulfilled";
 		if (!enabled) {
+			environmentAudio.disable();
 			for (const audio of players.values()) audio.pause();
 			notify();
 			return false;
@@ -113,12 +126,18 @@ export async function enableMusic() {
 		notify();
 		if (document.hidden) {
 			pausedByVisibility = true;
+			environmentAudio.pause();
 			for (const audio of players.values()) audio.pause();
 			return true;
 		}
 		LAYERS.forEach(({ key, target }, index) => {
 			if (results[index].status === "fulfilled")
-				fadeLayer(key, target, FADE_IN, "power1.out");
+				fadeLayer(
+					key,
+					key === "nature" ? natureTarget : target,
+					FADE_IN,
+					"power1.out",
+				);
 		});
 		return true;
 	} finally {
@@ -136,6 +155,7 @@ export function disableMusic() {
 	startVersion += 1;
 	starting = false;
 	wantMusic = false;
+	environmentAudio.disable();
 	pausedByVisibility = false;
 	ensureAll();
 	stopWhoosh();
@@ -194,6 +214,7 @@ async function handleVisibility() {
 	if (typeof document === "undefined") return;
 
 	if (document.hidden) {
+		environmentAudio.pause();
 		if (!enabled) return;
 		pausedByVisibility = true;
 		stopWhoosh();

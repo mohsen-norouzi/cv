@@ -1,3 +1,4 @@
+import SpatialAudio from "./experience/SpatialAudio";
 import { lazy } from "react";
 import Atmosphere from "./experience/Atmosphere";
 import CameraRig from "./experience/CameraRig";
@@ -25,6 +26,7 @@ export default function Experience() {
 			<SkyDome />
 			<CameraRig />
 			<WalkRig />
+			<SpatialAudio />
 			<EnvLight />
 			<ambientLight color="#c8d3e4" intensity={0.09} />
 			<hemisphereLight args={["#d7dfef", "#666957", 0.35]} />

@@ -1,0 +1,26 @@
+Spatial environment recordings
+
+All four source recordings are dedicated to the public domain under CC0 1.0:
+https://creativecommons.org/publicdomain/zero/1.0/
+
+morning.m4a: "dawn chorus.wav" by squashy555
+https://freesound.org/people/squashy555/sounds/269244/
+Source: https://cdn.freesound.org/previews/269/269244_1149179-hq.mp3
+
+night.m4a: "Crickets At Night - Clean sound" by Defelozedd94
+https://freesound.org/people/Defelozedd94/sounds/522298/
+Source: https://cdn.freesound.org/previews/522/522298_9084007-hq.mp3
+
+ocean.m4a: "WATER OCEAN WAVES 01.wav" by sengjinn
+https://freesound.org/people/sengjinn/sounds/174581/
+Source: https://cdn.freesound.org/previews/174/174581_2979997-hq.mp3
+
+owl.m4a: "Crickets and Owl" by gfrog
+https://freesound.org/people/gfrog/sounds/159727/
+Source: https://cdn.freesound.org/previews/159/159727_401105-hq.mp3
+
+Retrieved 10 September 2026. Edited into short, normalized mono AAC clips for
+3D positioning. Looping recordings have circular crossfades; the owl clip has
+short edge fades and plays occasionally. See scripts/prepare-environment-audio.py.
+These are artistic environmental recordings, not live local wildlife feeds.
+This provenance covers these four additions, not the existing music/effects.

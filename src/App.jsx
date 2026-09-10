@@ -1,4 +1,4 @@
-import { lazy, memo, Suspense, useState } from "react";
+import { lazy, memo, Suspense, useState, useEffect } from "react";
 import LiveSkyControl from "./components/LiveSkyControl";
 import HeroContent from "./components/HeroContent";
 import MusicToggle from "./components/MusicToggle";
@@ -10,6 +10,7 @@ import ScrollPath from "./components/ScrollPath";
 import SectionCaption from "./components/SectionCaption";
 import WalkControls from "./components/WalkControls";
 import ScrollStealer from "./experience/ScrollStealer";
+import { setAudioEnvironment } from "./experience/audioStore";
 import { useSky } from "./experience/skyStore";
 import { useWalking } from "./experience/walkStore";
 
@@ -19,6 +20,7 @@ function App() {
 	const [entered, setEntered] = useState(false);
 	const walking = useWalking();
 	const sky = useSky();
+	useEffect(() => setAudioEnvironment(sky), [sky]);
 	return (
 		<div
 			className={`portfolio ${sky.daylight < 0.4 ? "is-night" : ""} relative h-full w-full overflow-hidden bg-[#eee4d8]`}

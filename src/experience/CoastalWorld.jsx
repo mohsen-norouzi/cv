@@ -22,7 +22,7 @@ const LIGHTMAP_URLS = [
 useGLTF.preload(MODEL_URLS);
 useLoader.preload(THREE.TextureLoader, LIGHTMAP_URLS);
 
-function placeSubject(source, position, height, isSinger = false) {
+function placeSubject(source, position, height) {
 	const model = source.clone(true);
 	model.updateMatrixWorld(true);
 	const bounds = new THREE.Box3().setFromObject(model),
@@ -44,19 +44,6 @@ function placeSubject(source, position, height, isSinger = false) {
 			o.material.roughness = 0.82;
 			o.material.metalness = 0;
 			o.material.envMapIntensity = 0.6;
-			if (isSinger) {
-				o.material.onBeforeCompile = (shader) => {
-					shader.fragmentShader = shader.fragmentShader.replace(
-						"#include <map_fragment>",
-						`#include <map_fragment>
-					vec3 fabric=diffuseColor.rgb;
-					float rose=smoothstep(1.6,2.5,fabric.r/max(fabric.g,.001)) * (1.-smoothstep(1.15,1.7,fabric.g/max(fabric.b,.001))) * smoothstep(.06,.18,fabric.r);
-					float clothLight=dot(fabric,vec3(.3,.5,.2));
-					diffuseColor.rgb=mix(fabric,vec3(1.35,1.12,.77)*clothLight*1.3,rose*.9);`,
-					);
-				};
-				o.material.customProgramCacheKey = () => "ivory-stage-fabric";
-			}
 		}
 	});
 	return container;
@@ -142,7 +129,6 @@ export default function CoastalWorld() {
 					source,
 					LANDMARKS[i].position,
 					[2.65, 3.1, 1.0][i],
-					i === 0,
 				);
 				subject.name = `Showcase_${i + 1}`;
 				subject.userData.stop = i + 1;
@@ -210,8 +196,7 @@ function LanternHighlights({ positions }) {
 	);
 	useFrame(({ camera }, delta) => {
 		const sky = updateSkyPalette();
-		const brightness =
-			(1 - 0.6 * sky.daylight) * (1 - getFocusAmount() * 0.5);
+		const brightness = (1 - 0.6 * sky.daylight) * (1 - getFocusAmount() * 0.5);
 		for (const [i, slot] of pool.update(camera.position, delta).entries()) {
 			const light = lights.current[i];
 			if (!light) continue;

@@ -10,7 +10,8 @@ import {
 
 // Slice the authored meshes at the waterline. No hand-drawn island approximation
 // and no per-frame depth readback: a small distance field follows every cliff.
-const { root } = buildCoast();
+const { root, audit } = buildCoast();
+const soundShore = new Map();
 root.updateMatrixWorld(true);
 const size = 512,
 	[minX, minZ, width, depth] = SHORE_BOUNDS;
@@ -81,6 +82,13 @@ root.traverse((mesh) => {
 			len = dx * dx + dz * dz;
 		if (len < 1e-10) continue;
 		segments++;
+		// Spatial sound uses the same actual waterline, reduced to a 3 m grid.
+		const x = (ax + bx) / 2,
+			z = (az + bz) / 2;
+		soundShore.set(
+			`${Math.round(x / 3)},${Math.round(z / 3)}`,
+			[x, SEA_LEVEL, z].map((v) => +v.toFixed(3)),
+		);
 		const x0 = Math.max(
 			0,
 			Math.floor(((Math.min(ax, bx) - SHORE_RANGE - minX) / width) * size),
@@ -164,3 +172,17 @@ await writeFile(
 	heightPng,
 );
 console.log(`Mist terrain heights: ${(heightPng.length / 1024).toFixed(1)} KB`);
+
+await writeFile(
+	new URL("../public/optimized/soundscape.json", import.meta.url),
+	JSON.stringify({
+		shore: [...soundShore.values()],
+		trees: audit.plants
+			.filter((p) => p.kind !== "grass")
+			.map((p) => [p.position[0], p.position[1] + 2.5, p.position[2]]),
+		insects: [
+			...audit.plants.filter((p) => p.kind === "grass").map((p) => p.position),
+			...audit.lanterns.map((l) => l.position),
+		],
+	}),
+);
