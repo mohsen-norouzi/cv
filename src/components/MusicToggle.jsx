@@ -6,7 +6,7 @@ import {
 } from "../experience/audioStore";
 
 /**
- * EQ bars + “Music” mute toggle (ambient starts from the loader Enter click).
+ * EQ bars + music toggle. The opening Enter button starts the ambient song.
  */
 export default function MusicToggle() {
 	const on = useSyncExternalStore(
@@ -20,7 +20,7 @@ export default function MusicToggle() {
 			type="button"
 			data-music-toggle
 			onClick={() => toggleMusic()}
-			className="pointer-events-auto absolute bottom-8 right-8 z-30 cursor-pointer text-white/85 drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)] transition-opacity hover:text-white md:bottom-10 md:right-12 lg:right-16"
+			className="music-toggle"
 			aria-pressed={on}
 			aria-label={on ? "Mute music" : "Play music"}
 		>

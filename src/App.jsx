@@ -1,60 +1,62 @@
-import { Canvas } from "@react-three/fiber";
-import { Suspense } from "react";
-import * as THREE from "three";
+import { lazy, memo, Suspense, useState, useEffect } from "react";
+import LiveSkyControl from "./components/LiveSkyControl";
 import HeroContent from "./components/HeroContent";
 import MusicToggle from "./components/MusicToggle";
 import Navbar from "./components/Navbar";
+import SceneErrorBoundary from "./components/SceneErrorBoundary";
 import SceneLoader from "./components/SceneLoader";
 import ScrollCue from "./components/ScrollCue";
 import ScrollPath from "./components/ScrollPath";
 import SectionCaption from "./components/SectionCaption";
-import Experience from "./Experience";
-import { DPR_RANGE, IS_MOBILE } from "./experience/device";
+import WalkControls from "./components/WalkControls";
 import ScrollStealer from "./experience/ScrollStealer";
+import { setAudioEnvironment } from "./experience/audioStore";
+import { useSky } from "./experience/skyStore";
+import { useWalking } from "./experience/walkStore";
+
+const SceneCanvas = memo(lazy(() => import("./SceneCanvas")));
 
 function App() {
+	const [entered, setEntered] = useState(false);
+	const walking = useWalking();
+	const sky = useSky();
+	useEffect(() => setAudioEnvironment(sky), [sky]);
 	return (
-			<div className="relative h-full w-full overflow-hidden bg-[#e2cbb0]">
-			<ScrollStealer />
-			<Canvas
-				className="absolute inset-0 h-full w-full"
-				style={{ width: "100%", height: "100%" }}
-				shadows={!IS_MOBILE}
-				dpr={DPR_RANGE}
-				camera={{
-					position: [2.5, 3.8, 34],
-					fov: 42,
-					near: 0.1,
-					far: 250,
-				}}
-				gl={{
-					antialias: true,
-					toneMapping: THREE.NoToneMapping,
-					outputColorSpace: THREE.SRGBColorSpace,
-					powerPreference: IS_MOBILE ? "default" : "high-performance",
-					stencil: false,
-				}}
+		<div
+			className={`portfolio ${sky.daylight < 0.4 ? "is-night" : ""} relative h-full w-full overflow-hidden bg-[#eee4d8]`}
+		>
+			{entered && !walking && <ScrollStealer />}
+			<div inert={!entered} className="absolute inset-0">
+				<SceneErrorBoundary>
+					<Suspense fallback={null}>
+						<SceneCanvas />
+					</Suspense>
+				</SceneErrorBoundary>
+			</div>
+
+			<SceneLoader entered={entered} onEnter={() => setEntered(true)} />
+
+			<div
+				inert={!entered}
+				className="pointer-events-none absolute inset-0 z-10"
 			>
-				<Suspense fallback={null}>
-					<Experience />
-				</Suspense>
-			</Canvas>
-
-			<SceneLoader />
-
-			<div className="pointer-events-none absolute inset-0 z-10">
-				{/* Soft edge fades — long falloffs, no hard bands */}
-				<div
-					aria-hidden
-					className="page-edge-fade pointer-events-none absolute inset-0"
-				/>
-				<div className="pointer-events-auto">
-					<Navbar />
-				</div>
-				<HeroContent />
-				<SectionCaption />
-				<ScrollPath />
-				<ScrollCue />
+				{!walking && (
+					<>
+						<div
+							aria-hidden
+							className="page-edge-fade pointer-events-none absolute inset-0"
+						/>
+						<div className="pointer-events-auto">
+							<Navbar />
+						</div>
+						<HeroContent entered={entered} />
+						<SectionCaption />
+						<ScrollPath />
+						<ScrollCue />
+					</>
+				)}
+				{entered && walking && <WalkControls />}
+				<LiveSkyControl />
 				<MusicToggle />
 			</div>
 		</div>

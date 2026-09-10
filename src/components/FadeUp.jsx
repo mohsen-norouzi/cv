@@ -1,3 +1,4 @@
+import { reducedMotion } from "../experience/motion";
 import gsap from "gsap";
 import { useLayoutEffect, useRef } from "react";
 
@@ -16,6 +17,10 @@ export default function FadeUp({
 		const el = ref.current;
 		if (!el) return;
 
+		if (reducedMotion()) {
+			gsap.set(el, { opacity: active ? 1 : 0, y: 0 });
+			return;
+		}
 		const tween = active
 			? gsap.fromTo(
 					el,

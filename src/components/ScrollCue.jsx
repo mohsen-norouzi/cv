@@ -1,68 +1,45 @@
 import { useSyncExternalStore } from "react";
-import { IS_MOBILE } from "../experience/device";
 import {
-	getSceneReady,
-	subscribeSceneReady,
-} from "../experience/loadStore";
-import { getScrollProgress, subscribeScroll } from "../experience/scrollStore";
+	getScrollProgress,
+	requestSnap,
+	subscribeScroll,
+} from "../experience/scrollStore";
 
-/**
- * First-scroll hint — fades out once the visitor starts moving.
- */
+const getCueState = () => {
+	const p = getScrollProgress();
+	return p < 0.1 ? 0 : p >= 3 ? 3 : 1;
+};
 export default function ScrollCue() {
-	const progress = useSyncExternalStore(
-		subscribeScroll,
-		getScrollProgress,
-		getScrollProgress,
-	);
-	const sceneReady = useSyncExternalStore(
-		subscribeSceneReady,
-		getSceneReady,
-		getSceneReady,
-	);
-
-	const opacity = sceneReady ? Math.max(0, 1 - progress * 1.8) : 0;
-	const hidden = opacity < 0.02;
-	const label = IS_MOBILE ? "Swipe to explore" : "Scroll to explore";
-
+	const p = useSyncExternalStore(subscribeScroll, getCueState, getCueState);
 	return (
-		<div
-			className="absolute bottom-8 left-8 z-30 flex items-center gap-3 drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)] md:bottom-10 md:left-12 lg:left-16"
-			style={{
-				opacity,
-				visibility: hidden ? "hidden" : "visible",
-				transition: "opacity 0.4s ease",
-			}}
-			aria-hidden={hidden}
-		>
-			<svg
-				width="18"
-				height="28"
-				viewBox="0 0 18 28"
-				fill="none"
-				aria-hidden
-				className="text-white/80"
+		<footer className="site-footer">
+			<button
+				type="button"
+				className="scroll-cue"
+				onClick={() => requestSnap(p >= 3 ? -1 : 1)}
 			>
-				<rect
-					x="1"
-					y="1"
-					width="16"
-					height="26"
-					rx="8"
-					stroke="currentColor"
-					strokeWidth="1.5"
-				/>
-				<circle
-					cx="9"
-					cy="8"
-					r="2"
-					fill="currentColor"
-					className="animate-pulse"
-				/>
-			</svg>
-			<span className="font-ui text-[10px] font-medium tracking-[0.28em] text-white/75 uppercase">
-				{label}
-			</span>
-		</div>
+				<span className="mouse-outline" aria-hidden="true">
+					<i />
+				</span>
+				<span>
+					{p < 0.1
+						? "Scroll to explore"
+						: p >= 3
+							? "Back along the path"
+							: "Continue the journey"}
+				</span>
+				<span className="cue-arrow" aria-hidden="true">
+					↓
+				</span>
+			</button>
+			<div className="footer-links">
+				<a href="https://t.me/itsmohseeen" target="_blank" rel="noreferrer">
+					Telegram ↗
+				</a>
+				<a href="https://wa.me/34666601296" target="_blank" rel="noreferrer">
+					WhatsApp ↗
+				</a>
+			</div>
+		</footer>
 	);
 }

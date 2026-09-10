@@ -1,16 +1,114 @@
-# React + Vite
+# Mohsen — coastal portfolio
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A React / Three.js portfolio with a navigable coastal landscape, developed on `hq`.
 
-Currently, two official plugins are available:
+## Run locally
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```sh
+npm install
+npm run dev
+```
 
-## React Compiler
+For a production preview:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```sh
+npm run build
+npm run preview
+```
 
-## Expanding the ESLint configuration
+## Scene and lighting
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- `public/optimized/coast.glb` is the runtime landscape, losslessly compressed from `public/coast-lit.glb`. It contains fitted, bevelled paving, substantial terraces, folded foliage, pines, cliffs, a lighthouse, lanterns, and a hilltop destination.
+- `public/optimized/*.webp` are lossless copies of the linear RGBM8 irradiance atlases in `public/lighting/*.png`, baked in Blender Cycles. They retain sunlight, soft shadows, indirect bounce, and the surrounding glow from all 20 lamps. Their alpha channel encodes intensity; do not process them as ordinary transparent pictures.
+- `assets/coast-lighting.blend` is the editable lighting scene. Earlier scenes are preserved in the file; the active HQ scene is the latest bake.
+- `assets/coast-source.glb` is the generated geometry before UV unwrapping and lighting. `src/experience/buildCoast.js` and `coastLayout.js` author it deterministically (29 material groups, 22,108 triangles).
+- `public/Try1.glb` preserves the original models. Only the featured singer, bakery, and bench are extracted into `public/optimized/subjects.glb` and loaded by `CoastalWorld.jsx`. The singer's fabric receives a selective ivory color treatment at runtime.
+- `Ocean.jsx` reflects the actual scene into animated water. Its normal texture is generated locally. `SkyDome.jsx` and `CoastalMist.jsx` provide the atmosphere.
+- `TourFocus.jsx` starts surrounding dimming as the zoom begins; spotlight/dust fade in only within 4 world units of the destination camera view. Only the caption waits for camera arrival. `WorldFocus.jsx` dims baked and live illumination, sky, mist, water, and the page overlay while leaving the stage spotlight bright. Surroundings stay dark through project exits and travel; daylight returns only when navigating back to the coast. `npm run test:focus` checks this sequence and reduced-motion behavior. `SceneFocus.jsx` consumes that state to draw a warm spotlight, soft platform pool, and 80 floating dust motes on the selected project. The beam fades gradually before its upper end and along its silhouette, and the upper dust fades with it. One reusable light and particle buffer serve all three stops, with no extra shadow maps or downloaded assets.
+- Desktop uses live specular lighting, ambient occlusion, subtle bloom, depth of field, and filmic tone mapping. Six nearby lights provide moving specular highlights; every lantern retains its baked illumination regardless of that budget.
+- Phones retain the baked illumination and lower-resolution water reflections, while omitting the desktop postprocessing and large shadow maps. A narrow desktop window retains desktop rendering quality.
+
+The runtime lighting textures total 7.04 MB, the landscape 1.47 MB, and the featured models 3.54 MB (decimal MB). Original exports and PNGs stay available locally and are excluded from the production build. Raw EXR bake intermediates live in `assets/lighting/` and are excluded from Git and the production build.
+
+## Rebuild the landscape
+
+1. Run `npm run models:coast` to regenerate `assets/coast-source.glb`, the shared `assets/coast-layout.json`, and `assets/placement-audit.json`.
+2. In Blender's Python Console, execute `scripts/bake-coast.py` using its absolute path. The script creates a separate scene, imports the authored geometry and featured models, unwraps the meshes, and bakes three HDR atlases. It preserves existing scenes. Status is written to `assets/bake-status.json`; wait for `Complete`.
+3. Run `npm run models:lighting` to filter, downsample, and encode the EXRs, then generate the lossless runtime assets. This requires the `cwebp` command from libwebp (on macOS: `brew install webp`). If only the GLBs or existing PNGs change, run `npm run models:optimize` directly.
+4. Run `npm run build` and review all camera stops in the browser.
+
+The visible lamp glass is hidden during baking so it cannot block the light source inside it. Paving and terrace coordinates must remain aligned with the featured models. Regenerating the source replaces generated geometry; keep manual Blender edits in a separate scene/file if you intend to retain them.
+
+`CoastalWorld.jsx` applies the web exposure and sky-fill calibration separately from the baked transport and keeps live specular response. `constants.js` and `CameraRig.jsx` control the four-stop tour.
+
+## Navigation and accessibility
+
+- Scroll or swipe to move between the coast and the three projects.
+- Click a landmark, chapter marker, or Explore button to select a stop.
+- Arrow Up/Down and Page Up/Down move between stops; Home/End select the first/last stop.
+- Reduced-motion preference disables the camera fly-through, parallax, water/mist motion, and text reveals.
+- Music starts only when the visitor enables it.
+- If 3D cannot load, a fallback exposes the resume, projects, and contact links.
+
+No deployment is configured or performed by this redesign.
+
+## Performance pass — September 2026
+
+The appearance, geometry, texture resolutions, camera motion, shadow resolution, reflection resolution, and postprocessing quality are preserved.
+
+| Scene download | Before | After |
+| --- | ---: | ---: |
+| Featured model source | 6.47 MB | 3.54 MB |
+| Landscape | 3.01 MB | 1.77 MB |
+| Irradiance textures | 10.81 MB | 7.40 MB |
+| Total | 20.29 MB | 12.71 MB |
+
+The scene payload is 37.4% smaller. The initial UI JavaScript is approximately 277 KB instead of 1,504 KB (uncompressed); the 3D engine loads separately. Phones also skip the approximately 242 KB desktop effects chunk. All five scene assets begin loading concurrently.
+
+`models:optimize` uses meshoptimizer without quantization or geometry simplification and checks decoded geometry buffers byte-for-byte. Lossless WebP preserves all RGBM channels, including transparent RGB values. The three WebPs were independently decoded and compared against the PNGs: every RGBA pixel and dimension matched. The runtime glTF decoder was also checked against both generated models.
+
+The lighting textures use linear filtering, so their unused mipmap chains are disabled, avoiding approximately 10.1 MB of texture storage. Extracting only the three used models avoids parsing 131 unused meshes and decoding three unused images (12.6 million pixels). Static landscape matrices, motion preferences, and nearest-lantern buffers are reused. Only a focused showcase updates its world transforms while rotating. Navigation components subscribe only to the displayed state; hidden hero text no longer rerenders throughout the tour. The desktop canvas avoids a redundant MSAA framebuffer while retaining the composer's 4× MSAA. Fully transparent mist pixels exit before noise calculations, and rendering pauses when the page is hidden.
+
+Validation used production builds and the in-app browser, including all four desktop stops at 1440×900. The baseline hero and optimized desktop stops sustained approximately 60 fps; these measurements do not establish an FPS increase or predict performance on every device. The 390×844 phone-mode preview also rendered successfully, with no desktop effects chunk in its resource log. This is browser emulation, not a physical-phone benchmark. The confirmed gains are the reduced payload, avoided allocations, and removed redundant work. Temporary profiling instrumentation is removed from the delivered application.
+
+### Spotlight preset
+
+`src/experience/spotlightSettings.js` contains the approved singer preset, shared by all three projects. Light position and aim remain relative to each project's terrace. The editor and browser-saved overrides are removed; the same settings apply to every visitor. Scene darkening begins with the first project zoom and persists between projects. Only returning to the initial coast view restores the live ambient lighting. Each spotlight fades in near its final camera view.
+
+`node --test tests/*.test.mjs` checks the bounded camera finish and proximity-based focus sequence at 30, 60, and 120 fps.
+
+The opening screen stays visible until the scene is ready and the visitor selects Enter. This click starts music directly and reveals the portfolio; navigation stays inactive behind the screen. The music button remains available afterward. Muting is respected for the rest of the visit; background tabs pause and resume playback. Both sound layers start within the same gesture and the optional nature track cannot block the main song. Focused projects rotate at the original 0.4 radians/second, fading in with their spotlight; reduced-motion preference disables rotation. The existing sun shadow refreshes at most 15 times/second while a model rotates and freezes again afterward.
+
+Four tiny insect dots wander around each lantern bulb, using one shared points draw with static buffers and shader animation. They stay subtle in daylight, become slightly clearer in the dark, fade into the distance, and pause under reduced motion. No new assets or lights are loaded.
+
+Clicking a numbered marker, project label, or other absolute destination takes one direct camera flight from the current pose to that view. Intervening projects are not visited or highlighted. Wheel/swipe navigation still follows the sequential coastal path, with the same bounded arrival easing.
+
+### Grounding and placement
+
+Terrace skirts stay at least half a metre outside the road, with short stone approaches and continuous retaining foundations. The same resolved landmark coordinates drive the models, focus cameras, labels, spotlights, and baked subject shadows. Terrain and outcrops leave space beneath walking surfaces, and a continuous retaining base supports the paving on sloping ground. Vegetation is planted by raycasting the actual terrain and rock triangles; steep faces and road, terrace, and approach clearances are excluded. Lantern sockets connect to the road edge and have footings extending into the sampled ground. The lighthouse and citadel have fitted foundations and the castle has an unobstructed entrance.
+
+`node --test tests/placement.test.mjs` checks all terrace boundaries, samples finished terrain and rock geometry across the road and stages, and checks vegetation roots and lantern support. These checks run during development; the browser continues loading the prebuilt, merged landscape.
+
+The placement pass was checked in the browser at the coast and all three focused views, and all 25 automated checks pass. The rebuilt landscape and irradiance assets total 8.51 MB; lighting sample counts, atlas dimensions, and runtime effect settings are unchanged.
+
+### Walk the coast
+
+The header’s optional **Walk the coast** mode places the camera at eye level on the road near the current tour stop. WASD or arrow keys walk, Shift increases speed, Q/E turn, and dragging the scene looks around. **Enable mouse look** optionally captures the pointer in supporting browsers; drag-to-look remains available if capture is unavailable. Phones and narrow screens have directional hold buttons and drag-to-look. Escape or **Back to portfolio** restores the tour view and its lighting. Input clears when the window loses focus or the page becomes hidden.
+
+Walking follows the existing paving, connecting steps, and terraces, with a small body footprint, step-height limits, and collision around the exhibits and lanterns. Cliff edges block movement; this is grounded walking rather than flight. The walking view uses the same live sky as the portfolio and a clear depth-of-field range. Existing textures, models, reflection quality, and the normal tour presentation remain unchanged. Collision samples reuse the already-loaded landscape and run only while moving. `tests/walking.test.mjs` traverses the full road, all three terrace approaches, and verifies edge and obstacle blocking.
+
+### Live sky and local time
+
+The entire portfolio, entry screen and walking view follow a shared live clock. Barcelona (41.3874° N, 2.1686° E) is the default, with `Europe/Madrid` formatting handling daylight saving automatically. The small location/clock button offers **Use my location** through the browser permission prompt and **Use Barcelona** to reset. Coordinates stay in memory for the current visit; there is no IP lookup, reverse geocoding, location storage or server request from the application. Denial, timeout and unsupported geolocation preserve the previous location. With current location enabled, the displayed clock uses the device timezone; sky calculations use the UTC instant and coordinates independently of that setting.
+
+[SunCalc 2.0.2](https://github.com/mourner/suncalc) computes the sun and moon directions, lunar illumination and altitude-based daylight/twilight weights. Its angles are degrees with azimuth clockwise from north; scene north is -Z. The stars are decorative, with sidereal rotation, rather than a constellation catalogue. The sky, sunlight/moonlight, fog, mist, water and environment lighting follow the same state. Sun and moon discs are slightly enlarged for legibility. Project focus still darkens the surroundings and reveals the approved spotlight near arrival; nighttime uses less additional dimming to retain detail.
+
+Astronomy refreshes every 30 seconds while visible and immediately on returning to the tab or choosing a location. Sky, sun, moon and stars use one draw call; environment reflections are cached for five minutes and refreshed on location changes. Existing models, texture sizes and reflection resolutions are retained. The original baked irradiance is attenuated at night and combined with live direct light; this is an art-directed real-time cycle, not a fresh global-illumination bake for every sun angle.
+
+`node --test tests/*.test.mjs` includes Barcelona day/night, location changes, polar conditions, coordinate conventions and daylight-saving checks. Daytime and nighttime previews were checked in the browser alongside project focus and walking; browser location permission is requested only by the visitor’s explicit button click.
+
+The location/clock panel also offers a date and time picker, a full-day scrubber, backward/forward playback, pause, and **Return to live time**. Playback speeds are one minute, ten minutes, or one hour per real second; crossing midnight advances or reverses the date. Picking a time pauses playback, changing speed preserves the current instant, and returning live uses the current real time. Manual times use the selected location's displayed timezone, including daylight-saving transitions. Nonexistent spring-forward times are rejected; repeated fall-back times use the occurrence nearest the current preview. Preview state lasts for the current visit and works in both tour and walking mode. While running, astronomy updates at 20 Hz and expensive environment lighting is limited to one update every two seconds. Hidden tabs stop rendering and catch up to elapsed playback time when shown again.
+
+`tests/preview-clock.test.mjs` covers signed playback, pause/resume, speed changes, date rollover, timezone conversion, daylight-saving gaps/repeats, and fractional timezone offsets.
+
+The lighthouse now sweeps a warm, narrow beam through a full turn every 24 seconds. Its origin comes from the lighthouse lamp stored in the landscape asset. One spotlight lights nearby surfaces, a soft additive shaft makes the sweep visible in the haze, and the existing water shader draws the corresponding moving highlight. The shaft's centre ray is clipped against the real landscape eight times per second; this is a lightweight occlusion approximation rather than another live shadow map. The effect fades in daylight and steps back during project focus. Rotation uses ordinary animation time, so speeding up the sky does not spin the lighthouse faster; reduced-motion preference keeps the beam stationary. No model or texture downloads were added.
