@@ -31,6 +31,8 @@ import {
 	isScrollAnimating,
 } from "./scrollStore";
 
+import { getWalking } from "./walkStore";
+
 const MOBILE_LOOK_SHIFTS = [0, 3.2, 3.5, 3.0];
 const PARALLAX_X = 0.45;
 const PARALLAX_Y = 0.26;
@@ -111,6 +113,7 @@ export default function CameraRig() {
 	);
 
 	useLayoutEffect(() => {
+		if (getWalking()) return;
 		setCameraSettled(false);
 		const d0 = BAKERY_LOOK_AT.clone().sub(BAKERY_VIEW_POS);
 		startLookDistance.current = d0.length();
@@ -130,6 +133,7 @@ export default function CameraRig() {
 	}, [camera, size.width]);
 
 	useFrame(({ pointer }, delta) => {
+		if (getWalking()) return;
 		const route = getCameraRoute();
 		if (route.id !== routeId.current) {
 			routeId.current = route.id;

@@ -90,3 +90,9 @@ Terrace skirts stay at least half a metre outside the road, with short stone app
 `node --test tests/placement.test.mjs` checks all terrace boundaries, samples finished terrain and rock geometry across the road and stages, and checks vegetation roots and lantern support. These checks run during development; the browser continues loading the prebuilt, merged landscape.
 
 The placement pass was checked in the browser at the coast and all three focused views, and all 25 automated checks pass. The rebuilt landscape and irradiance assets total 8.51 MB; lighting sample counts, atlas dimensions, and runtime effect settings are unchanged.
+
+### Walk the coast
+
+The header’s optional **Walk the coast** mode places the camera at eye level on the road near the current tour stop. WASD or arrow keys walk, Shift increases speed, Q/E turn, and dragging the scene looks around. **Enable mouse look** optionally captures the pointer in supporting browsers; drag-to-look remains available if capture is unavailable. Phones and narrow screens have directional hold buttons and drag-to-look. Escape or **Back to portfolio** restores the tour view and its lighting. Input clears when the window loses focus or the page becomes hidden.
+
+Walking follows the existing paving, connecting steps, and terraces, with a small body footprint, step-height limits, and collision around the exhibits and lanterns. Cliff edges block movement; this is grounded walking rather than flight. The walking view uses daylight and a clear depth-of-field range. Existing textures, models, reflection quality, and the normal tour presentation remain unchanged. Collision samples reuse the already-loaded landscape and run only while moving. `tests/walking.test.mjs` traverses the full road, all three terrace approaches, and verifies edge and obstacle blocking.

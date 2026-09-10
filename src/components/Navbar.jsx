@@ -4,6 +4,7 @@ import {
 	requestSnapTo,
 	subscribeScroll,
 } from "../experience/scrollStore";
+import { setWalking } from "../experience/walkStore";
 import Logo from "./Logo";
 
 const getWorkActive = () => getScrollProgress() > 0;
@@ -27,6 +28,13 @@ export default function Navbar() {
 				</span>
 			</button>
 			<nav aria-label="Main navigation">
+				<button
+					type="button"
+					className="nav-walk"
+					onClick={() => setWalking(true)}
+				>
+					Walk the coast
+				</button>
 				<button
 					type="button"
 					className={progress ? "nav-work active" : "nav-work"}

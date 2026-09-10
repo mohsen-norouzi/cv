@@ -12,11 +12,18 @@ import {
 } from "./scrollStore";
 import { spotlightSettings } from "./spotlightSettings";
 
+import { getWalking } from "./walkStore";
+
 const VIEWS = [null, GIRL_VIEW_POS, BAKERY_VIEW_POS, CRYSTAL_VIEW_POS];
 
 export default function TourFocus() {
 	const state = useRef(createFocusTransition());
 	useFrame(({ camera }, dt) => {
+		if (getWalking()) {
+			setFocus(0, 0);
+			setFocusReveal(0, 0);
+			return;
+		}
 		// Dim immediately, but reveal the selected light only near its final view.
 		// Use the actual camera position, not the faster scroll animation.
 		const stop = getScrollSection();

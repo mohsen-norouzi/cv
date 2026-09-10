@@ -12,6 +12,7 @@ import SceneFocus from "./experience/SceneFocus";
 import ShadowBake from "./experience/ShadowBake";
 import SkyDome from "./experience/SkyDome";
 import TourFocus from "./experience/TourFocus";
+import WalkRig from "./experience/WalkRig";
 import WorldFocus from "./experience/WorldFocus";
 
 const PostFX = lazy(() => import("./experience/PostFX"));
@@ -23,6 +24,7 @@ export default function Experience() {
 			<Atmosphere />
 			<SkyDome />
 			<CameraRig />
+			<WalkRig />
 			<EnvLight intensity={0.45} />
 			<ambientLight color="#c8d3e4" intensity={0.09} />
 			<hemisphereLight args={["#d7dfef", "#666957", 0.35]} />

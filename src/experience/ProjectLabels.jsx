@@ -8,6 +8,8 @@ import {
 	subscribeScroll,
 } from "./scrollStore";
 
+import { useWalking } from "./walkStore";
+
 const copy = [
 	["Artist portfolio", "Ekaterina Shelehova"],
 	["Brand & e-commerce", "Bavo Bakes"],
@@ -15,6 +17,7 @@ const copy = [
 ];
 const getLabelsVisible = () => getScrollProgress() <= 0.15;
 export default function ProjectLabels() {
+	const walking = useWalking();
 	const p = useSyncExternalStore(
 		subscribeScroll,
 		getLabelsVisible,
@@ -25,7 +28,7 @@ export default function ProjectLabels() {
 		getSceneReady,
 		getSceneReady,
 	);
-	if (!ready || !p) return null;
+	if (walking || !ready || !p) return null;
 	return LANDMARKS.map((landmark, i) => (
 		<Html
 			key={landmark.name}

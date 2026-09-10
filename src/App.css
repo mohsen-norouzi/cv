@@ -761,3 +761,179 @@
 		color: color-mix(in srgb, #99632e, #e2b978 calc(var(--scene-focus) * 100%));
 	}
 }
+
+/* Optional first-person mode; the portfolio layout is preserved on exit. */
+.walk-overlay {
+	position: absolute;
+	inset: 0;
+	color: #fff6e6;
+	pointer-events: none;
+	text-shadow: 0 1px 12px #0008;
+}
+.walk-header {
+	position: absolute;
+	inset: 30px 4.5% auto;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 20px;
+}
+.walk-eyebrow {
+	font-size: 11px;
+	letter-spacing: 0.2em;
+}
+.walk-header p {
+	margin: 6px 0 0;
+	font-size: 15px;
+}
+.walk-overlay button {
+	pointer-events: auto;
+	cursor: pointer;
+}
+.walk-exit,
+.walk-mouse {
+	border: 1px solid #fff5;
+	border-radius: 4px;
+	background: #18201acc;
+	padding: 12px 16px;
+	color: #fff6e6;
+	font-size: 12px;
+	backdrop-filter: blur(8px);
+}
+.walk-exit span {
+	margin-left: 20px;
+}
+.walk-crosshair {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	width: 4px;
+	height: 4px;
+	border-radius: 50%;
+	background: #fff9;
+	box-shadow: 0 0 2px #000;
+}
+.walk-help {
+	position: absolute;
+	bottom: 30px;
+	left: 50%;
+	transform: translateX(-50%);
+	width: min(760px, 80%);
+	text-align: center;
+	font-size: 11px;
+	line-height: 1.7;
+}
+.walk-help p {
+	margin: 0 0 10px;
+}
+.walk-mouse {
+	padding: 8px 14px;
+}
+.walk-pad {
+	border: 0;
+	padding: 0;
+	margin: 0;
+	position: absolute;
+	left: 24px;
+	bottom: 26px;
+	display: none;
+	grid-template-columns: repeat(3, 44px);
+	grid-template-rows: repeat(2, 44px);
+	gap: 5px;
+	pointer-events: auto;
+}
+.walk-direction {
+	touch-action: none;
+	user-select: none;
+	-webkit-user-select: none;
+	border: 1px solid #fff5;
+	border-radius: 8px;
+	background: #18201aba;
+	color: white;
+	font-size: 20px;
+}
+.walk-direction:active {
+	background: #b68b4d;
+}
+.walk-direction-0 {
+	grid-column: 2;
+}
+.walk-direction-1 {
+	grid-column: 1;
+	grid-row: 2;
+}
+.walk-direction-2 {
+	grid-column: 2;
+	grid-row: 2;
+}
+.walk-direction-3 {
+	grid-column: 3;
+	grid-row: 2;
+}
+.walk-touch-help {
+	display: none;
+}
+@media (pointer: coarse), (max-width: 700px) {
+	.walk-pad {
+		display: grid;
+	}
+	.walk-help {
+		left: 190px;
+		right: 25px;
+		bottom: 70px;
+		width: auto;
+		transform: none;
+		text-align: right;
+	}
+	.walk-desktop-help {
+		display: none;
+	}
+	.walk-touch-help {
+		display: block;
+	}
+	.walk-header {
+		top: 24px;
+	}
+	.walk-header p {
+		max-width: 150px;
+		font-size: 12px;
+	}
+	.walk-exit {
+		padding: 10px;
+		font-size: 11px;
+	}
+	.walk-exit span {
+		margin-left: 5px;
+	}
+	.site-header nav .nav-walk {
+		font-size: 10px;
+	}
+}
+@media (pointer: coarse) {
+	.walk-mouse {
+		display: none;
+	}
+}
+.walk-header > div {
+	background: #18201aba;
+	padding: 12px 16px;
+	border-radius: 4px;
+	backdrop-filter: blur(8px);
+}
+.walk-help > p {
+	display: inline-block;
+	padding: 5px 10px;
+	border-radius: 4px;
+	background: #18201a99;
+}
+.walk-help > .walk-touch-help {
+	display: none;
+}
+@media (pointer: coarse), (max-width: 700px) {
+	.walk-help > .walk-desktop-help {
+		display: none;
+	}
+	.walk-help > .walk-touch-help {
+		display: block;
+	}
+}

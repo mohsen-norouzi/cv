@@ -26,6 +26,8 @@ import { IS_MOBILE } from "./device";
 import { getFocusAmount } from "./focusStore";
 import { getScrollProgress } from "./scrollStore";
 
+import { getWalking } from "./walkStore";
+
 /**
  * Desktop: full post stack.
  * Mobile: no composer (Android gray/black bugs). Leave NoToneMapping —
@@ -58,7 +60,9 @@ function DesktopPostFX() {
 				p - i,
 			);
 			lens.current.circleOfConfusionMaterial.focusDistance = distance;
-			lens.current.circleOfConfusionMaterial.focusRange = distance * 0.6;
+			lens.current.circleOfConfusionMaterial.focusRange = getWalking()
+				? 3000
+				: distance * 0.6;
 		}
 		if (vignette.current) {
 			vignette.current.darkness = VIGNETTE_DARKNESS + f * 0.2;
