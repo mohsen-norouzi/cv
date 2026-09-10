@@ -3,7 +3,9 @@ import { useFrame, useLoader } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { LANDMARKS } from "./coastLayout";
-import { getFocusStop, getSpotReveal } from "./focusStore";
+import { getFocusStop, getSpotReveal, getFocusAmount } from "./focusStore";
+import { createLanternLightPool } from "./lanternLightPool";
+import { updateSkyPalette } from "./skyPalette";
 import LighthouseBeam from "./LighthouseBeam";
 import LanternInsects from "./LanternInsects";
 import { setSceneReady } from "./loadStore";
@@ -202,26 +204,20 @@ export default function CoastalWorld() {
 // A fixed light budget follows the camera. The baked pools remain on every lamp.
 function LanternHighlights({ positions }) {
 	const lights = useRef([]);
-	const candidates = useMemo(
-		() =>
-			positions.map((p, i) => ({
-				position: new THREE.Vector3(...p),
-				index: i,
-				distance: 0,
-			})),
+	const pool = useMemo(
+		() => createLanternLightPool(positions.slice(0, -1)),
 		[positions],
 	);
-	const lastCamera = useRef(new THREE.Vector3(Infinity, Infinity, Infinity));
-	useFrame(({ camera }) => {
-		if (lastCamera.current.equals(camera.position)) return;
-		lastCamera.current.copy(camera.position);
-		for (const candidate of candidates)
-			candidate.distance = camera.position.distanceToSquared(
-				candidate.position,
-			);
-		candidates.sort((a, b) => a.distance - b.distance || a.index - b.index);
-		for (let i = 0; i < Math.min(6, candidates.length); i++)
-			lights.current[i]?.position.copy(candidates[i].position);
+	useFrame(({ camera }, delta) => {
+		const sky = updateSkyPalette();
+		const brightness =
+			(1 - 0.6 * sky.daylight) * (1 - getFocusAmount() * 0.5);
+		for (const [i, slot] of pool.update(camera.position, delta).entries()) {
+			const light = lights.current[i];
+			if (!light) continue;
+			light.intensity = 12 * slot.strength * brightness;
+			if (slot.index >= 0) light.position.fromArray(positions[slot.index]);
+		}
 	});
 	return positions.slice(0, 6).map((position, i) => (
 		<pointLight
@@ -231,7 +227,8 @@ function LanternHighlights({ positions }) {
 			}}
 			position={positions[i]}
 			color="#ffba60"
-			intensity={24}
+			name="Lantern highlight"
+			intensity={0}
 			distance={10}
 			decay={2}
 		/>

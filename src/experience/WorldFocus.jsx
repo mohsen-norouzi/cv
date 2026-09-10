@@ -21,7 +21,8 @@ export default function WorldFocus() {
 			if (
 				object.isLight &&
 				object.name !== "Focus spotlight" &&
-				object.name !== "Lighthouse sweep"
+				object.name !== "Lighthouse sweep" &&
+				object.name !== "Lantern highlight"
 			)
 				lights.push([object, object.intensity]);
 			if (object.material)

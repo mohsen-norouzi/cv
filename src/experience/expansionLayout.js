@@ -21,7 +21,7 @@ export const EXPANSION_PATH = new THREE.CatmullRomCurve3(
 	],
 	false,
 	"catmullrom",
-	0.3,
+	0.55,
 );
 export const HEADLANDS = [
 	{ name: "East garden", center: [43, 12.25, -17], radius: [13, 13] },

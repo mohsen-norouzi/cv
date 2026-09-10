@@ -59,7 +59,7 @@ def run():
     sun=light('Late afternoon sun','SUN',(-35,-75,24),2.6,(1,.72,.46),.13)
     sun.rotation_euler=(Vector((0,0,5))-sun.location).to_track_quat('-Z','Y').to_euler()
     for i,p in enumerate(lanterns):
-      x,y,z=p;light('Amber lantern %02d'%i,'POINT',(x,-z,y),155 if i<19 else 220,(1,.48,.115),.16)
+      x,y,z=p;light('Amber lantern %02d'%i,'POINT',(x,-z,y),220 if i==len(lanterns)-1 else 155,(1,.48,.115),.16)
     # The visible bulb is an opaque emissive mesh in WebGL. Hide it during
     # transport baking so it does not enclose and block its own point light.
     for o in coast:

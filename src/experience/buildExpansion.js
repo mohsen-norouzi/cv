@@ -6,6 +6,11 @@ import {
 	FUTURE_TERRACES,
 	BRIDGE_SPANS,
 } from "./expansionLayout.js";
+import {
+	pavingBlock,
+	subtractRoadCell,
+	corridorDistance,
+} from "./roadGeometry.js";
 import { createRoadSampler } from "./placement.js";
 
 // Authored once at export time. The browser loads the merged, baked result.
@@ -25,6 +30,7 @@ export function buildExpansion({
 	audit,
 	surfaces,
 	terrainMaterial,
+	mainSections,
 }) {
 	const nearest = createRoadSampler(path, 600);
 	const bridgeMaterial = stone[2].clone();
@@ -115,6 +121,7 @@ export function buildExpansion({
 		g.computeVertexNormals();
 		const ng = g.toNonIndexed(),
 			colors = [];
+		ng.computeVertexNormals();
 		for (let i = 0; i < ng.attributes.position.count; i += 3) {
 			const color = (
 				ng.attributes.normal.getY(i) > 0.6
@@ -133,6 +140,53 @@ export function buildExpansion({
 		mesh.updateMatrixWorld(true);
 		surfaces.push(mesh);
 	}
+
+	const edge = mainSections.map((s) => s[0]);
+	const contact = (p) => {
+		let best = null,
+			distance = Infinity;
+		for (let i = 0; i < edge.length - 1; i++) {
+			const a = edge[i],
+				b = edge[i + 1],
+				d = b.clone().sub(a),
+				len = d.x * d.x + d.z * d.z;
+			const t = THREE.MathUtils.clamp(
+				((p.x - a.x) * d.x + (p.z - a.z) * d.z) / len,
+				0,
+				1,
+			);
+			const q = a.clone().lerp(b, t),
+				dist = Math.hypot(p.x - q.x, p.z - q.z);
+			if (dist < distance) {
+				const inside = mainSections[i][1]
+					.clone()
+					.lerp(mainSections[i + 1][1], t)
+					.sub(q)
+					.setY(0)
+					.normalize();
+				best = {
+					point: q,
+					signed: -(p.x - q.x) * inside.x - (p.z - q.z) * inside.z,
+				};
+				distance = dist;
+			}
+		}
+		return best;
+	};
+	const fitJunction = (p) => {
+		if (p.z < -24 || p.x > 30) return p.clone();
+		const c = contact(p),
+			blend = THREE.MathUtils.smoothstep(c.signed, 0, 4);
+		return p
+			.clone()
+			.setY(THREE.MathUtils.lerp(c.point.y, nearest(p.x, p.z).point.y, blend));
+	};
+	const entranceAt = (p) =>
+		connections.some(
+			({ start, end }) => corridorDistance(p.x, p.z, start, end) < 1.08,
+		);
+	audit.railPosts = [];
+	audit.rails = [];
 	// Slabs and their substructure share cross-sections, including the bridge decks.
 	const count = 172;
 	const sections = Array.from({ length: count + 1 }, (_, i) => {
@@ -146,11 +200,12 @@ export function buildExpansion({
 			d,
 			n,
 			edges: [
-				p.clone().addScaledVector(n, -halfWidth),
-				p.clone().addScaledVector(n, halfWidth),
+				fitJunction(p.clone().addScaledVector(n, -halfWidth)),
+				fitJunction(p.clone().addScaledVector(n, halfWidth)),
 			],
 		};
 	});
+	const junctionPavers = [];
 	for (let i = 0; i < count; i++) {
 		const a = sections[i],
 			b = sections[i + 1],
@@ -158,23 +213,47 @@ export function buildExpansion({
 			verts = [];
 		const tri = (x, y, z) =>
 			verts.push(...x.toArray(), ...y.toArray(), ...z.toArray());
-		const center = a.p.clone().lerp(b.p, 0.5),
-			outer = quad.map((p) => p.clone().lerp(center, 0.002)),
-			top = outer.map((p) => p.clone().lerp(center, 0.008));
-		const shoulder = outer.map((p) =>
-				p.clone().add(new THREE.Vector3(0, -0.022, 0)),
-			),
-			bottom = outer.map((p) => p.clone().add(new THREE.Vector3(0, -0.42, 0)));
-		tri(top[0], top[2], top[1]);
-		tri(top[0], top[3], top[2]);
-		for (let j = 0; j < 4; j++) {
-			const k = (j + 1) % 4;
-			tri(top[j], top[k], shoulder[k]);
-			tri(top[j], shoulder[k], shoulder[j]);
-			tri(shoulder[j], shoulder[k], bottom[k]);
-			tri(shoulder[j], bottom[k], bottom[j]);
-		}
-		add(triGeometry(verts), paving[i % paving.length]);
+		let pieces = [quad];
+		if (i < 18)
+			for (let j = 0; j < mainSections.length - 1; j++) {
+				const cell = [
+					mainSections[j][0],
+					mainSections[j][1],
+					mainSections[j + 1][1],
+					mainSections[j + 1][0],
+				];
+				const minX = Math.min(...cell.map((p) => p.x)),
+					maxX = Math.max(...cell.map((p) => p.x)),
+					minZ = Math.min(...cell.map((p) => p.z)),
+					maxZ = Math.max(...cell.map((p) => p.z));
+				pieces = pieces.flatMap((poly) =>
+					poly.every((p) => p.x < minX) ||
+					poly.every((p) => p.x > maxX) ||
+					poly.every((p) => p.z < minZ) ||
+					poly.every((p) => p.z > maxZ)
+						? [poly]
+						: subtractRoadCell(poly, cell),
+				);
+			}
+		for (const poly of pieces)
+			if (
+				poly.length >= 3 &&
+				Math.abs(
+					poly.reduce((a, p, i) => {
+						const q = poly[(i + 1) % poly.length];
+						return a + p.x * q.z - q.x * p.z;
+					}, 0),
+				) > 0.00001
+			) {
+				const fitted = poly.map(fitJunction);
+				if (i < 18)
+					junctionPavers.push({
+						polygon: fitted,
+						material: paving[i % paving.length],
+					});
+				else add(pavingBlock(fitted), paving[i % paving.length]);
+			}
+
 		const span = BRIDGE_SPANS.find(([s, e]) => a.u >= s && b.u <= e);
 		const bedTop = quad.map((p) =>
 			p.clone().add(new THREE.Vector3(0, -0.415, 0)),
@@ -204,12 +283,14 @@ export function buildExpansion({
 		tri(base[0], base[1], base[2]);
 		tri(base[0], base[2], base[3]);
 		add(triGeometry(verts), span ? bridgeMaterial : rocks[1]);
-		// Bridge balustrades. The clear walking width remains the full 3.2 metres.
+		// Posts sit inside the deck; terrace approaches have unobstructed openings.
 		if (span) {
 			for (const side of [-1, 1]) {
-				const x = a.p.clone().addScaledVector(a.n, side * (halfWidth + 0.05));
-				const y = b.p.clone().addScaledVector(b.n, side * (halfWidth + 0.05));
+				const x = a.p.clone().addScaledVector(a.n, side * (halfWidth - 0.14));
+				const y = b.p.clone().addScaledVector(b.n, side * (halfWidth - 0.14));
 				const midpoint = x.clone().lerp(y, 0.5);
+				if (entranceAt(x) || entranceAt(y) || entranceAt(midpoint)) continue;
+				audit.rails.push({ start: x.toArray(), end: y.toArray() });
 				midpoint.y += 0.88;
 				const delta = y.clone().sub(x),
 					len = delta.length();
@@ -221,14 +302,51 @@ export function buildExpansion({
 					),
 				);
 				add(rail, wood, midpoint.toArray());
-				if (i % 3 === 0)
-					box([x.x, x.y + 0.51, x.z], [0.18, 1.02, 0.18], stone[2], [
+				if (
+					i % 3 === 0 ||
+					!BRIDGE_SPANS.some(
+						([s, e]) => sections[Math.max(0, i - 1)].u >= s && a.u <= e,
+					) ||
+					entranceAt(x.clone().addScaledVector(a.d, -1.2))
+				) {
+					audit.railPosts.push({ position: x.toArray(), width: 0.18 });
+					box([x.x, x.y + 0.47, x.z], [0.18, 1.1, 0.18], stone[2], [
 						0,
 						Math.atan2(a.d.x, a.d.z),
 						0,
 					]);
+				}
 			}
 		}
+	}
+	// All clipped cells share the same edge vertices, including T junctions.
+	// Otherwise a height sample on one side becomes a visible lip on the other.
+	const junctionVertices = junctionPavers.flatMap((p) => p.polygon);
+	for (const { polygon, material } of junctionPavers) {
+		const stitched = [];
+		for (let i = 0; i < polygon.length; i++) {
+			const a = polygon[i],
+				b = polygon[(i + 1) % polygon.length],
+				dx = b.x - a.x,
+				dz = b.z - a.z,
+				len = dx * dx + dz * dz;
+			if (len < 1e-12) continue;
+			const points = [{ t: 0, p: a }];
+			for (const p of junctionVertices) {
+				const t = ((p.x - a.x) * dx + (p.z - a.z) * dz) / len;
+				if (
+					t > 1e-6 &&
+					t < 1 - 1e-6 &&
+					Math.abs((p.x - a.x) * dz - (p.z - a.z) * dx) < 1e-6
+				)
+					points.push({ t, p });
+			}
+			points.sort((a, b) => a.t - b.t);
+			for (let j = 0; j < points.length; j++)
+				if (j === 0 || points[j].t - points[j - 1].t > 1e-6)
+					stitched.push(fitJunction(points[j].p));
+		}
+		add(pavingBlock(stitched, 0.42, true), material);
 	}
 	const endPoint = path.getPoint(1);
 	cylinder(
@@ -319,13 +437,20 @@ export function buildExpansion({
 			side = i % 2 ? 1 : -1;
 		const x = p.x + d.z * (halfWidth + 0.23) * side,
 			z = p.z - d.x * (halfWidth + 0.23) * side;
-		box([x, p.y - 0.18, z], [0.62, 0.36, 0.62], stone[2]);
+		if (entranceAt(new THREE.Vector3(x, p.y, z))) continue;
+		// A full-depth corbel keys into the deck masonry rather than hovering outside it.
+		const floor = Math.min(p.y - 0.55, groundAt(x, z)?.point.y ?? p.y - 0.7);
+		box([x, (p.y + floor) / 2, z], [0.72, p.y - floor, 0.7], stone[2], [
+			0,
+			Math.atan2(d.x, d.z),
+			0,
+		]);
 		lantern([x, p.y, z], true);
 		audit.lanterns.push({
 			position: [x, p.y, z],
 			expansion: true,
 			roadT: u,
-			footingBottom: p.y - 0.36,
+			footingBottom: floor,
 			support: "paving socket",
 		});
 	}
@@ -361,6 +486,13 @@ export function buildExpansion({
 				continue;
 			const hit = groundAt(x, z);
 			if (!hit || hit.face.normal.y < 0.7 || hit.point.y < 0) continue;
+			if (
+				audit.lanterns.some(
+					(l) =>
+						Math.hypot(x - l.position[0], z - l.position[2]) < h * 0.19 + 0.5,
+				)
+			)
+				continue;
 			const y = hit.point.y - 0.03;
 			cylinder([x, y + h * 0.34, z], 0.06, 0.1, h * 0.68, wood, 7);
 			add(new THREE.ConeGeometry(h * 0.19, h, 7), leaf[i % leaf.length], [
