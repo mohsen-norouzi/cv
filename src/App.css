@@ -225,11 +225,6 @@
 .landmark-label:hover {
 	transform: translateY(-4px);
 }
-.nav-instagram {
-	justify-content: center;
-	min-width: 44px;
-	min-height: 44px;
-}
 .scene-navigation {
 	--scene-control-width: 184px;
 	position: absolute;
