@@ -225,40 +225,103 @@
 .landmark-label:hover {
 	transform: translateY(-4px);
 }
-.chapter-nav {
+.nav-instagram {
+	justify-content: center;
+	min-width: 44px;
+	min-height: 44px;
+}
+.scene-navigation {
+	--scene-control-width: 184px;
 	position: absolute;
-	right: 3.1%;
-	top: 42%;
+	right: 4.8%;
+	top: clamp(112px, 22vh, 220px);
+	width: var(--scene-control-width);
 	display: flex;
 	flex-direction: column;
-	gap: 13px;
-	z-index: 30;
+	gap: 24px;
+	z-index: 40;
+	pointer-events: none;
+}
+.scene-control {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	width: var(--scene-control-width);
+	min-height: 44px;
+	padding: 10px 12px;
+	border: 1px solid color-mix(in srgb, var(--ink) 36%, transparent);
+	border-radius: 4px;
+	background: transparent;
+	color: var(--ink);
+	font: 400 11px / 1.5 var(--mono);
+	letter-spacing: 0;
+	cursor: pointer;
 	pointer-events: auto;
+	transition:
+		border-color 0.2s,
+		color 0.2s,
+		background 0.2s;
+}
+.scene-control svg {
+	flex-shrink: 0;
+}
+.scene-control:hover,
+.scene-control[aria-expanded="true"] {
+	border-color: var(--gold);
+	background: color-mix(in srgb, var(--ink) 5%, transparent);
+}
+.scene-control:focus-visible,
+.chapter-nav button:focus-visible {
+	outline: 2px solid var(--gold);
+	outline-offset: 4px;
+}
+.explore-controls {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	gap: 24px;
+	pointer-events: auto;
+}
+.chapter-nav {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding-right: 12px;
 }
 .chapter-nav :where(button) {
 	display: flex;
 	align-items: center;
-	gap: 12px;
-	min-height: 32px;
+	justify-content: flex-end;
+	gap: 14px;
+	min-height: 44px;
+	min-width: 60px;
 	cursor: pointer;
-	font: 10px var(--mono);
-	color: #4d535c;
-	opacity: 0.55;
+	font: 500 12px var(--mono);
+	font-variant-numeric: tabular-nums;
+	color: var(--ink);
+	transition: color 0.2s;
 }
 .chapter-nav :where(button i) {
 	display: block;
-	width: 15px;
+	width: 24px;
 	height: 1px;
 	background: currentColor;
-	transition: width 0.2s;
+	opacity: 0.45;
+	transform: scaleX(0.55);
+	transform-origin: right;
+	transition:
+		transform 0.2s,
+		opacity 0.2s;
 }
-.chapter-nav :where(button[aria-current]),
-.chapter-nav :where(button:hover) {
-	opacity: 1;
-	color: #99632e;
+.chapter-nav :where(button[aria-current], button:hover) {
+	color: var(--gold);
 }
 .chapter-nav :where(button[aria-current] i) {
-	width: 26px;
+	transform: scaleX(1);
+	opacity: 1;
+}
+.walk-entry {
+	justify-content: flex-start;
 }
 .site-footer {
 	position: absolute;
@@ -536,25 +599,28 @@
 			transparent
 		);
 	}
+	.scene-navigation {
+		position: static;
+	}
+	.explore-controls {
+		position: absolute;
+		right: 7%;
+		bottom: 78px;
+		gap: 16px;
+		--ink: #fff4e5;
+		--gold: #ffd79f;
+		text-shadow: 0 1px 6px #15202d;
+	}
 	.chapter-nav {
-		right: 5%;
-		top: auto;
-		bottom: 76px;
 		flex-direction: row;
-		gap: 7px;
+		gap: 4px;
+		padding-right: 0;
 	}
 	.chapter-nav :where(button) {
-		padding: 5px;
+		min-width: 44px;
 		gap: 5px;
-		color: #fff;
 	}
 	.chapter-nav :where(button i) {
-		width: 9px;
-	}
-	.chapter-nav :where(button[aria-current]) {
-		color: #ffd79f;
-	}
-	.chapter-nav :where(button[aria-current] i) {
 		width: 15px;
 	}
 	.site-footer {
@@ -724,12 +790,6 @@
 		color: #fff7e9;
 		text-shadow: 0 1px 5px #182123;
 	}
-	.chapter-nav {
-		background: rgba(31, 40, 43, 0.35);
-		border-radius: 3px;
-		padding: 0 8px;
-		backdrop-filter: blur(8px);
-	}
 }
 
 /* Follow the staged world lighting without rerendering the interface each frame. */
@@ -752,14 +812,6 @@
 }
 .project-details dt {
 	color: color-mix(in srgb, #7b776f, #c7bfb4 calc(var(--scene-focus) * 100%));
-}
-@media (min-width: 701px) {
-	.chapter-nav :where(button) {
-		color: color-mix(in srgb, #4d535c, #e1dcd3 calc(var(--scene-focus) * 100%));
-	}
-	.chapter-nav :where(button[aria-current], button:hover) {
-		color: color-mix(in srgb, #99632e, #e2b978 calc(var(--scene-focus) * 100%));
-	}
 }
 
 /* Optional first-person mode; the portfolio layout is preserved on exit. */
@@ -905,9 +957,6 @@
 	.walk-exit span {
 		margin-left: 5px;
 	}
-	.site-header nav .nav-walk {
-		font-size: 10px;
-	}
 }
 @media (pointer: coarse) {
 	.walk-mouse {
@@ -940,30 +989,40 @@
 
 /* The live clock stays available in both the tour and the walking view. */
 .live-sky {
-	position: absolute;
-	left: 4.8%;
-	top: 96px;
+	position: relative;
+	min-width: 0;
+	width: var(--scene-control-width);
 	z-index: 40;
 	pointer-events: auto;
 	font: 10px var(--mono);
 	letter-spacing: 0.02em;
 	color: var(--ink);
 }
-.live-sky-trigger {
-	display: flex;
-	align-items: center;
-	gap: 9px;
-	cursor: pointer;
-	padding: 8px 10px;
-	border: 1px solid currentColor;
-	border-radius: 20px;
-	background: rgb(235 235 230 / 0.12);
-	backdrop-filter: blur(10px);
+.live-sky-location {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 .live-sky-clock {
+	margin-left: auto;
+	font-variant-numeric: tabular-nums;
+}
+.live-sky-clock.is-preview {
+	color: var(--gold);
+}
+.sky-symbol {
+	color: var(--gold);
+}
+.sky-chevron {
 	opacity: 0.65;
+	transition: transform 0.2s;
+}
+.live-sky-trigger[aria-expanded="true"] .sky-chevron {
+	transform: rotate(180deg);
 }
 .live-sky-panel {
+	position: absolute;
+	right: 0;
 	width: min(290px, 84vw);
 	margin-top: 10px;
 	padding: 20px;
@@ -1024,12 +1083,9 @@
 }
 @media (max-width: 700px) {
 	.live-sky {
+		position: absolute;
 		top: 78px;
-		left: 5%;
-		font-size: 9px;
-	}
-	.live-sky-trigger {
-		padding: 6px 9px;
+		right: 7%;
 	}
 	.is-night .page-edge-fade {
 		background: linear-gradient(
@@ -1045,12 +1101,7 @@
 .is-night .brand img {
 	filter: brightness(0) invert(1);
 }
-.is-night .chapter-nav :where(button) {
-	color: #c9cbd2;
-}
-.is-night .chapter-nav :where(button[aria-current], button:hover) {
-	color: #e2b978;
-}
+
 .is-night .coast-loader {
 	color: #eee9e0;
 	background: #101827;
@@ -1060,9 +1111,15 @@
 	color: #c3c8d1;
 }
 
-.live-sky-walking {
+.scene-navigation.is-walking {
 	top: 120px;
-	color: #eee9e0;
+}
+.live-sky-walking {
+	--ink: #eee9e0;
+}
+.live-sky-walking .scene-control {
+	background: #18201aba;
+	backdrop-filter: blur(8px);
 }
 .is-night .coast-loader .eyebrow {
 	color: #b6bdc8;
@@ -1073,9 +1130,6 @@
 	}
 }
 
-.live-sky-walking .live-sky-trigger {
-	background: #18201ae6;
-}
 .portfolio:not(.is-night) .landmark-label {
 	color: #283843;
 	text-shadow: 0 1px 8px #ffffffc0;
@@ -1090,7 +1144,7 @@
 
 .live-sky-panel {
 	width: min(330px, 90vw);
-	max-height: calc(100dvh - 160px);
+	max-height: calc(100dvh - clamp(112px, 22vh, 220px) - 76px);
 	overflow-y: auto;
 	overscroll-behavior: contain;
 }
