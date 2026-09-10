@@ -20,9 +20,9 @@ export const SUN_POSITION = new THREE.Vector3(-98, 53, 210);
 export const SUN_DIRECTION = new THREE.Vector3(-35, 19, 75).normalize();
 
 /** From Try1.glb CamTarget */
-export const CAM_TARGET = new THREE.Vector3(-7, 10, -3);
+export const CAM_TARGET = new THREE.Vector3(9, 12, -25);
 /** Near the road / street light, looking into the scene */
-export const CAM_START = new THREE.Vector3(30, 23, 48);
+export const CAM_START = new THREE.Vector3(57, 38, 78);
 export const CAM_FOV = 42;
 
 /**

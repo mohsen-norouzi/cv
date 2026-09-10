@@ -1,0 +1,116 @@
+{
+  "headlands": [
+    {
+      "name": "East garden",
+      "center": [
+        43,
+        12.25,
+        -17
+      ],
+      "radius": [
+        13,
+        13
+      ]
+    },
+    {
+      "name": "North cove",
+      "center": [
+        52,
+        14.7,
+        -48
+      ],
+      "radius": [
+        13,
+        12
+      ]
+    },
+    {
+      "name": "Far headland",
+      "center": [
+        27,
+        17.8,
+        -77
+      ],
+      "radius": [
+        14,
+        13
+      ]
+    }
+  ],
+  "reservedTerraces": [
+    {
+      "id": "future-1",
+      "name": "East lookout",
+      "position": [
+        38,
+        12.8,
+        -10
+      ],
+      "radius": 2.7
+    },
+    {
+      "id": "future-2",
+      "name": "Garden terrace",
+      "position": [
+        50.01933900469339,
+        12.85,
+        -19.99548675252157
+      ],
+      "radius": 2.9
+    },
+    {
+      "id": "future-3",
+      "name": "Cove terrace",
+      "position": [
+        45,
+        15.25,
+        -46
+      ],
+      "radius": 2.8
+    },
+    {
+      "id": "future-4",
+      "name": "Sea terrace",
+      "position": [
+        59,
+        15.25,
+        -49
+      ],
+      "radius": 2.9
+    },
+    {
+      "id": "future-5",
+      "name": "North lookout",
+      "position": [
+        20,
+        18.3,
+        -73
+      ],
+      "radius": 2.8
+    },
+    {
+      "id": "future-6",
+      "name": "Horizon terrace",
+      "position": [
+        34,
+        18.4,
+        -81
+      ],
+      "radius": 3
+    }
+  ],
+  "bridges": [
+    [
+      0.13,
+      0.255
+    ],
+    [
+      0.385,
+      0.525
+    ],
+    [
+      0.68,
+      0.825
+    ]
+  ]
+}

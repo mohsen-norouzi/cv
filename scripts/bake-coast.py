@@ -114,7 +114,7 @@ def run():
     bpy.ops.export_scene.gltf(filepath=str(ROOT/'public/coast-lit.glb'),export_format='GLB',use_selection=True,export_extras=True,export_yup=True,use_active_scene=True,export_materials='EXPORT')
     # A ready-to-render camera makes the authored Blender scene reviewable.
     camera_data=bpy.data.cameras.new('Coast overview');camera=bpy.data.objects.new('Coast overview',camera_data);scene.collection.objects.link(camera)
-    camera.location=(30,-48,23);camera.rotation_euler=(Vector((-7,3,10))-camera.location).to_track_quat('-Z','Y').to_euler()
+    camera.location=(57,-78,38);camera.rotation_euler=(Vector((9,25,12))-camera.location).to_track_quat('-Z','Y').to_euler()
     camera_data.sensor_fit='VERTICAL';camera_data.sensor_height=24;camera_data.lens=24/(2*math.tan(math.radians(42)/2));camera_data.clip_end=3000
     scene.camera=camera;scene.render.resolution_x=1672;scene.render.resolution_y=941;scene.render.resolution_percentage=100
     scene.view_settings.view_transform='AgX'
@@ -123,4 +123,7 @@ def run():
   except Exception:
     status('Failed',error=traceback.format_exc())
   return None
-bpy.app.timers.register(run, first_interval=1)
+if bpy.app.background:
+    run()
+else:
+    bpy.app.timers.register(run, first_interval=1)

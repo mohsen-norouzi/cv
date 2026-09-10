@@ -13,6 +13,8 @@ import { ToneMappingMode } from "postprocessing";
 import { useCallback, useRef } from "react";
 import * as THREE from "three";
 import {
+	CAM_START,
+	CAM_TARGET,
 	BLOOM_INTENSITY,
 	BLOOM_RADIUS,
 	BLOOM_THRESHOLD,
@@ -33,7 +35,8 @@ import { getWalking } from "./walkStore";
  * Mobile: no composer (Android gray/black bugs). Leave NoToneMapping —
  * ACES without the grade stack was crushing the scene to night-black.
  */
-const FOCUS_DISTANCES = [46, 13, 17, 14];
+const OVERVIEW_FOCUS_DISTANCE = CAM_START.distanceTo(CAM_TARGET);
+const FOCUS_DISTANCES = [OVERVIEW_FOCUS_DISTANCE, 13, 17, 14];
 
 function DesktopPostFX() {
 	const vignette = useRef(null);
@@ -89,8 +92,8 @@ function DesktopPostFX() {
 			/>
 			<DepthOfField
 				ref={lens}
-				focusDistance={46}
-				focusRange={27}
+				focusDistance={OVERVIEW_FOCUS_DISTANCE}
+				focusRange={OVERVIEW_FOCUS_DISTANCE * 0.6}
 				bokehScale={1.7}
 				height={480}
 			/>

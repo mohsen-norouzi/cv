@@ -1,6 +1,8 @@
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
+import { buildExpansion } from "./buildExpansion.js";
+import { EXPANSION_PATH, EXPANSION_HALF_WIDTH } from "./expansionLayout.js";
 import { COAST_PATH, LANDMARKS } from "./coastLayout.js";
 import {
 	createRoadSampler,
@@ -27,6 +29,7 @@ export function buildCoast() {
 	};
 	const nearestRoad = createRoadSampler(COAST_PATH);
 	const surfaces = [];
+	const nearestExtension = createRoadSampler(EXPANSION_PATH, 600);
 	const ray = new THREE.Raycaster(
 		new THREE.Vector3(),
 		new THREE.Vector3(0, -1, 0),
@@ -70,6 +73,12 @@ export function buildCoast() {
 	};
 	const clearAt = (x, z, radius, top = Infinity) => {
 		const road = nearestRoad(x, z);
+		const extension = nearestExtension(x, z);
+		if (
+			extension.distance < EXPANSION_HALF_WIDTH + radius + 0.2 &&
+			top > extension.point.y - 0.6
+		)
+			return false;
 		if (
 			road.distance < road.halfWidth + radius + 0.18 &&
 			top > road.point.y - radius * 0.4 - 0.5
@@ -224,6 +233,9 @@ export function buildCoast() {
 					terraceOuterRadius(landmark) + 1.35
 				)
 					y = Math.min(y, landmark.position[1] - 1.12);
+			const extension = nearestExtension(x, z);
+			if (extension.distance < EXPANSION_HALF_WIDTH + 1.2)
+				y = Math.min(y, extension.point.y - 0.55);
 			vertices.push(x, y, z);
 		}
 	}
@@ -641,8 +653,8 @@ export function buildCoast() {
 			nz = 17;
 		for (let iz = 0; iz <= nz; iz++)
 			for (let ix = 0; ix <= nx; ix++) {
-				const x = -52 + ix * 2.65 + layer * 5;
-				const z = -27 - iz * 3.4 - layer * 18;
+				const x = -52 + ix * 4 + layer * 5;
+				const z = -108 - iz * 3.4 - layer * 18;
 				const u = ix / nx,
 					v = iz / nz;
 				const envelope =
@@ -673,6 +685,23 @@ export function buildCoast() {
 		);
 		add(g, m);
 	}
+	buildExpansion({
+		root,
+		add,
+		box,
+		cylinder,
+		stone,
+		rocks,
+		moss,
+		leaf,
+		wood,
+		paving,
+		groundAt,
+		lantern,
+		audit,
+		surfaces,
+		terrainMaterial: gm,
+	});
 	// Offshore lighthouse, neutral masonry and a dark copper lantern room.
 	const lx = -23,
 		lz = -8;

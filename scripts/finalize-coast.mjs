@@ -11,7 +11,7 @@ for (const mesh of document.meshes) {
 	for (const primitive of mesh.primitives) {
 		const name = document.materials[primitive.material]?.name ?? "";
 		if (
-			/^(Cliff|Citadel limestone|Oxidized roofs)/.test(name) &&
+			/^(Cliff|Bridge masonry|Citadel limestone|Oxidized roofs)/.test(name) &&
 			primitive.attributes.COLOR_0 !== undefined
 		) {
 			delete primitive.attributes.COLOR_0;
