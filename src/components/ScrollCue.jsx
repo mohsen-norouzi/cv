@@ -33,6 +33,13 @@ export default function ScrollCue() {
 				</span>
 			</button>
 			<div className="footer-links">
+				<a
+					href="https://www.instagram.com/mohsenized/"
+					target="_blank"
+					rel="noreferrer"
+				>
+					Instagram ↗
+				</a>
 				<a href="https://t.me/itsmohseeen" target="_blank" rel="noreferrer">
 					Telegram ↗
 				</a>

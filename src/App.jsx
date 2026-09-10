@@ -51,12 +51,14 @@ function App() {
 						</div>
 						<HeroContent entered={entered} />
 						<SectionCaption />
-						<ScrollPath />
 						<ScrollCue />
 					</>
 				)}
 				{entered && walking && <WalkControls />}
-				<LiveSkyControl />
+				<div className={`scene-navigation ${walking ? "is-walking" : ""}`}>
+					<LiveSkyControl />
+					{!walking && <ScrollPath />}
+				</div>
 				<MusicToggle />
 			</div>
 		</div>
