@@ -44,7 +44,7 @@ export default function ScrollStealer() {
 			if (
 				event.ctrlKey ||
 				event.metaKey ||
-				event.target.closest(".scene-fallback")
+				event.target.closest(".scene-fallback, .live-sky")
 			)
 				return;
 			event.preventDefault();
@@ -65,11 +65,16 @@ export default function ScrollStealer() {
 		};
 
 		const onTouchStart = (event) => {
-			touchStartY = event.touches[0]?.clientY ?? null;
+			touchStartY = event.target.closest(".live-sky")
+				? null
+				: (event.touches[0]?.clientY ?? null);
 		};
 
 		const onTouchMove = (event) => {
-			if (event.touches.length > 1 || event.target.closest(".scene-fallback"))
+			if (
+				event.touches.length > 1 ||
+				event.target.closest(".scene-fallback, .live-sky")
+			)
 				return;
 			event.preventDefault();
 		};

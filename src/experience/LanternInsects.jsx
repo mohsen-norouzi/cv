@@ -1,3 +1,4 @@
+import { getSky } from "./skyStore";
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo } from "react";
 import * as THREE from "three";
@@ -89,7 +90,10 @@ export default function LanternInsects({ positions }) {
 		if (!reducedMotion())
 			material.uniforms.uTime.value += Math.min(delta, 0.05);
 		material.uniforms.uPixelRatio.value = gl.getPixelRatio();
-		material.uniforms.uNight.value = getFocusAmount();
+		material.uniforms.uNight.value = Math.max(
+			getFocusAmount(),
+			1 - getSky().daylight,
+		);
 	});
 
 	return (

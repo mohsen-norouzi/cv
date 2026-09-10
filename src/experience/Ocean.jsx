@@ -5,10 +5,13 @@ import { Water } from "three/examples/jsm/objects/Water.js";
 import { SKY_COOL, SKY_HORIZON, SKY_SUN, SUN_DIRECTION } from "./constants";
 import { IS_MOBILE } from "./device";
 import { worldBrightness } from "./focusStore";
+import {
+	skyPalette,
+	skyLightColor,
+	skyLightDirection,
+	updateSkyPalette,
+} from "./skyPalette";
 import { reducedMotion } from "./motion";
-
-const WATER_COLOR = new THREE.Color("#597d86");
-const SUN_COLOR = new THREE.Color("#ffdfb8");
 
 // Tileable, multi-scale capillary waves. This is a normal map, not a painted reflection.
 function waveNormals() {
@@ -63,32 +66,49 @@ export default function Ocean() {
 			value: new THREE.Color(SKY_HORIZON),
 		};
 		surface.material.uniforms.coastSun = { value: new THREE.Color(SKY_SUN) };
+		surface.material.uniforms.skySunDirection = {
+			value: SUN_DIRECTION.clone(),
+		};
+		surface.material.uniforms.skySunAmount = { value: 1 };
 		surface.material.fragmentShader = surface.material.fragmentShader
 			.replace(
 				"uniform float alpha;",
-				"uniform float alpha; uniform vec3 coastCool; uniform vec3 coastHorizon; uniform vec3 coastSun; uniform float worldBrightness;",
+				"uniform float alpha; uniform vec3 coastCool; uniform vec3 coastHorizon; uniform vec3 coastSun; uniform float worldBrightness; uniform vec3 skySunDirection; uniform float skySunAmount;",
 			)
 			.replace("vec3( 1.5, 1.0, 1.5 )", "vec3( 0.5, 1.0, 0.7 )")
 			.replace(
 				"vec3 outgoingLight = albedo;",
 				`
 				vec3 horizonDir=normalize(worldPosition.xyz-eye);
-				float az=max(dot(normalize(vec3(horizonDir.x,0.,horizonDir.z)),normalize(vec3(sunDirection.x,0.,sunDirection.z))),0.);
+				float az=max(dot(normalize(vec3(horizonDir.x,0.,horizonDir.z)),normalize(vec3(skySunDirection.x,0.,skySunDirection.z))),0.);
 				float glow=pow(az,1.5);
 				vec3 horizon=mix(coastCool,coastHorizon,glow);
-				horizon=mix(horizon,coastSun,glow*.65);
-				horizon=mix(horizon,coastSun,glow*.25);
+				horizon=mix(horizon,coastSun,glow*.65*skySunAmount);
+
 				vec3 outgoingLight=mix(albedo,horizon*worldBrightness,1.-exp(-distance*.0035));`,
 			)
 			.replace("#include <fog_fragment>", "");
 		return surface;
 	}, []);
 	useFrame((_, delta) => {
+		const sky = updateSkyPalette();
+		const u = water.material.uniforms;
+		u.sunDirection.value.copy(skyLightDirection);
+		u.skySunDirection.value.fromArray(sky.sunDirection);
+		u.skySunAmount.value = sky.sunVisible;
+		u.coastCool.value.copy(skyPalette.cool);
+		u.coastHorizon.value.copy(skyPalette.horizon);
+		u.coastSun.value.copy(skyPalette.sun);
 		water.material.uniforms.sunColor.value
-			.copy(SUN_COLOR)
-			.multiplyScalar(worldBrightness.value);
+			.copy(skyLightColor)
+			.multiplyScalar(
+				worldBrightness.value *
+					(sky.sunVisible > 0.01
+						? sky.sunVisible
+						: sky.moonVisible * sky.moonFraction * 0.18),
+			);
 		water.material.uniforms.waterColor.value
-			.copy(WATER_COLOR)
+			.copy(skyPalette.water)
 			.multiplyScalar(worldBrightness.value);
 		if (!reducedMotion())
 			water.material.uniforms.time.value += Math.min(delta, 0.05) * 0.32;

@@ -25,6 +25,7 @@
 		"r3f-perf": "^7.2.3",
 		"react": "^19.2.7",
 		"react-dom": "^19.2.7",
+		"suncalc": "2.0.2",
 		"three": "^0.185.1"
 	},
 	"devDependencies": {

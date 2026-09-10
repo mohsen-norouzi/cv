@@ -937,3 +937,235 @@
 		display: block;
 	}
 }
+
+/* The live clock stays available in both the tour and the walking view. */
+.live-sky {
+	position: absolute;
+	left: 4.8%;
+	top: 96px;
+	z-index: 40;
+	pointer-events: auto;
+	font: 10px var(--mono);
+	letter-spacing: 0.02em;
+	color: var(--ink);
+}
+.live-sky-trigger {
+	display: flex;
+	align-items: center;
+	gap: 9px;
+	cursor: pointer;
+	padding: 8px 10px;
+	border: 1px solid currentColor;
+	border-radius: 20px;
+	background: rgb(235 235 230 / 0.12);
+	backdrop-filter: blur(10px);
+}
+.live-sky-clock {
+	opacity: 0.65;
+}
+.live-sky-panel {
+	width: min(290px, 84vw);
+	margin-top: 10px;
+	padding: 20px;
+	border: 1px solid rgb(211 190 155 / 0.3);
+	border-radius: 12px;
+	color: #f4eadc;
+	background: #111820;
+	box-shadow: 0 12px 40px #0003;
+	line-height: 1.7;
+}
+.live-sky-title {
+	font-size: 14px;
+	margin-bottom: 6px;
+}
+.live-sky-note {
+	opacity: 0.65;
+	margin: 12px 0;
+}
+.live-sky-panel button {
+	display: block;
+	width: 100%;
+	padding: 10px;
+	margin-top: 8px;
+	text-align: left;
+	border: 1px solid #ffffff30;
+	border-radius: 5px;
+	cursor: pointer;
+}
+.live-sky-panel button:hover {
+	background: #ffffff15;
+}
+.live-sky-panel button:disabled {
+	opacity: 0.5;
+	cursor: wait;
+}
+.live-sky-status {
+	color: #ebc998;
+}
+.live-sky :focus-visible {
+	outline: 2px solid #d7aa69;
+	outline-offset: 4px;
+}
+.portfolio.is-night {
+	--ink: #eee9e0;
+	--muted: #bbbcc5;
+	--gold: #d7ad74;
+}
+.is-night .hero-description {
+	color: #c3c8d1;
+}
+.is-night .page-edge-fade {
+	background: linear-gradient(
+		90deg,
+		rgb(7 14 25 / 0.5),
+		rgb(7 14 25 / 0.18) 33%,
+		transparent 58%
+	);
+}
+@media (max-width: 700px) {
+	.live-sky {
+		top: 78px;
+		left: 5%;
+		font-size: 9px;
+	}
+	.live-sky-trigger {
+		padding: 6px 9px;
+	}
+	.is-night .page-edge-fade {
+		background: linear-gradient(
+			180deg,
+			rgb(7 14 25 / 0.92),
+			rgb(7 14 25 / 0.85) 37%,
+			rgb(7 14 25 / 0.16) 70%,
+			transparent
+		);
+	}
+}
+
+.is-night .brand img {
+	filter: brightness(0) invert(1);
+}
+.is-night .chapter-nav :where(button) {
+	color: #c9cbd2;
+}
+.is-night .chapter-nav :where(button[aria-current], button:hover) {
+	color: #e2b978;
+}
+.is-night .coast-loader {
+	color: #eee9e0;
+	background: #101827;
+	--muted: #bbbcc5;
+}
+.is-night .coast-loader p {
+	color: #c3c8d1;
+}
+
+.live-sky-walking {
+	top: 120px;
+	color: #eee9e0;
+}
+.is-night .coast-loader .eyebrow {
+	color: #b6bdc8;
+}
+@media (max-width: 700px) {
+	.live-sky-walking {
+		top: 104px;
+	}
+}
+
+.live-sky-walking .live-sky-trigger {
+	background: #18201ae6;
+}
+.portfolio:not(.is-night) .landmark-label {
+	color: #283843;
+	text-shadow: 0 1px 8px #ffffffc0;
+}
+.portfolio:not(.is-night) .landmark-number {
+	color: #885920;
+}
+.is-night .scene-fallback {
+	background: #101827;
+	color: #eee9e0;
+}
+
+.live-sky-panel {
+	width: min(330px, 90vw);
+	max-height: calc(100dvh - 160px);
+	overflow-y: auto;
+	overscroll-behavior: contain;
+}
+.sky-time-controls {
+	padding-bottom: 16px;
+	margin-bottom: 16px;
+	border-bottom: 1px solid #ffffff24;
+}
+.sky-time-fields {
+	display: grid;
+	grid-template-columns: 1.3fr 1fr;
+	gap: 10px;
+}
+.sky-time-fields label {
+	display: grid;
+	gap: 6px;
+}
+.sky-time-fields input,
+.sky-speed select {
+	color-scheme: dark;
+	min-width: 0;
+	width: 100%;
+	padding: 8px;
+	border: 1px solid #ffffff30;
+	border-radius: 5px;
+	background: #1c2732;
+	color: #f4eadc;
+	font: inherit;
+}
+.sky-time-slider {
+	display: block;
+	width: 100%;
+	margin: 18px 0 6px;
+	accent-color: #d7ad74;
+	cursor: pointer;
+	touch-action: pan-x;
+}
+.sky-time-marks {
+	display: flex;
+	justify-content: space-between;
+	opacity: 0.6;
+	font-size: 9px;
+}
+.sky-playback {
+	display: flex;
+	gap: 6px;
+	margin: 10px 0;
+}
+.sky-playback button {
+	text-align: center;
+	padding: 10px 6px;
+}
+.sky-playback button:nth-child(2) {
+	width: 42px;
+	flex-shrink: 0;
+}
+.sky-playback button[aria-pressed="true"] {
+	background: #d7ad7424;
+	border-color: #d7ad74;
+	color: #f1cf9e;
+}
+.sky-speed {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+.sky-speed select {
+	flex: 1;
+	cursor: pointer;
+}
+.live-sky-panel .sky-live-button {
+	text-align: center;
+	color: #f1cf9e;
+}
+.live-sky-panel .sky-live-button:disabled {
+	opacity: 0.65;
+	cursor: default;
+}

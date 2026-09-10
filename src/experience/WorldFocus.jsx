@@ -1,9 +1,16 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { useLayoutEffect, useRef } from "react";
+import {
+	skyPalette,
+	skyLightColor,
+	skyLightDirection,
+	updateSkyPalette,
+} from "./skyPalette";
 import { getFocusAmount, worldBrightness } from "./focusStore";
 
 export default function WorldFocus() {
-	const { scene } = useThree();
+	const { scene, gl } = useThree();
+	const lastSky = useRef(null);
 	const baseline = useRef(null);
 	const lastFocus = useRef(null);
 	const lastApplied = useRef(null);
@@ -58,9 +65,12 @@ export default function WorldFocus() {
 		};
 	}, [scene]);
 	useFrame(() => {
+		const sky = updateSkyPalette();
 		const f = getFocusAmount(),
-			brightness = 1 - f * 0.82;
-		if (lastApplied.current === f) return;
+			brightness = 1 - f * (0.55 + 0.27 * sky.daylight);
+		if (lastApplied.current === f && lastSky.current === sky) return;
+		const skyChanged = lastSky.current !== sky;
+		lastSky.current = sky;
 		lastApplied.current = f;
 		worldBrightness.value = brightness;
 		const base = baseline.current;
@@ -70,17 +80,34 @@ export default function WorldFocus() {
 			base.overlay?.style.setProperty("--scene-focus", overlayFocus);
 			lastFocus.current = overlayFocus;
 		}
-		for (const [light, intensity] of base.lights)
-			light.intensity = intensity * brightness;
+		const daylight = sky.daylight;
+		const ambient = 0.2 + daylight * 0.8;
+		for (const [light, intensity] of base.lights) {
+			if (light.name === "Celestial key") {
+				light.position.copy(skyLightDirection).multiplyScalar(85);
+				light.color.copy(skyLightColor);
+				const moonlight = sky.moonVisible * sky.moonFraction * 0.28;
+				light.intensity =
+					(sky.sunVisible > 0.01 ? intensity * sky.sunVisible : moonlight) *
+					brightness;
+			} else if (light.isPointLight) {
+				light.intensity = intensity * (0.8 + 0.2 * daylight) * (1 - f * 0.5);
+			} else light.intensity = intensity * ambient * brightness;
+		}
+		if (skyChanged) {
+			gl.shadowMap.needsUpdate = true;
+		}
 		for (const { material, lightMap, emissive } of base.materials) {
-			if (material.lightMap) material.lightMapIntensity = lightMap * brightness;
+			if (material.lightMap)
+				material.lightMapIntensity =
+					lightMap * brightness * (0.16 + daylight * 0.59);
 			material.emissiveIntensity = emissive * (1 - f * 0.55);
 		}
-		scene.environmentIntensity = 0.45 * brightness;
+		scene.environmentIntensity = 0.45 * brightness * ambient;
 		if (scene.fog && base.fog)
-			scene.fog.color.copy(base.fog).multiplyScalar(brightness);
+			scene.fog.color.copy(skyPalette.horizon).multiplyScalar(brightness);
 		if (scene.background?.isColor && base.background)
-			scene.background.copy(base.background).multiplyScalar(brightness);
+			scene.background.copy(skyPalette.horizon).multiplyScalar(brightness);
 	}, -0.5);
 	return null;
 }

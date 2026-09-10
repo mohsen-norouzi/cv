@@ -105,12 +105,12 @@ export default function CoastalWorld() {
 					shader.fragmentShader = shader.fragmentShader.replace(
 						"#include <lights_fragment_end>",
 						`#include <lights_fragment_end>
-						reflectedLight.directDiffuse = vec3(0.0);
+						reflectedLight.directDiffuse *= .65;
 						vec4 bakedIrradiance=texture2D(lightMap, vLightMapUv);
 						reflectedLight.indirectDiffuse = (bakedIrradiance.rgb * bakedIrradiance.a * 8.0 * .55 + vec3(.08,.10,.14)) * material.diffuseColor * lightMapIntensity;`,
 					);
 				};
-				material.customProgramCacheKey = () => `coastal-irradiance-v3`;
+				material.customProgramCacheKey = () => `coastal-irradiance-v4`;
 			}
 		});
 		return { root, lanterns };

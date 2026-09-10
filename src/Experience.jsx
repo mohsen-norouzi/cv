@@ -25,10 +25,11 @@ export default function Experience() {
 			<SkyDome />
 			<CameraRig />
 			<WalkRig />
-			<EnvLight intensity={0.45} />
+			<EnvLight />
 			<ambientLight color="#c8d3e4" intensity={0.09} />
 			<hemisphereLight args={["#d7dfef", "#666957", 0.35]} />
 			<directionalLight
+				name="Celestial key"
 				position={[-35, 24, 75]}
 				intensity={2.5}
 				color="#ffdbab"
