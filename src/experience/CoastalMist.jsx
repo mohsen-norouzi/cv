@@ -1,7 +1,7 @@
 import { useFrame, useLoader } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
-import { worldBrightness } from "./focusStore";
+import { getFocusAmount, worldBrightness } from "./focusStore";
 import { mistColor, skyPalette } from "./skyPalette";
 import { reducedMotion } from "./motion";
 import { IS_MOBILE } from "./device";
@@ -21,35 +21,51 @@ const banks = [
 	[-38, 1.3, 27, 50, 5, 0.24],
 	[12, 3, 22, 40, 6, 0.25],
 ];
+// Narrow elevated ribbons amongst the trees and beside the actual walking route.
+const inland = [
+	[4, 6.6, 19, 24, 4, 0.72, 1],
+	[7, 10, 4, 26, 4.5, 0.76, 1],
+	[14, 14, -9, 25, 4, 0.68, 1],
+	[17, 19, -23, 28, 5, 0.7, 1],
+	[32, 14.5, -16, 30, 4.5, 0.72, 1],
+	[48, 17, -36, 28, 5, 0.76, 1],
+	[39, 20, -64, 30, 5, 0.68, 1],
+];
 export default function CoastalMist() {
 	const time = useRef(0);
+	const ground = useLoader(THREE.TextureLoader, "/optimized/mist-height.png");
+	ground.flipY = false;
+	ground.colorSpace = THREE.NoColorSpace;
 	const shore = useLoader(THREE.TextureLoader, "/optimized/shore.png");
 	shore.flipY = false;
 	shore.colorSpace = THREE.NoColorSpace;
 	const sprites = useMemo(
 		() =>
-			banks
-				.filter((_, i) => !IS_MOBILE || i < 5)
-				.map(([x, y, z, w, h, opacity], i) => {
-					const material = new THREE.ShaderMaterial({
-						name: "Drifting coastal mist",
-						transparent: true,
-						depthWrite: false,
-						side: THREE.DoubleSide,
-						uniforms: {
-							uTime: { value: 0 },
-							shoreMap: { value: shore },
-							shoreBounds: { value: new THREE.Vector4(...SHORE_BOUNDS) },
-							uSeed: { value: i * 17.31 },
-							uOpacity: { value: opacity },
-							uFade: { value: 1 },
-							worldBrightness,
-							mistColor,
-							coolColor: { value: skyPalette.cool },
-						},
-						vertexShader: `varying vec2 vUv; varying vec3 vWorld;
+			[
+				...banks.filter((_, i) => !IS_MOBILE || i < 4),
+				...inland.filter((_, i) => !IS_MOBILE || i % 2 === 0),
+			].map(([x, y, z, w, h, opacity, land = 0], i) => {
+				const material = new THREE.ShaderMaterial({
+					name: "Drifting coastal mist",
+					transparent: true,
+					depthWrite: false,
+					side: THREE.DoubleSide,
+					uniforms: {
+						uTime: { value: 0 },
+						uLand: { value: land },
+						groundMap: { value: ground },
+						shoreMap: { value: shore },
+						shoreBounds: { value: new THREE.Vector4(...SHORE_BOUNDS) },
+						uSeed: { value: i * 17.31 },
+						uOpacity: { value: opacity },
+						uFade: { value: 1 },
+						worldBrightness,
+						mistColor,
+						coolColor: { value: skyPalette.cool },
+					},
+					vertexShader: `varying vec2 vUv; varying vec3 vWorld;
     void main(){vUv=uv;vWorld=(modelMatrix*vec4(position,1.)).xyz;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
-						fragmentShader: `uniform float uTime,uSeed,uOpacity,uFade,worldBrightness;uniform vec3 mistColor,coolColor;varying vec2 vUv;varying vec3 vWorld; uniform sampler2D shoreMap; uniform vec4 shoreBounds;
+					fragmentShader: `uniform float uTime,uSeed,uOpacity,uFade,worldBrightness;uniform vec3 mistColor,coolColor;varying vec2 vUv;varying vec3 vWorld; uniform sampler2D shoreMap,groundMap; uniform float uLand; uniform vec4 shoreBounds;
     ${weatherNoise}
     void main(){
      vec2 q=(vUv-.5)*2.;float edge=pow(max(0.,1.-dot(q,q)),1.6);
@@ -62,20 +78,23 @@ export default function CoastalMist() {
      float inBounds=step(0.,shoreUV.x)*step(0.,shoreUV.y)*step(shoreUV.x,1.)*step(shoreUV.y,1.);
      float clearance=mix(${SHORE_RANGE.toFixed(1)},texture2D(shoreMap,shoreUV).r*${SHORE_RANGE.toFixed(1)},inBounds);
      float shoreFade=smoothstep(.3,3.3,clearance);
-     float alpha=edge*density*uOpacity*uFade*aboveWater*shoreFade;
+     float groundHeight=mix(-2.,texture2D(groundMap,shoreUV).r*42.-2.,inBounds);
+     float groundFade=smoothstep(.25,1.7,vWorld.y-groundHeight);
+     float alpha=edge*density*uOpacity*uFade*aboveWater*mix(shoreFade,groundFade,uLand);
      if(alpha<.002)discard;
      vec3 color=mix(coolColor,mistColor,.65+n*.35)*worldBrightness;
      gl_FragColor=vec4(color,alpha);
      #include <tonemapping_fragment>
      #include <colorspace_fragment>
     }`,
-					});
-					const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), material);
-					mesh.position.set(x, y, z);
-					mesh.userData.origin = new THREE.Vector3(x, y, z);
-					return mesh;
-				}),
-		[shore],
+				});
+				const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), material);
+				mesh.position.set(x, y, z);
+				mesh.userData.origin = new THREE.Vector3(x, y, z);
+				mesh.userData.inland = land;
+				return mesh;
+			}),
+		[shore, ground],
 	);
 	useEffect(
 		() => () => {
@@ -93,23 +112,24 @@ export default function CoastalMist() {
 			const phase = (t * (0.006 + i * 0.0003) + 0.23 + i * 0.137) % 1;
 			const life = Math.sin(phase * Math.PI);
 			s.position.copy(s.userData.origin);
-			s.position.x += (phase - 0.5) * 24;
-			s.position.z += Math.sin(t * 0.025 + i) * 2.5;
+			s.position.x += (phase - 0.5) * (s.userData.inland ? 10 : 24);
+			s.position.z += Math.sin(t * 0.025 + i) * (s.userData.inland ? 1 : 2.5);
 			s.position.y += Math.sin(t * 0.075 + i) * 0.5;
 			s.quaternion.copy(camera.quaternion);
 			const u = s.material.uniforms;
 			u.uTime.value = t;
 			u.uFade.value =
 				Math.min(1, life * 4) *
+				(s.userData.inland ? 1 - getFocusAmount() * 0.6 : 1) *
 				THREE.MathUtils.smoothstep(
 					camera.position.distanceTo(s.position),
-					6,
-					18,
+					s.userData.inland ? 2 : 6,
+					s.userData.inland ? 8 : 18,
 				);
 		});
 	});
 	return (
-		<group name="Moving sea mist">
+		<group name="Drifting coastal and inland mist">
 			{sprites.map((s) => (
 				<primitive key={s.uuid} object={s} />
 			))}

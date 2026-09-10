@@ -77,3 +77,35 @@ test("foam field follows the actual waterline of each new headland and stays abs
 	}
 	assert.equal(distance(-85, 30), SHORE_RANGE);
 });
+
+test("mist height map agrees with the nine project terrace surfaces", async () => {
+	const { LANDMARKS } = await import("../src/experience/coastLayout.js");
+	const { FUTURE_TERRACES } = await import(
+		"../src/experience/expansionLayout.js"
+	);
+	const png = readFileSync(
+		new URL("../public/optimized/mist-height.png", import.meta.url),
+	);
+	const parts = [];
+	let size;
+	for (let o = 8; o < png.length; ) {
+		const n = png.readUInt32BE(o),
+			kind = png.toString("ascii", o + 4, o + 8);
+		if (kind === "IHDR") size = png.readUInt32BE(o + 8);
+		if (kind === "IDAT") parts.push(png.subarray(o + 8, o + 8 + n));
+		o += n + 12;
+	}
+	const rows = inflateSync(Buffer.concat(parts)),
+		[x0, z0, w, h] = SHORE_BOUNDS;
+	for (const {
+		position: [x, y, z],
+	} of [...LANDMARKS, ...FUTURE_TERRACES]) {
+		const col = Math.floor(((x - x0) / w) * size),
+			row = Math.floor(((z - z0) / h) * size);
+		const height = (rows[row * (size + 1) + col + 1] / 255) * 42 - 2;
+		assert.ok(
+			Math.abs(height - y) < 0.25,
+			`Mist would intersect terrace at ${[x, y, z]}: ${height}`,
+		);
+	}
+});

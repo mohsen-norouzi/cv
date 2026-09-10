@@ -15,6 +15,7 @@ root.updateMatrixWorld(true);
 const size = 512,
 	[minX, minZ, width, depth] = SHORE_BOUNDS;
 const field = new Float32Array(size * size).fill(SHORE_RANGE);
+const heights = new Float32Array(size * size).fill(-2);
 let segments = 0;
 const vertices = [
 	new THREE.Vector3(),
@@ -30,6 +31,41 @@ root.traverse((mesh) => {
 			vertices[j]
 				.fromBufferAttribute(pos, index ? index.getX(i + j) : i + j)
 				.applyMatrix4(mesh.matrixWorld);
+		// Highest solid surface at each pixel, for soft inland mist intersections.
+		if (/^(Coastal escarpment|Cliff|Paving|Limestone)/.test(mesh.name)) {
+			const [a, b, c] = vertices;
+			const den = (b.z - c.z) * (a.x - c.x) + (c.x - b.x) * (a.z - c.z);
+			if (Math.abs(den) > 1e-8) {
+				const x0 = Math.max(
+					0,
+					Math.floor(((Math.min(a.x, b.x, c.x) - minX) / width) * size),
+				);
+				const x1 = Math.min(
+					size - 1,
+					Math.ceil(((Math.max(a.x, b.x, c.x) - minX) / width) * size),
+				);
+				const z0 = Math.max(
+					0,
+					Math.floor(((Math.min(a.z, b.z, c.z) - minZ) / depth) * size),
+				);
+				const z1 = Math.min(
+					size - 1,
+					Math.ceil(((Math.max(a.z, b.z, c.z) - minZ) / depth) * size),
+				);
+				for (let row = z0; row <= z1; row++)
+					for (let col = x0; col <= x1; col++) {
+						const x = minX + ((col + 0.5) / size) * width,
+							z = minZ + ((row + 0.5) / size) * depth;
+						const u = ((b.z - c.z) * (x - c.x) + (c.x - b.x) * (z - c.z)) / den;
+						const v = ((c.z - a.z) * (x - c.x) + (a.x - c.x) * (z - c.z)) / den;
+						if (u >= 0 && v >= 0 && u + v <= 1)
+							heights[row * size + col] = Math.max(
+								heights[row * size + col],
+								u * a.y + v * b.y + (1 - u - v) * c.y,
+							);
+					}
+			}
+		}
 		const hits = [];
 		for (let j = 0; j < 3; j++) {
 			const a = vertices[j],
@@ -111,3 +147,20 @@ await writeFile(new URL("../public/optimized/shore.png", import.meta.url), png);
 console.log(
 	`Shoreline: ${segments} rock/water intersections, ${size}×${size}, ${(png.length / 1024).toFixed(1)} KB`,
 );
+
+for (let y = 0; y < size; y++)
+	for (let x = 0; x < size; x++)
+		pixels[y * (size + 1) + x + 1] = Math.round(
+			Math.min(1, Math.max(0, (heights[y * size + x] + 2) / 42)) * 255,
+		);
+const heightPng = Buffer.concat([
+	Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
+	chunk("IHDR", header),
+	chunk("IDAT", deflateSync(pixels)),
+	chunk("IEND", Buffer.alloc(0)),
+]);
+await writeFile(
+	new URL("../public/optimized/mist-height.png", import.meta.url),
+	heightPng,
+);
+console.log(`Mist terrain heights: ${(heightPng.length / 1024).toFixed(1)} KB`);

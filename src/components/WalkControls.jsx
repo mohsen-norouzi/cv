@@ -5,11 +5,22 @@ export default function WalkControls() {
 	const [locked, setLocked] = useState(false);
 	const [hint, setHint] = useState("");
 	useEffect(() => {
-		const update = () => setLocked(!!document.pointerLockElement);
+		const update = () => {
+			setLocked(
+				document.pointerLockElement === document.querySelector("canvas"),
+			);
+			setHint("");
+		};
+		update();
 		document.addEventListener("pointerlockchange", update);
 		return () => document.removeEventListener("pointerlockchange", update);
 	}, []);
 	const mouseLook = () => {
+		if (document.pointerLockElement) {
+			document.exitPointerLock();
+			return;
+		}
+		setHint("");
 		const canvas = document.querySelector("canvas");
 		canvas?.focus();
 		if (!canvas?.requestPointerLock) {
@@ -47,15 +58,16 @@ export default function WalkControls() {
 			<div className="walk-help">
 				<p className="walk-desktop-help">
 					WASD / arrows to walk · Drag to look · Q / E to turn · Shift to move
-					faster · Esc to exit
+					faster · {locked ? "Esc to release mouse" : "Esc to exit"}
 				</p>
 				<p className="walk-touch-help">
 					Hold an arrow to walk · Drag the scene to look
 				</p>
-				{!locked && (
-					<button type="button" className="walk-mouse" onClick={mouseLook}>
-						Enable mouse look
-					</button>
+				<button type="button" className="walk-mouse" onClick={mouseLook}>
+					{locked ? "Release mouse (Esc)" : "Enable mouse look"}
+				</button>
+				{locked && (
+					<p role="status">Press Esc to free your cursor and keep exploring.</p>
 				)}
 				{hint && <p role="status">{hint}</p>}
 			</div>

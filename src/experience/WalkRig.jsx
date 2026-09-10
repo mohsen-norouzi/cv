@@ -9,6 +9,8 @@ import { getScrollSection } from "./scrollStore";
 import { createWalkGround, EYE_HEIGHT, moveWalker } from "./walkPhysics";
 import { setWalking, useWalking, walkInput } from "./walkStore";
 
+import { createWalkEscape } from "./walkEscape";
+
 const MOVEMENT_KEYS = new Set([
 	"KeyW",
 	"KeyA",
@@ -79,18 +81,22 @@ export default function WalkRig() {
 		camera.position.copy(s.feet).y += EYE_HEIGHT;
 		camera.fov = 68;
 		camera.updateProjectionMatrix();
-		let drag = null,
-			wasLocked = false;
+		let drag = null;
 		const clear = () => {
 			s.keys.clear();
+			if (drag && canvas.hasPointerCapture(drag.id))
+				canvas.releasePointerCapture(drag.id);
 			drag = null;
 			Object.assign(walkInput, { forward: 0, side: 0, yaw: 0, pitch: 0 });
 		};
+		const escapeControl = createWalkEscape({
+			isLocked: () => document.pointerLockElement === canvas,
+			releaseMouse: () => document.exitPointerLock(),
+			clearInput: clear,
+			exitWalk: () => setWalking(false),
+		});
 		const onKey = (event) => {
-			if (event.code === "Escape") {
-				setWalking(false);
-				return;
-			}
+			if (escapeControl.keyDown(event)) return;
 			if (
 				event.altKey ||
 				event.metaKey ||
@@ -105,6 +111,7 @@ export default function WalkRig() {
 		};
 		const onUp = (event) => s.keys.delete(event.code);
 		const onDown = (event) => {
+			if (document.pointerLockElement === canvas) return;
 			if (event.button !== 0 && event.pointerType === "mouse") return;
 			drag = { id: event.pointerId, x: event.clientX, y: event.clientY };
 			canvas.setPointerCapture(event.pointerId);
@@ -129,11 +136,7 @@ export default function WalkRig() {
 		const onEnd = (event) => {
 			if (drag?.id === event.pointerId) drag = null;
 		};
-		const onLock = () => {
-			const locked = document.pointerLockElement === canvas;
-			if (wasLocked && !locked) setWalking(false);
-			wasLocked = locked;
-		};
+		const onLock = escapeControl.lockChanged;
 		const oldTabIndex = canvas.getAttribute("tabindex");
 		canvas.tabIndex = 0;
 		canvas.focus();
