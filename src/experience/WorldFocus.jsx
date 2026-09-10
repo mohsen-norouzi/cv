@@ -18,7 +18,11 @@ export default function WorldFocus() {
 		const lights = [],
 			materials = new Set();
 		scene.traverse((object) => {
-			if (object.isLight && object.name !== "Focus spotlight")
+			if (
+				object.isLight &&
+				object.name !== "Focus spotlight" &&
+				object.name !== "Lighthouse sweep"
+			)
 				lights.push([object, object.intensity]);
 			if (object.material)
 				for (const material of Array.isArray(object.material)

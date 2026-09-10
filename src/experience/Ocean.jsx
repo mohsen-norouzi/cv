@@ -11,6 +11,7 @@ import {
 	skyLightDirection,
 	updateSkyPalette,
 } from "./skyPalette";
+import { lighthouseUniforms } from "./lighthouseState";
 import { reducedMotion } from "./motion";
 
 // Tileable, multi-scale capillary waves. This is a normal map, not a painted reflection.
@@ -60,6 +61,7 @@ export default function Ocean() {
 		surface.rotation.x = -Math.PI / 2;
 		surface.position.set(0, -0.85, -60);
 		surface.material.uniforms.size.value = 2.4;
+		Object.assign(surface.material.uniforms, lighthouseUniforms);
 		surface.material.uniforms.worldBrightness = worldBrightness;
 		surface.material.uniforms.coastCool = { value: new THREE.Color(SKY_COOL) };
 		surface.material.uniforms.coastHorizon = {
@@ -73,7 +75,7 @@ export default function Ocean() {
 		surface.material.fragmentShader = surface.material.fragmentShader
 			.replace(
 				"uniform float alpha;",
-				"uniform float alpha; uniform vec3 coastCool; uniform vec3 coastHorizon; uniform vec3 coastSun; uniform float worldBrightness; uniform vec3 skySunDirection; uniform float skySunAmount;",
+				"uniform float alpha; uniform vec3 coastCool; uniform vec3 coastHorizon; uniform vec3 coastSun; uniform float worldBrightness; uniform vec3 skySunDirection; uniform float skySunAmount; uniform vec3 lighthouseOrigin; uniform vec3 lighthouseDirection; uniform vec3 lighthouseColor; uniform float lighthouseReach; uniform float lighthouseStrength;",
 			)
 			.replace("vec3( 1.5, 1.0, 1.5 )", "vec3( 0.5, 1.0, 0.7 )")
 			.replace(
@@ -85,7 +87,13 @@ export default function Ocean() {
 				vec3 horizon=mix(coastCool,coastHorizon,glow);
 				horizon=mix(horizon,coastSun,glow*.65*skySunAmount);
 
-				vec3 outgoingLight=mix(albedo,horizon*worldBrightness,1.-exp(-distance*.0035));`,
+				vec3 outgoingLight=mix(albedo,horizon*worldBrightness,1.-exp(-distance*.0035));
+                vec3 fromLighthouse=worldPosition.xyz-lighthouseOrigin;
+                float beamDistance=length(fromLighthouse);
+                float cone=dot(normalize(fromLighthouse),lighthouseDirection);
+                float footprint=smoothstep(.99789,.99925,cone)*(1.-smoothstep(lighthouseReach*.7,lighthouseReach,beamDistance));
+                float ripples=.55+.45*max(0.,dot(surfaceNormal,normalize(lighthouseOrigin-worldPosition.xyz)));
+                outgoingLight+=lighthouseColor*footprint*ripples*lighthouseStrength*.9;`,
 			)
 			.replace("#include <fog_fragment>", "");
 		return surface;

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { LANDMARKS } from "./coastLayout";
 import { getFocusStop, getSpotReveal } from "./focusStore";
+import LighthouseBeam from "./LighthouseBeam";
 import LanternInsects from "./LanternInsects";
 import { setSceneReady } from "./loadStore";
 import { reducedMotion } from "./motion";
@@ -185,6 +186,7 @@ export default function CoastalWorld() {
 		<>
 			<primitive object={coast.root} dispose={null} />
 			<primitive object={subjects} dispose={null} />
+			<LighthouseBeam position={coast.lanterns.at(-1)} landscape={coast.root} />
 			<LanternHighlights positions={coast.lanterns} />
 			<LanternInsects positions={coast.lanterns} />
 		</>
