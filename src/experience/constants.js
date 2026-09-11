@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { TEMPLATE_BOARD } from "./templateBoardPlacement.js";
 import { LANDMARKS } from "./coastLayout.js";
 
 /** Soft warm haze — matches HTML page backdrop (keep App bg in sync) */
@@ -138,3 +139,16 @@ export const BRIGHTNESS = 0.015;
 export const CONTRAST = 0.075;
 export const VIGNETTE_OFFSET = 0.18;
 export const VIGNETTE_DARKNESS = 0.08;
+
+export const BOARD_VIEW_POS = new THREE.Vector3(...TEMPLATE_BOARD.position).add(
+	new THREE.Vector3(4, 4.4, -9),
+);
+export const BOARD_LOOK_AT = new THREE.Vector3(...TEMPLATE_BOARD.position).add(
+	new THREE.Vector3(2.4, 1.55, 1),
+);
+export const CAM_PATH_CRYSTAL_TO_BOARD = [
+	CRYSTAL_VIEW_POS,
+	new THREE.Vector3(25, 18, -7),
+	new THREE.Vector3(33, 17, -15),
+	BOARD_VIEW_POS,
+];

@@ -1,5 +1,7 @@
 import { Html } from "@react-three/drei";
 import { useSyncExternalStore } from "react";
+import { TEMPLATE_BOARD } from "./templateBoardPlacement";
+import { visitCollection } from "./collectionStore";
 import { LANDMARKS } from "./coastLayout";
 import { getSceneReady, subscribeSceneReady } from "./loadStore";
 import {
@@ -14,6 +16,7 @@ const copy = [
 	["Artist portfolio", "Ekaterina Shelehova"],
 	["Brand & e-commerce", "Bavo Bakes"],
 	["The next chapter", "Your project here"],
+	["The collection", "Website templates"],
 ];
 const getLabelsVisible = () => getScrollProgress() <= 0.15;
 export default function ProjectLabels() {
@@ -29,7 +32,10 @@ export default function ProjectLabels() {
 		getSceneReady,
 	);
 	if (walking || !ready || !p) return null;
-	return LANDMARKS.map((landmark, i) => (
+	return [
+		...LANDMARKS,
+		{ name: "collection", position: TEMPLATE_BOARD.position },
+	].map((landmark, i) => (
 		<Html
 			key={landmark.name}
 			position={[
@@ -42,7 +48,7 @@ export default function ProjectLabels() {
 			<button
 				type="button"
 				className={`landmark-label landmark-label-${i}`}
-				onClick={() => requestSnapTo(i + 1)}
+				onClick={() => (i === 3 ? visitCollection() : requestSnapTo(i + 1))}
 				aria-label={`Explore ${copy[i][1]}`}
 			>
 				<span className="landmark-number">0{i + 1}</span>

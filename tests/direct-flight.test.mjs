@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import * as THREE from "three";
 import {
+	BOARD_LOOK_AT,
+	BOARD_VIEW_POS,
 	BAKERY_LOOK_AT,
 	BAKERY_VIEW_POS,
 	CAM_START,
@@ -22,9 +24,10 @@ const stops = [
 	[GIRL_VIEW_POS, GIRL_LOOK_AT],
 	[BAKERY_VIEW_POS, BAKERY_LOOK_AT],
 	[CRYSTAL_VIEW_POS, CRYSTAL_LOOK_AT],
+	[BOARD_VIEW_POS, BOARD_LOOK_AT],
 ];
 
-test("all twelve destination pairs fly along one direct line and land exactly", () => {
+test("all twenty destination pairs fly along one direct line and land exactly", () => {
 	const position = new THREE.Vector3(),
 		look = new THREE.Vector3();
 	const expected = new THREE.Vector3();

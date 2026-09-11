@@ -6,6 +6,7 @@ import {
 } from "../experience/focusStore";
 import { PROJECTS } from "../experience/projects";
 import { requestSnapTo } from "../experience/scrollStore";
+import { setCollectionOpen } from "../experience/collectionStore";
 import FadeUp from "./FadeUp";
 export default function SectionCaption() {
 	const reveal = useSyncExternalStore(
@@ -18,7 +19,15 @@ export default function SectionCaption() {
 		getFocusStop,
 		getFocusStop,
 	);
-	const project = PROJECTS[stop - 1];
+	const collection = stop === 4;
+	const project = collection
+		? {
+				id: "04",
+				title: "The collection",
+				description:
+					"A few discoveries from my workshop. Explore website templates, find a starting point, and make it yours.",
+			}
+		: PROJECTS[stop - 1];
 	if (!project) return null;
 	const show = reveal > 0.35;
 	return (
@@ -39,33 +48,46 @@ export default function SectionCaption() {
 				</FadeUp>
 				<FadeUp active={show} delay={0.06}>
 					<p className="eyebrow">
-						SELECTED WORK <span>/ {project.id}</span>
+						{collection ? "WEBSITE TEMPLATES" : "SELECTED WORK"}{" "}
+						<span>/ {project.id}</span>
 					</p>
 					<h2>{project.title}</h2>
 				</FadeUp>
 				<FadeUp active={show} delay={0.12}>
 					<p className="project-description">{project.description}</p>
-					<dl className="project-details">
-						<div>
-							<dt>DISCIPLINE</dt>
-							<dd>{project.role}</dd>
-						</div>
-						<div>
-							<dt>YEAR</dt>
-							<dd>{project.year}</dd>
-						</div>
-					</dl>
+					{!collection && (
+						<dl className="project-details">
+							<div>
+								<dt>DISCIPLINE</dt>
+								<dd>{project.role}</dd>
+							</div>
+							<div>
+								<dt>YEAR</dt>
+								<dd>{project.year}</dd>
+							</div>
+						</dl>
+					)}
 				</FadeUp>
-				<FadeUp active={show} delay={0.18}>
-					<a
-						className="primary-action"
-						href={project.url}
-						{...(project.url.startsWith("http")
-							? { target: "_blank", rel: "noreferrer" }
-							: {})}
-					>
-						{project.urlLabel} <span aria-hidden="true">↗</span>
-					</a>
+				<FadeUp active={show} delay={0.18} className="project-action">
+					{collection ? (
+						<button
+							type="button"
+							className="primary-action"
+							onClick={() => setCollectionOpen(true)}
+						>
+							Browse templates <span aria-hidden="true">↗</span>
+						</button>
+					) : (
+						<a
+							className="primary-action"
+							href={project.url}
+							{...(project.url.startsWith("http")
+								? { target: "_blank", rel: "noreferrer" }
+								: {})}
+						>
+							{project.urlLabel} <span aria-hidden="true">↗</span>
+						</a>
+					)}
 				</FadeUp>
 			</div>
 		</aside>

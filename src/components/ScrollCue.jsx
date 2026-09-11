@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from "react";
 import {
+	SCROLL_SECTION_COUNT,
 	getScrollProgress,
 	requestSnap,
 	subscribeScroll,
@@ -7,7 +8,11 @@ import {
 
 const getCueState = () => {
 	const p = getScrollProgress();
-	return p < 0.1 ? 0 : p >= 3 ? 3 : 1;
+	return p < 0.1
+		? 0
+		: p >= SCROLL_SECTION_COUNT - 1
+			? SCROLL_SECTION_COUNT - 1
+			: 1;
 };
 export default function ScrollCue() {
 	const p = useSyncExternalStore(subscribeScroll, getCueState, getCueState);
@@ -16,7 +21,7 @@ export default function ScrollCue() {
 			<button
 				type="button"
 				className="scroll-cue"
-				onClick={() => requestSnap(p >= 3 ? -1 : 1)}
+				onClick={() => requestSnap(p >= SCROLL_SECTION_COUNT - 1 ? -1 : 1)}
 			>
 				<span className="mouse-outline" aria-hidden="true">
 					<i />
@@ -24,7 +29,7 @@ export default function ScrollCue() {
 				<span>
 					{p < 0.1
 						? "Scroll to explore"
-						: p >= 3
+						: p >= SCROLL_SECTION_COUNT - 1
 							? "Back along the path"
 							: "Continue the journey"}
 				</span>

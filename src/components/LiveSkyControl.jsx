@@ -108,6 +108,7 @@ export default function LiveSkyControl() {
 			<button
 				type="button"
 				className="scene-control live-sky-trigger"
+				title="Change the time and sky"
 				aria-expanded={open}
 				aria-controls="live-sky-panel"
 				onClick={() => setOpen(!open)}

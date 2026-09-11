@@ -1,5 +1,10 @@
 import { useEffect } from "react";
-import { isScrollAnimating, requestSnap, requestSnapTo } from "./scrollStore";
+import {
+	SCROLL_SECTION_COUNT,
+	isScrollAnimating,
+	requestSnap,
+	requestSnapTo,
+} from "./scrollStore";
 
 /** Accumulated wheel delta needed to fire a snap (trackpads send tiny ticks). */
 const WHEEL_ACCUM_THRESHOLD = 24;
@@ -112,7 +117,7 @@ export default function ScrollStealer() {
 			}
 			if (event.key === "End") {
 				event.preventDefault();
-				requestSnapTo(3);
+				requestSnapTo(SCROLL_SECTION_COUNT - 1);
 			}
 		};
 		window.addEventListener("keydown", onKey);

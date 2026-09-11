@@ -1,6 +1,11 @@
 import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
-import { BAKERY_VIEW_POS, CRYSTAL_VIEW_POS, GIRL_VIEW_POS } from "./constants";
+import {
+	BOARD_VIEW_POS,
+	BAKERY_VIEW_POS,
+	CRYSTAL_VIEW_POS,
+	GIRL_VIEW_POS,
+} from "./constants";
 import { getCameraSettled, setFocus, setFocusReveal } from "./focusStore";
 import { advanceFocus, createFocusTransition } from "./focusTransition";
 import { reducedMotion } from "./motion";
@@ -12,16 +17,23 @@ import {
 } from "./scrollStore";
 import { spotlightSettings } from "./spotlightSettings";
 
+import { walkFocus } from "./walkHudStore";
 import { getWalking } from "./walkStore";
 
-const VIEWS = [null, GIRL_VIEW_POS, BAKERY_VIEW_POS, CRYSTAL_VIEW_POS];
+const VIEWS = [
+	null,
+	GIRL_VIEW_POS,
+	BAKERY_VIEW_POS,
+	CRYSTAL_VIEW_POS,
+	BOARD_VIEW_POS,
+];
 
 export default function TourFocus() {
 	const state = useRef(createFocusTransition());
 	useFrame(({ camera }, dt) => {
 		if (getWalking()) {
-			setFocus(0, 0);
-			setFocusReveal(0, 0);
+			setFocus(walkFocus.reveal * 0.55, walkFocus.stop);
+			setFocusReveal(walkFocus.reveal, 0);
 			return;
 		}
 		// Dim immediately, but reveal the selected light only near its final view.
