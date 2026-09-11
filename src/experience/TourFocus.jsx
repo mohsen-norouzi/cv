@@ -17,6 +17,7 @@ import {
 } from "./scrollStore";
 import { spotlightSettings } from "./spotlightSettings";
 
+import { walkFocus } from "./walkHudStore";
 import { getWalking } from "./walkStore";
 
 const VIEWS = [
@@ -31,8 +32,8 @@ export default function TourFocus() {
 	const state = useRef(createFocusTransition());
 	useFrame(({ camera }, dt) => {
 		if (getWalking()) {
-			setFocus(0, 0);
-			setFocusReveal(0, 0);
+			setFocus(walkFocus.reveal * 0.55, walkFocus.stop);
+			setFocusReveal(walkFocus.reveal, 0);
 			return;
 		}
 		// Dim immediately, but reveal the selected light only near its final view.

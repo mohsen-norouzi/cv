@@ -65,7 +65,7 @@ function App() {
 				)}
 				{entered && walking && <WalkControls />}
 				<div className={`scene-navigation ${walking ? "is-walking" : ""}`}>
-					<LiveSkyControl />
+					{walking && <LiveSkyControl />}
 					{!walking && <ScrollPath />}
 				</div>
 				<MusicToggle />

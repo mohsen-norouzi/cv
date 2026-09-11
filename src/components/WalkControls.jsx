@@ -1,3 +1,4 @@
+import WalkHud from "./WalkHud";
 import { useEffect, useState } from "react";
 import { setWalking, walkInput } from "../experience/walkStore";
 
@@ -41,35 +42,81 @@ export default function WalkControls() {
 	};
 	return (
 		<div className="walk-overlay">
-			<div className="walk-header">
-				<div>
-					<span className="walk-eyebrow">ON FOOT</span>
-					<p>The coast, at your own pace.</p>
+			<WalkHud />
+			<div className="walk-dock">
+				{hint && (
+					<p className="walk-status" role="status">
+						{hint}
+					</p>
+				)}
+				<div
+					className="walk-key-guide"
+					aria-label="W A S D or arrow keys to move"
+				>
+					<span className="walk-wasd" aria-hidden="true">
+						{["W", "A", "S", "D"].map((key) => (
+							<kbd key={key}>{key}</kbd>
+						))}
+					</span>
+					<span>Move</span>
 				</div>
+				<div
+					className="walk-key-guide walk-extra-guide"
+					aria-label="Q and E to turn"
+				>
+					<span className="walk-key-pair" aria-hidden="true">
+						<kbd>Q</kbd>
+						<kbd>E</kbd>
+					</span>
+					<span>Turn</span>
+				</div>
+				<div
+					className="walk-key-guide walk-extra-guide"
+					aria-label="Hold Shift to move faster"
+				>
+					<kbd aria-hidden="true">Shift</kbd>
+					<span>Faster</span>
+				</div>
+				<span className="walk-dock-divider" aria-hidden="true" />
 				<button
 					type="button"
-					className="walk-exit"
-					onClick={() => setWalking(false)}
+					className="walk-mouse"
+					onClick={mouseLook}
+					aria-label={locked ? "Release mouse look" : "Enable mouse look"}
+					aria-pressed={locked}
+					title={
+						locked
+							? "Press Escape to release your cursor"
+							: "Capture the mouse to look freely. You can also drag the scene."
+					}
 				>
-					Back to portfolio <span aria-hidden>↗</span>
+					<svg
+						width="16"
+						height="20"
+						viewBox="0 0 18 24"
+						fill="none"
+						stroke="currentColor"
+						strokeWidth="1.4"
+						aria-hidden="true"
+					>
+						<rect x="3" y="2" width="12" height="20" rx="6" />
+						<path d="M9 6v4" strokeLinecap="round" />
+					</svg>
+					<span>{locked ? "Looking" : "Look"}</span>
+					<span className="walk-look-dot" aria-hidden="true" />
 				</button>
-			</div>
-			<div className="walk-crosshair" aria-hidden />
-			<div className="walk-help">
-				<p className="walk-desktop-help">
-					WASD / arrows to walk · Drag to look · Q / E to turn · Shift to move
-					faster · {locked ? "Esc to release mouse" : "Esc to exit"}
-				</p>
-				<p className="walk-touch-help">
-					Hold an arrow to walk · Drag the scene to look
-				</p>
-				<button type="button" className="walk-mouse" onClick={mouseLook}>
-					{locked ? "Release mouse (Esc)" : "Enable mouse look"}
+				<span className="walk-touch-guide">Drag to look</span>
+				<button
+					type="button"
+					className="walk-leave"
+					aria-label={locked ? "Release mouse" : "Exit walking mode"}
+					onClick={() =>
+						locked ? document.exitPointerLock() : setWalking(false)
+					}
+				>
+					<kbd>Esc</kbd>
+					<span>{locked ? "Release" : "Exit"}</span>
 				</button>
-				{locked && (
-					<p role="status">Press Esc to free your cursor and keep exploring.</p>
-				)}
-				{hint && <p role="status">{hint}</p>}
 			</div>
 			<fieldset className="walk-pad" aria-label="Walking controls">
 				{[

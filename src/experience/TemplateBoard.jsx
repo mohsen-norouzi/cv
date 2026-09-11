@@ -1,7 +1,11 @@
 import { useCursor } from "@react-three/drei";
 import { visitCollection } from "./collectionStore";
-import { useThree } from "@react-three/fiber";
-import { useEffect, useMemo, useState } from "react";
+import { getWalking } from "./walkStore";
+import { getFocusStop, getSpotReveal } from "./focusStore";
+import { rotateShowcase } from "./showcaseMotion";
+import { reducedMotion } from "./motion";
+import { useFrame, useThree } from "@react-three/fiber";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { TEMPLATE_BOARD } from "./templateBoardPlacement";
@@ -46,8 +50,10 @@ export default function TemplateBoard() {
 	const [hovered, setHovered] = useState(false);
 	useCursor(hovered);
 	const gl = useThree((state) => state.gl);
+	const shadowTime = useRef(0);
 	const board = useMemo(() => {
 		const root = new THREE.Group();
+		root.userData.walkTarget = 4;
 		root.name = "Template noticeboard — East lookout";
 		root.position.fromArray(TEMPLATE_BOARD.position);
 		root.rotation.y = TEMPLATE_BOARD.yaw;
@@ -141,6 +147,32 @@ export default function TemplateBoard() {
 			board.paper.dispose();
 		};
 	}, [board, gl]);
+	useFrame(({ gl }, delta) => {
+		let rotated = false;
+		if (getWalking()) {
+			if (getFocusStop() === 4)
+				rotated = rotateShowcase(
+					board.root,
+					getSpotReveal(),
+					delta,
+					reducedMotion(),
+				);
+		} else if (board.root.rotation.y !== TEMPLATE_BOARD.yaw) {
+			board.root.rotation.y = TEMPLATE_BOARD.yaw;
+			board.root.updateMatrixWorld(true);
+			gl.shadowMap.needsUpdate = true;
+		}
+		if (rotated) {
+			shadowTime.current += delta;
+			if (gl.shadowMap.enabled && shadowTime.current >= 1 / 15) {
+				gl.shadowMap.needsUpdate = true;
+				shadowTime.current = 0;
+			}
+		} else if (shadowTime.current > 0) {
+			gl.shadowMap.needsUpdate = gl.shadowMap.enabled;
+			shadowTime.current = 0;
+		}
+	});
 	return (
 		<primitive
 			object={board.root}
@@ -148,7 +180,7 @@ export default function TemplateBoard() {
 			onPointerOver={() => setHovered(true)}
 			onPointerOut={() => setHovered(false)}
 			onClick={(event) => {
-				if (event.delta > 5) return;
+				if (getWalking() || event.delta > 5) return;
 				event.stopPropagation();
 				visitCollection();
 			}}

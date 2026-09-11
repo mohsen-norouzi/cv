@@ -13,6 +13,7 @@ import SceneFocus from "./experience/SceneFocus";
 import ShadowBake from "./experience/ShadowBake";
 import SkyDome from "./experience/SkyDome";
 import TourFocus from "./experience/TourFocus";
+import WalkInteractions from "./experience/WalkInteractions";
 import WalkRig from "./experience/WalkRig";
 import WorldFocus from "./experience/WorldFocus";
 import TemplateBoard from "./experience/TemplateBoard";
@@ -27,6 +28,7 @@ export default function Experience() {
 			<SkyDome />
 			<CameraRig />
 			<WalkRig />
+			<WalkInteractions />
 			<SpatialAudio />
 			<EnvLight />
 			<ambientLight color="#c8d3e4" intensity={0.09} />

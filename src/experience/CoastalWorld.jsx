@@ -54,6 +54,7 @@ export default function CoastalWorld() {
 	const atlases = useLoader(THREE.TextureLoader, LIGHTMAP_URLS);
 	const coast = useMemo(() => {
 		const root = landscape.clone(true);
+		root.userData.walkOccluder = true;
 		const maps = Object.fromEntries(
 			["paving", "landscape", "foliage"].map((name, i) => {
 				const texture = atlases[i];
@@ -132,6 +133,7 @@ export default function CoastalWorld() {
 				);
 				subject.name = `Showcase_${i + 1}`;
 				subject.userData.stop = i + 1;
+				subject.userData.walkTarget = i + 1;
 				root.add(subject);
 			}
 		});

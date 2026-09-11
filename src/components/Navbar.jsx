@@ -1,18 +1,8 @@
-import { useSyncExternalStore } from "react";
-import {
-	getScrollProgress,
-	requestSnapTo,
-	subscribeScroll,
-} from "../experience/scrollStore";
+import { requestSnapTo } from "../experience/scrollStore";
+import LiveSkyControl from "./LiveSkyControl";
 import Logo from "./Logo";
 
-const getWorkActive = () => getScrollProgress() > 0;
 export default function Navbar() {
-	const progress = useSyncExternalStore(
-		subscribeScroll,
-		getWorkActive,
-		getWorkActive,
-	);
 	return (
 		<header className="site-header">
 			<button
@@ -26,21 +16,14 @@ export default function Navbar() {
 					MOHSEN<span className="brand-role">DESIGN & DEVELOPMENT</span>
 				</span>
 			</button>
-			<nav aria-label="Main navigation">
-				<button
-					type="button"
-					className={progress ? "nav-work active" : "nav-work"}
-					onClick={() => requestSnapTo(1)}
-				>
-					Work
-				</button>
-				<a href="/resume.pdf" target="_blank" rel="noreferrer">
-					Resume <span aria-hidden="true">↗</span>
-				</a>
-				<a href="mailto:hello@itsmohsen.com">
-					Let's talk <span className="contact-dot" aria-hidden="true" />
-				</a>
-			</nav>
+			<div className="header-actions">
+				<LiveSkyControl />
+				<nav aria-label="Main navigation">
+					<a href="mailto:hello@itsmohsen.com">
+						Let's talk <span className="contact-dot" aria-hidden="true" />
+					</a>
+				</nav>
+			</div>
 		</header>
 	);
 }

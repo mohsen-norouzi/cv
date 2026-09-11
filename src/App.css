@@ -29,6 +29,20 @@
 	padding: 32px 4.8%;
 	z-index: 30;
 }
+.header-actions {
+	--scene-control-width: 196px;
+	display: flex;
+	align-items: center;
+	gap: 30px;
+}
+.site-header .live-sky {
+	position: relative;
+	top: auto;
+	right: auto;
+}
+.scene-navigation:not(.is-walking) {
+	padding-top: 68px;
+}
 .brand {
 	display: flex;
 	align-items: center;
@@ -229,7 +243,7 @@
 	transform: translateY(-4px);
 }
 .scene-navigation {
-	--scene-control-width: 184px;
+	--scene-control-width: 196px;
 	position: absolute;
 	right: 4.8%;
 	top: clamp(112px, 22vh, 220px);
@@ -246,27 +260,26 @@
 	gap: 8px;
 	width: var(--scene-control-width);
 	min-height: 44px;
-	padding: 10px 12px;
-	border: 1px solid color-mix(in srgb, var(--ink) 36%, transparent);
-	border-radius: 4px;
+	padding: 10px 15px;
+	border: 0;
+	border-radius: 999px;
 	background: transparent;
 	color: var(--ink);
 	font: 400 11px / 1.5 var(--mono);
 	letter-spacing: 0;
 	cursor: pointer;
 	pointer-events: auto;
-	transition:
-		border-color 0.2s,
-		color 0.2s,
-		background 0.2s;
+	transition: color 0.2s;
 }
 .scene-control svg {
 	flex-shrink: 0;
 }
 .scene-control:hover,
 .scene-control[aria-expanded="true"] {
-	border-color: var(--gold);
-	background: color-mix(in srgb, var(--ink) 5%, transparent);
+	color: var(--gold);
+}
+.walk-entry > svg {
+	color: var(--gold);
 }
 .scene-control:focus-visible,
 .chapter-nav button:focus-visible {
@@ -329,9 +342,7 @@
 	min-width: 88px;
 	min-height: 44px;
 	justify-content: center;
-	padding: 8px 14px;
-	border-radius: 999px;
-	font-size: 11px;
+	padding: 10px 15px;
 }
 .site-footer {
 	position: absolute;
@@ -396,7 +407,7 @@
 	filter: none;
 }
 .music-eq span {
-	color: #f4ebda;
+	color: var(--ink);
 }
 .project-caption {
 	--caption-action-gap: 30px;
@@ -585,8 +596,24 @@
 		gap: 23px;
 		font-size: 10px;
 	}
-	.site-header nav .nav-work {
-		display: none;
+	.header-actions {
+		--scene-control-width: 150px;
+		gap: 12px;
+	}
+	.site-header .live-sky {
+		position: static;
+	}
+	.site-header .live-sky-panel {
+		top: calc(100% - 10px);
+		right: 6%;
+	}
+	.header-actions .live-sky-trigger {
+		padding-inline: 4px;
+		gap: 6px;
+		font-size: 10px;
+	}
+	.scene-navigation:not(.is-walking) {
+		padding-top: 0;
 	}
 	.hero {
 		align-items: flex-start;
@@ -874,38 +901,13 @@
 	pointer-events: none;
 	text-shadow: 0 1px 12px #0008;
 }
-.walk-header {
-	position: absolute;
-	inset: 30px 4.5% auto;
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 20px;
-}
-.walk-eyebrow {
-	font-size: 11px;
-	letter-spacing: 0.2em;
-}
-.walk-header p {
-	margin: 6px 0 0;
-	font-size: 15px;
-}
 .walk-overlay button {
 	pointer-events: auto;
 	cursor: pointer;
 }
-.walk-exit,
-.walk-mouse {
-	border: 1px solid #fff5;
-	border-radius: 4px;
-	background: #18201acc;
-	padding: 12px 16px;
-	color: #fff6e6;
-	font-size: 12px;
-	backdrop-filter: blur(8px);
-}
-.walk-exit span {
-	margin-left: 20px;
+.walk-overlay button:focus-visible {
+	outline: 2px solid #edc185;
+	outline-offset: 4px;
 }
 .walk-crosshair {
 	position: absolute;
@@ -917,29 +919,116 @@
 	background: #fff9;
 	box-shadow: 0 0 2px #000;
 }
-.walk-help {
+.walk-dock {
 	position: absolute;
-	bottom: 30px;
+	bottom: max(24px, env(safe-area-inset-bottom));
 	left: 50%;
 	transform: translateX(-50%);
-	width: min(760px, 80%);
-	text-align: center;
-	font-size: 11px;
-	line-height: 1.7;
+	display: flex;
+	align-items: center;
+	gap: 24px;
+	min-height: 64px;
+	padding: 10px 20px;
+	border-radius: 12px;
+	background: #14221ede;
+	color: #e4e5db;
+	text-shadow: none;
+	font: 10px / 1.4 var(--mono);
+	white-space: nowrap;
 }
-.walk-help p {
-	margin: 0 0 10px;
+.walk-dock kbd {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 22px;
+	height: 22px;
+	padding: 0 5px;
+	border: 1px solid #dfe7d942;
+	border-bottom-width: 2px;
+	border-radius: 4px;
+	color: #eee9db;
+	font: 10px / 1 var(--mono);
 }
-.walk-mouse {
-	padding: 8px 14px;
+.walk-key-guide {
+	display: flex;
+	align-items: center;
+	gap: 9px;
+	color: #b6bdb0;
+}
+.walk-wasd {
+	display: grid;
+	grid-template-columns: repeat(3, 20px);
+	gap: 3px;
+}
+.walk-wasd kbd {
+	min-width: 20px;
+	height: 20px;
+	padding: 0;
+}
+.walk-wasd kbd:first-child {
+	grid-column: 2;
+}
+.walk-wasd kbd:nth-child(2) {
+	grid-column: 1;
+}
+.walk-key-pair {
+	display: flex;
+	gap: 3px;
+}
+.walk-dock-divider {
+	width: 1px;
+	height: 24px;
+	background: #dfe7d922;
+}
+.walk-mouse,
+.walk-leave {
+	min-width: 44px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	min-height: 44px;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: inherit;
+	font: inherit;
+	transition: color 0.15s;
+}
+.walk-mouse:hover,
+.walk-leave:hover,
+.walk-mouse[aria-pressed="true"] {
+	color: #edc185;
+}
+.walk-look-dot {
+	width: 4px;
+	height: 4px;
+	border-radius: 50%;
+	background: currentColor;
+	opacity: 0.3;
+}
+.walk-mouse[aria-pressed="true"] .walk-look-dot {
+	opacity: 1;
+	box-shadow: 0 0 6px #edc18566;
+}
+.walk-status {
+	position: absolute;
+	bottom: calc(100% + 10px);
+	left: 50%;
+	transform: translateX(-50%);
+	margin: 0;
+	padding: 8px 12px;
+	border-radius: 6px;
+	background: #14221ede;
 }
 .walk-pad {
 	border: 0;
 	padding: 0;
 	margin: 0;
 	position: absolute;
-	left: 24px;
-	bottom: 26px;
+	left: calc(50% + 32px);
+	bottom: max(24px, env(safe-area-inset-bottom));
+	transform: translateX(-50%);
 	display: none;
 	grid-template-columns: repeat(3, 44px);
 	grid-template-rows: repeat(2, 44px);
@@ -950,10 +1039,11 @@
 	touch-action: none;
 	user-select: none;
 	-webkit-user-select: none;
-	border: 1px solid #fff5;
-	border-radius: 8px;
-	background: #18201aba;
-	color: white;
+	border: 1px solid #dfe7d942;
+	border-bottom-width: 2px;
+	border-radius: 6px;
+	background: #14221ede;
+	color: #eee9db;
 	font-size: 20px;
 }
 .walk-direction:active {
@@ -974,68 +1064,44 @@
 	grid-column: 3;
 	grid-row: 2;
 }
-.walk-touch-help {
+.walk-touch-guide {
 	display: none;
+}
+@media (max-width: 1100px) {
+	.walk-extra-guide {
+		display: none;
+	}
+	.walk-dock {
+		gap: 18px;
+	}
 }
 @media (pointer: coarse), (max-width: 700px) {
 	.walk-pad {
 		display: grid;
 	}
-	.walk-help {
-		left: 190px;
-		right: 25px;
-		bottom: 70px;
-		width: auto;
-		transform: none;
-		text-align: right;
+	.walk-dock {
+		bottom: calc(max(24px, env(safe-area-inset-bottom)) + 104px);
+		left: calc(50% + 32px);
+		min-height: 44px;
+		padding: 0 12px;
+		gap: 14px;
+		border-radius: 8px;
 	}
-	.walk-desktop-help {
+	.walk-key-guide,
+	.walk-dock-divider {
 		display: none;
 	}
-	.walk-touch-help {
-		display: block;
-	}
-	.walk-header {
-		top: 24px;
-	}
-	.walk-header p {
-		max-width: 150px;
-		font-size: 12px;
-	}
-	.walk-exit {
-		padding: 10px;
-		font-size: 11px;
-	}
-	.walk-exit span {
-		margin-left: 5px;
+	.walk-leave kbd {
+		display: none;
 	}
 }
 @media (pointer: coarse) {
 	.walk-mouse {
 		display: none;
 	}
-}
-.walk-header > div {
-	background: #18201aba;
-	padding: 12px 16px;
-	border-radius: 4px;
-	backdrop-filter: blur(8px);
-}
-.walk-help > p {
-	display: inline-block;
-	padding: 5px 10px;
-	border-radius: 4px;
-	background: #18201a99;
-}
-.walk-help > .walk-touch-help {
-	display: none;
-}
-@media (pointer: coarse), (max-width: 700px) {
-	.walk-help > .walk-desktop-help {
-		display: none;
-	}
-	.walk-help > .walk-touch-help {
-		display: block;
+	.walk-touch-guide {
+		display: inline;
+		color: #b6bdb0;
 	}
 }
 
@@ -1163,22 +1229,13 @@
 }
 
 .scene-navigation.is-walking {
-	top: 120px;
+	top: 30px;
 }
 .live-sky-walking {
-	--ink: #eee9e0;
-}
-.live-sky-walking .scene-control {
-	background: #18201aba;
-	backdrop-filter: blur(8px);
+	color: var(--ink);
 }
 .is-night .coast-loader .eyebrow {
 	color: #b6bdc8;
-}
-@media (max-width: 700px) {
-	.live-sky-walking {
-		top: 104px;
-	}
 }
 
 .portfolio:not(.is-night) .landmark-label {
@@ -1469,5 +1526,145 @@
 @media (prefers-reduced-motion: reduce) {
 	.template-image img {
 		transition: none;
+	}
+}
+
+/* Walking navigation and contextual interactions. */
+.walk-map {
+	position: absolute;
+	bottom: max(24px, env(safe-area-inset-bottom));
+	left: 32px;
+	width: 132px;
+	padding: 12px;
+	border: 1px solid #d9e4d21f;
+	border-radius: 8px;
+	background: #14221ede;
+	color: #e9e5d8;
+	text-shadow: none;
+	pointer-events: none;
+}
+.walk-map-heading {
+	display: flex;
+	justify-content: space-between;
+	font: 8px var(--mono);
+	letter-spacing: 1px;
+	color: #c6cbbb;
+}
+.walk-map svg {
+	display: block;
+	width: 100%;
+	height: auto;
+	margin: 7px 0;
+	overflow: visible;
+}
+.map-land {
+	fill: #cbdab015;
+}
+.map-path {
+	fill: none;
+	stroke: #c9d2b5;
+	stroke-width: 1.3;
+	stroke-linecap: round;
+	opacity: 0.5;
+}
+.map-terrace {
+	fill: none;
+	stroke: #c9d2b5;
+	stroke-width: 0.7;
+	opacity: 0.45;
+}
+.map-stop {
+	fill: #b6a78a;
+	stroke: #18221c;
+	stroke-width: 1;
+}
+.map-stop.is-near {
+	fill: #edc185;
+}
+.map-facing {
+	fill: #f8e0b3;
+	opacity: 0.55;
+}
+.map-player {
+	fill: #fff7e5;
+	stroke: #18221c;
+	stroke-width: 1;
+}
+.walk-map p {
+	font: 9px / 1.5 var(--mono);
+	color: #e1cfad;
+	margin: 0;
+}
+.walk-crosshair {
+	transform: translate(-50%, -50%);
+	transition:
+		width 0.15s,
+		height 0.15s,
+		background 0.15s;
+}
+.walk-crosshair.has-target {
+	width: 10px;
+	height: 10px;
+	background: #edc185;
+	box-shadow:
+		0 0 0 4px #edc18530,
+		0 1px 4px #0008;
+}
+.walk-object-hint {
+	position: absolute;
+	top: calc(50% + 24px);
+	left: 50%;
+	transform: translateX(-50%);
+	max-width: calc(100vw - 40px);
+	padding: 10px 14px;
+	border-radius: 6px;
+	background: #11201dde;
+	text-align: center;
+	font: 11px / 1.6 var(--mono);
+	text-shadow: none;
+	color: #f0e8d6;
+}
+.walk-object-hint > span {
+	display: block;
+	color: #d4b27b;
+}
+.walk-object-hint button {
+	min-height: 34px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 12px;
+}
+.walk-interact-key {
+	border: 1px solid #efe7ce55;
+	border-radius: 3px;
+	padding: 0 5px;
+	font-size: 10px;
+}
+.walk-object-hint button:focus-visible {
+	outline: 2px solid #edc185;
+	outline-offset: 3px;
+}
+@media (max-width: 700px) {
+	.walk-map {
+		left: 16px;
+		width: 96px;
+		padding: 9px;
+	}
+	.walk-map-heading {
+		font-size: 7px;
+		letter-spacing: 0.4px;
+	}
+	.walk-map p {
+		font-size: 8px;
+	}
+	.walk-object-hint {
+		width: max-content;
+		font-size: 10px;
+	}
+}
+@media (pointer: coarse) {
+	.walk-interact-key {
+		display: none;
 	}
 }

@@ -6,6 +6,7 @@ export default function WalkEntry() {
 			type="button"
 			className="scene-control walk-entry"
 			aria-label="Walk the coast"
+			title="Explore the coast on foot"
 			onClick={() => setWalking(true)}
 		>
 			<svg
