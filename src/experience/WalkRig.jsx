@@ -10,6 +10,9 @@ import { createWalkGround, EYE_HEIGHT, moveWalker } from "./walkPhysics";
 import { setWalking, useWalking, walkInput } from "./walkStore";
 
 import { createWalkEscape } from "./walkEscape";
+import { getCollectionOpen } from "./collectionStore";
+import { EXPANSION_PATH } from "./expansionLayout";
+import { TEMPLATE_BOARD } from "./templateBoardPlacement";
 
 const MOVEMENT_KEYS = new Set([
 	"KeyW",
@@ -40,6 +43,12 @@ export default function WalkRig() {
 			z: landmark.position[2],
 			radius: [0.55, 1.25, 1.1][i],
 		}));
+		list.push({
+			x: TEMPLATE_BOARD.position[0],
+			y: TEMPLATE_BOARD.position[1],
+			z: TEMPLATE_BOARD.position[2],
+			radius: TEMPLATE_BOARD.obstacleRadius,
+		});
 		scene.traverse((o) => {
 			for (const [x, y, z] of o.userData.lanterns ?? [])
 				list.push({ x, y: y - 0.8, z, radius: 0.17 });
@@ -63,9 +72,9 @@ export default function WalkRig() {
 			quaternion: camera.quaternion.clone(),
 		};
 		const stop = getScrollSection(),
-			landmark = LANDMARKS[stop - 1];
+			landmark = stop === 4 ? TEMPLATE_BOARD : LANDMARKS[stop - 1];
 		const spawn = landmark
-			? createRoadSampler(COAST_PATH)(
+			? createRoadSampler(stop === 4 ? EXPANSION_PATH : COAST_PATH)(
 					landmark.position[0],
 					landmark.position[2],
 				).point
@@ -96,6 +105,7 @@ export default function WalkRig() {
 			exitWalk: () => setWalking(false),
 		});
 		const onKey = (event) => {
+			if (getCollectionOpen()) return;
 			if (escapeControl.keyDown(event)) return;
 			if (
 				event.altKey ||
@@ -173,6 +183,11 @@ export default function WalkRig() {
 	}, [active, camera, gl, ground]);
 
 	useFrame((_, delta) => {
+		if (getCollectionOpen()) {
+			state.current.keys.clear();
+			Object.assign(walkInput, { forward: 0, side: 0, yaw: 0, pitch: 0 });
+			return;
+		}
 		if (!active) return;
 		const s = state.current,
 			dt = Math.min(delta, 0.05),

@@ -21,4 +21,6 @@ export const spotlightSettings = {
 	singer: approvedSpotlight,
 	bakery: approvedSpotlight,
 	next: approvedSpotlight,
+	// The board faces back toward the branch, so light its parchment from that side.
+	collection: { ...approvedSpotlight, pos: [1, 6.4, -2.6] },
 };

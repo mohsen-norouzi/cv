@@ -3,8 +3,8 @@ import { reducedMotion } from "./motion.js";
 
 const listeners = new Set();
 
-/** 0 = hero, 1 = girl, 2 = bakery, 3 = bench */
-export const SCROLL_SECTION_COUNT = 4;
+/** 0 = hero, 1 = girl, 2 = bakery, 3 = bench, 4 = collection */
+export const SCROLL_SECTION_COUNT = 5;
 
 let section = 0;
 let progress = 0;

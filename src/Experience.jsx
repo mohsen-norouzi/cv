@@ -15,6 +15,7 @@ import SkyDome from "./experience/SkyDome";
 import TourFocus from "./experience/TourFocus";
 import WalkRig from "./experience/WalkRig";
 import WorldFocus from "./experience/WorldFocus";
+import TemplateBoard from "./experience/TemplateBoard";
 
 const PostFX = lazy(() => import("./experience/PostFX"));
 
@@ -52,6 +53,7 @@ export default function Experience() {
 			/>
 			<Ocean />
 			<CoastalWorld />
+			<TemplateBoard />
 			<CoastalMist />
 			<ProjectLabels />
 			<TourFocus />

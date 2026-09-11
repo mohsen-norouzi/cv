@@ -1,6 +1,11 @@
 import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
-import { BAKERY_VIEW_POS, CRYSTAL_VIEW_POS, GIRL_VIEW_POS } from "./constants";
+import {
+	BOARD_VIEW_POS,
+	BAKERY_VIEW_POS,
+	CRYSTAL_VIEW_POS,
+	GIRL_VIEW_POS,
+} from "./constants";
 import { getCameraSettled, setFocus, setFocusReveal } from "./focusStore";
 import { advanceFocus, createFocusTransition } from "./focusTransition";
 import { reducedMotion } from "./motion";
@@ -14,7 +19,13 @@ import { spotlightSettings } from "./spotlightSettings";
 
 import { getWalking } from "./walkStore";
 
-const VIEWS = [null, GIRL_VIEW_POS, BAKERY_VIEW_POS, CRYSTAL_VIEW_POS];
+const VIEWS = [
+	null,
+	GIRL_VIEW_POS,
+	BAKERY_VIEW_POS,
+	CRYSTAL_VIEW_POS,
+	BOARD_VIEW_POS,
+];
 
 export default function TourFocus() {
 	const state = useRef(createFocusTransition());

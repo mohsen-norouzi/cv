@@ -58,14 +58,6 @@ export default function HeroContent({ entered = true }) {
 						>
 							Explore my work <span aria-hidden="true">⟶</span>
 						</button>
-						<a
-							className="text-action"
-							href="/resume.pdf"
-							target="_blank"
-							rel="noreferrer"
-						>
-							About me <span aria-hidden="true">↗</span>
-						</a>
 					</div>
 				</FadeUp>
 			</div>

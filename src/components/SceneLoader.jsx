@@ -6,7 +6,7 @@ import {
 	subscribeLoadProgress,
 	subscribeSceneReady,
 } from "../experience/loadStore";
-export default function SceneLoader({ entered, onEnter }) {
+export default function SceneLoader({ entered, onEnter, sky }) {
 	const { progress, errors } = useSyncExternalStore(
 		subscribeLoadProgress,
 		getLoadProgress,
@@ -27,6 +27,11 @@ export default function SceneLoader({ entered, onEnter }) {
 	return (
 		<section
 			className={`coast-loader ${entered ? "loaded" : ""}`}
+			style={{
+				"--intro-day": `${sky.daylight * 100}%`,
+				"--intro-warmth": `${sky.warmth * 100}%`,
+				"--intro-glow-x": `${50 + sky.sunDirection[0] * 24}%`,
+			}}
 			aria-label="Mohsen’s portfolio"
 			inert={entered}
 		>

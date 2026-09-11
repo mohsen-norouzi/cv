@@ -1,6 +1,7 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
+import { TEMPLATE_BOARD } from "./templateBoardPlacement";
 import { LANDMARKS } from "./coastLayout";
 import { getFocusStop, getSpotReveal } from "./focusStore";
 import { reducedMotion } from "./motion";
@@ -12,6 +13,7 @@ const SPOT_COLOR = "#ffe0a8";
 const STOPS = [
 	null,
 	...LANDMARKS.map(({ position }) => new THREE.Vector3(...position)),
+	new THREE.Vector3(...TEMPLATE_BOARD.position),
 ];
 
 // One camera-facing shaft with a soft cross-section and a long source fade.
@@ -216,7 +218,9 @@ export default function SceneFocus() {
 				? spotlightSettings.bakery
 				: stop === 3
 					? spotlightSettings.next
-					: spotlightSettings.singer;
+					: stop === 4
+						? spotlightSettings.collection
+						: spotlightSettings.singer;
 
 		const [ox, oy, oz] = spot.pos;
 		const [lx, ly, lz] = spot.look;

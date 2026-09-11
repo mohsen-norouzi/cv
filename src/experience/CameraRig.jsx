@@ -3,6 +3,9 @@ import { useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { advanceCameraFollow, CAMERA_FINISH_SECONDS } from "./cameraTransition";
 import {
+	BOARD_VIEW_POS,
+	BOARD_LOOK_AT,
+	CAM_PATH_CRYSTAL_TO_BOARD,
 	BAKERY_LOOK_AT,
 	BAKERY_VIEW_POS,
 	CAM_FOV,
@@ -33,7 +36,7 @@ import {
 
 import { getWalking } from "./walkStore";
 
-const MOBILE_LOOK_SHIFTS = [0, 3.2, 3.5, 3.0];
+const MOBILE_LOOK_SHIFTS = [0, 3.2, 3.5, 3.0, 0];
 const PARALLAX_X = 0.45;
 const PARALLAX_Y = 0.26;
 const LOOK_X = 0.14;
@@ -47,6 +50,7 @@ const STOP_POSITIONS = [
 	GIRL_VIEW_POS,
 	BAKERY_VIEW_POS,
 	CRYSTAL_VIEW_POS,
+	BOARD_VIEW_POS,
 ];
 const STOP_LOOKS = [
 	CAM_TARGET,
@@ -57,6 +61,7 @@ const STOP_LOOKS = [
 		.normalize()
 		.multiplyScalar(LOOK_DIST)
 		.add(CRYSTAL_VIEW_POS),
+	BOARD_LOOK_AT,
 ];
 const _fwd = new THREE.Vector3(0, 0, -1);
 const _dir = new THREE.Vector3();
@@ -101,6 +106,7 @@ export default function CameraRig() {
 			makeCurve(CAM_PATH_HERO_TO_GIRL),
 			makeCurve(CAM_PATH_GIRL_TO_BAKERY),
 			makeCurve(CAM_PATH_BAKERY_TO_CRYSTAL),
+			makeCurve(CAM_PATH_CRYSTAL_TO_BOARD),
 		],
 		[],
 	);
@@ -194,12 +200,18 @@ export default function CameraRig() {
 						easeInOut(t),
 					),
 				);
+			} else if (seg === 3) {
+				targetLook.current.lerpVectors(
+					STOP_LOOKS[3],
+					BOARD_LOOK_AT,
+					easeInOut(t),
+				);
 			} else {
 				sampleSegment(lookCurves, p, targetLook.current);
 			}
 
 			if (size.width < 700) {
-				const segment = Math.min(2, Math.floor(p)),
+				const segment = Math.min(posCurves.length - 1, Math.floor(p)),
 					fraction = p - segment;
 				targetLook.current.x += THREE.MathUtils.lerp(
 					MOBILE_LOOK_SHIFTS[segment],
