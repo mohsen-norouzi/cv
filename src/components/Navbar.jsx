@@ -18,11 +18,6 @@ export default function Navbar() {
 			</button>
 			<div className="header-actions">
 				<LiveSkyControl />
-				<nav aria-label="Main navigation">
-					<a href="mailto:hello@itsmohsen.com">
-						Let's talk <span className="contact-dot" aria-hidden="true" />
-					</a>
-				</nav>
 			</div>
 		</header>
 	);
