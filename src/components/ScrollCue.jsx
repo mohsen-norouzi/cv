@@ -38,7 +38,7 @@ export default function ScrollCue() {
 				</span>
 			</button>
 			<div className="footer-links">
-				<a href="mailto:hello@itsmohsen.com">hello@itsmohsen.com ↗</a>
+				<a href="mailto:hello@itsmohsen.com">Email ↗</a>
 				<a
 					href="https://www.instagram.com/mohsenized/"
 					target="_blank"
