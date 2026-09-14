@@ -1,3 +1,4 @@
+import TemplateCard from "./TemplateCard";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import {
 	setCollectionOpen,
@@ -112,54 +113,15 @@ export default function TemplateCollection() {
 					</section>
 				) : (
 					<div className="template-grid">
-						{TEMPLATES.map((template, index) => {
-							const url = getPreviewUrl(template);
-							const content = (
-								<>
-									<div className={`template-image template-tone-${index % 3}`}>
-										<img
-											src={template.image}
-											alt={template.imageAlt}
-											width="1920"
-											height="1080"
-											loading="lazy"
-										/>
-									</div>
-									<div className="template-card-copy">
-										<div className="template-card-title">
-											<h3>{template.title}</h3>
-											<span aria-hidden="true">↗</span>
-										</div>
-										<p>{template.description}</p>
-										<span className="template-status">
-											{url ? "Preview website" : "Coming soon · Placeholder"}
-										</span>
-									</div>
-								</>
-							);
-							return url ? (
-								<a
-									className="template-card"
-									key={template.id}
-									data-template-id={template.id}
-									href={url}
-									target="_blank"
-									rel="noopener noreferrer"
-								>
-									{content}
-								</a>
-							) : (
-								<button
-									className="template-card"
-									key={template.id}
-									data-template-id={template.id}
-									type="button"
-									onClick={() => showTemplate(template)}
-								>
-									{content}
-								</button>
-							);
-						})}
+						{TEMPLATES.map((template, index) => (
+							<TemplateCard
+								key={template.id}
+								template={template}
+								index={index}
+								active={open}
+								onSelect={showTemplate}
+							/>
+						))}
 					</div>
 				)}
 				<footer className="collection-footer">
