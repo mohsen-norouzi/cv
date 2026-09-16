@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useWalking } from "../experience/walkStore";
 import { BARCELONA, localClock } from "../experience/solar";
 import { localDateTime, fromLocalDateTime } from "../experience/previewClock";
+import { resolveCity } from "../experience/locationLabel";
 import {
 	seekSky,
 	playSky,
@@ -36,9 +37,11 @@ export default function LiveSkyControl() {
 	const [pending, setPending] = useState(false);
 	const root = useRef(null);
 	const request = useRef(0);
+	const cityLookup = useRef(null);
 	useEffect(
 		() => () => {
 			request.current++;
+			cityLookup.current?.abort();
 		},
 		[],
 	);
@@ -63,26 +66,43 @@ export default function LiveSkyControl() {
 	}, [open]);
 	function useLocation() {
 		if (!navigator.geolocation) {
-			setStatus("Location is unavailable. The sky is following Barcelona.");
+			setStatus(
+				`Location is unavailable. The sky still follows ${sky.location.label}.`,
+			);
 			return;
 		}
 		const id = ++request.current;
+		cityLookup.current?.abort();
 		setPending(true);
 		setStatus("Waiting for location…");
 		navigator.geolocation.getCurrentPosition(
-			(position) => {
+			async (position) => {
 				if (id !== request.current) return;
-				const valid = setSkyLocation({
+				const location = {
 					latitude: position.coords.latitude,
 					longitude: position.coords.longitude,
 					label: "Your location",
 					timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+				};
+				const valid = setSkyLocation(location);
+				if (!valid) {
+					setPending(false);
+					setStatus("Location is unavailable. The previous sky is unchanged.");
+					return;
+				}
+				setStatus("Finding your city…");
+				const controller = new AbortController();
+				cityLookup.current = controller;
+				const city = await resolveCity(location.latitude, location.longitude, {
+					signal: controller.signal,
 				});
+				if (id !== request.current) return;
+				if (city) setSkyLocation({ ...location, label: city });
 				setPending(false);
 				setStatus(
-					valid
-						? "The sky now follows your location."
-						: "Location is unavailable. The previous sky is unchanged.",
+					city
+						? `The sky now follows ${city}.`
+						: "The sky follows your location, but its city name couldn't be found.",
 				);
 			},
 			() => {
@@ -273,13 +293,30 @@ export default function LiveSkyControl() {
 								: "Return to live time"}
 						</button>
 					</div>
-					<button type="button" onClick={useLocation} disabled={pending}>
+					<p id="sky-location-note" className="live-sky-note">
+						Using your location sends your coordinates to{" "}
+						<a
+							href="https://www.bigdatacloud.com/geocoding-apis/free-reverse-geocode-to-city-api"
+							target="_blank"
+							rel="noreferrer"
+						>
+							BigDataCloud
+						</a>{" "}
+						to find your city. The clock uses your device’s time zone.
+					</p>
+					<button
+						type="button"
+						onClick={useLocation}
+						disabled={pending}
+						aria-describedby="sky-location-note"
+					>
 						{pending ? "Finding location…" : "Use my location"}
 					</button>
 					<button
 						type="button"
 						onClick={() => {
 							request.current++;
+							cityLookup.current?.abort();
 							setPending(false);
 							setSkyLocation(BARCELONA);
 							setStatus("Following Barcelona again.");
@@ -287,10 +324,6 @@ export default function LiveSkyControl() {
 					>
 						Use Barcelona
 					</button>
-					<p className="live-sky-note">
-						Your location stays in this browser. Your device’s clock is shown
-						when using your location.
-					</p>
 					<p role="status" className="live-sky-status">
 						{status}
 					</p>
