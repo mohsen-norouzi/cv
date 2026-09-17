@@ -124,15 +124,20 @@ test("all sign posts are supported by the actual shipped terrain, clear of roads
 	}
 });
 
-test("remaining castle arrow points toward the castle", () => {
+test("junction arrows point toward Castle and Templates", () => {
 	const sign = COAST_SIGNS.find((s) => s.id === "crossroads");
 	const castle = COAST_PATH.getPointAt(0.95);
-	const side =
-		(castle.x - sign.position[0]) * Math.cos(sign.yaw) -
-		(castle.z - sign.position[2]) * Math.sin(sign.yaw);
-	assert.ok(side * (sign.flip ? -1 : 1) > 0);
-	assert.equal(sign.variant, "Arrow");
-	assert.deepEqual(sign.lines, ["Castle"]);
+	for (const [destination, direction] of [
+		[castle.toArray(), -1],
+		[FUTURE_TERRACES[0].position, 1],
+	]) {
+		const side =
+			(destination[0] - sign.position[0]) * Math.cos(sign.yaw) -
+			(destination[2] - sign.position[2]) * Math.sin(sign.yaw);
+		assert.ok(side * direction * (sign.flip ? -1 : 1) > 0);
+	}
+	assert.equal(sign.variant, "Split");
+	assert.deepEqual(sign.lines, ["Castle", "Templates"]);
 	assert.ok(
 		!COAST_SIGNS.some((s) => s.id === "music" || s.id === "collection"),
 	);

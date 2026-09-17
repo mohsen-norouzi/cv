@@ -4,7 +4,7 @@
 
 All three variants share `public/optimized/signs/woodsign.glb` (about 12 KB). There are no downloaded textures. A matte wood material with subtle plank color variation responds to the existing scene lights; cream lettering is generated in a small canvas atlas. All seven fixed signs are merged into three draw meshes. The interactive Templates board retains its original parchment-and-wood design.
 
-The coast welcome, North Cove and horizon use plain signs. The road junction has a Castle arrow. Ekaterina and Templates direction arrows are omitted. Each project terrace has a smaller name/year sign beside its steps, including Bavo Bakes. Project text is read from `src/experience/projects.js`.
+The coast welcome, North Cove and horizon use plain signs. The road junction has Castle and Templates arrows on one post. The separate Ekaterina and collection-approach arrow signs are omitted. Each project terrace has a smaller name/year sign beside its steps, including Bavo Bakes. Project text is read from `src/experience/projects.js`.
 
 ## Rebuild
 

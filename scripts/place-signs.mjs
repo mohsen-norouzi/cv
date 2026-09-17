@@ -53,9 +53,9 @@ const plans = [
 		id: "crossroads",
 		path: 0,
 		t: 0.643,
-		variant: "Arrow",
-		lines: ["Castle"],
-		destination: COAST_PATH.getPointAt(0.95).toArray(),
+		variant: "Split",
+		lines: ["Castle", "Templates"],
+		destination: FUTURE_TERRACES[0].position,
 		side: 1,
 	},
 	{

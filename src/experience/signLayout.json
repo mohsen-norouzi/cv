@@ -11,12 +11,12 @@
 	},
 	{
 		"id": "crossroads",
-		"variant": "Arrow",
-		"lines": ["Castle"],
+		"variant": "Split",
+		"lines": ["Castle", "Templates"],
 		"position": [15.901902563512358, 10.991092044415133, -7.79849322867081],
 		"approach": [11.824101894305102, 12.282892950699615, -7.312997423896267],
-		"yaw": -1.9161848417510254,
-		"flip": true,
+		"yaw": -0.7949122964461387,
+		"flip": false,
 		"scale": 1.1
 	},
 	{
