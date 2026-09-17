@@ -13,6 +13,7 @@ import { createWalkEscape } from "./walkEscape";
 import { getCollectionOpen } from "./collectionStore";
 import { EXPANSION_PATH } from "./expansionLayout";
 import { TEMPLATE_BOARD } from "./templateBoardPlacement";
+import { SIGN_OBSTACLES } from "./buildWayfinding";
 
 const MOVEMENT_KEYS = new Set([
 	"KeyW",
@@ -49,6 +50,7 @@ export default function WalkRig() {
 			z: TEMPLATE_BOARD.position[2],
 			radius: TEMPLATE_BOARD.obstacleRadius,
 		});
+		list.push(...SIGN_OBSTACLES);
 		scene.traverse((o) => {
 			for (const [x, y, z] of o.userData.lanterns ?? [])
 				list.push({ x, y: y - 0.8, z, radius: 0.17 });

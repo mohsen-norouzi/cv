@@ -17,6 +17,7 @@ import WalkInteractions from "./experience/WalkInteractions";
 import WalkRig from "./experience/WalkRig";
 import WorldFocus from "./experience/WorldFocus";
 import TemplateBoard from "./experience/TemplateBoard";
+import Wayfinding from "./experience/Wayfinding";
 
 const PostFX = lazy(() => import("./experience/PostFX"));
 
@@ -56,6 +57,7 @@ export default function Experience() {
 			<Ocean />
 			<CoastalWorld />
 			<TemplateBoard />
+			<Wayfinding />
 			<CoastalMist />
 			<ProjectLabels />
 			<TourFocus />
