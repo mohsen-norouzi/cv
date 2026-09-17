@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { pathToFileURL } from "node:url";
 import { execFileSync } from "node:child_process";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { MeshoptEncoder } from "meshoptimizer/encoder";
@@ -11,7 +12,7 @@ const path = (name) => new URL(name, base);
 await mkdir(path("public/optimized"), { recursive: true });
 await Promise.all([MeshoptEncoder.ready, MeshoptDecoder.ready]);
 
-async function readGlb(name) {
+export async function readGlb(name) {
 	const bytes = await readFile(path(name));
 	assert.equal(bytes.readUInt32LE(0), 0x46546c67);
 	const length = bytes.readUInt32LE(12);
@@ -118,7 +119,7 @@ function extractSubjects(source) {
 	return { ...source, json };
 }
 
-async function compress(source, target) {
+export async function compress(source, target) {
 	const json = source.json;
 	const blocks = [];
 	let offset = 0,
@@ -244,25 +245,31 @@ async function compress(source, target) {
 	);
 }
 
-await compress(
-	extractSubjects(await readGlb("public/Try1.glb")),
-	"public/optimized/subjects.glb",
-);
-await compress(
-	await readGlb("public/coast-lit.glb"),
-	"public/optimized/coast.glb",
-);
-for (const name of ["paving", "landscape", "foliage"]) {
-	// -exact is essential: alpha stores irradiance, not ordinary image transparency.
-	execFileSync("cwebp", [
-		"-quiet",
-		"-lossless",
-		"-exact",
-		"-m",
-		"6",
-		path(`public/lighting/${name}.png`).pathname,
-		"-o",
-		path(`public/optimized/${name}.webp`).pathname,
-	]);
-	console.log(`${name}: lossless WebP generated at original resolution`);
+// Importing the lossless compressor must not rebuild unrelated scene assets.
+if (
+	process.argv[1] &&
+	pathToFileURL(process.argv[1]).href === import.meta.url
+) {
+	await compress(
+		extractSubjects(await readGlb("public/Try1.glb")),
+		"public/optimized/subjects.glb",
+	);
+	await compress(
+		await readGlb("public/coast-lit.glb"),
+		"public/optimized/coast.glb",
+	);
+	for (const name of ["paving", "landscape", "foliage"]) {
+		// -exact is essential: alpha stores irradiance, not ordinary image transparency.
+		execFileSync("cwebp", [
+			"-quiet",
+			"-lossless",
+			"-exact",
+			"-m",
+			"6",
+			path(`public/lighting/${name}.png`).pathname,
+			"-o",
+			path(`public/optimized/${name}.webp`).pathname,
+		]);
+		console.log(`${name}: lossless WebP generated at original resolution`);
+	}
 }

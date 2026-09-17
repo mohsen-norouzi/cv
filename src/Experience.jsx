@@ -3,6 +3,7 @@ import { lazy } from "react";
 import Atmosphere from "./experience/Atmosphere";
 import CameraRig from "./experience/CameraRig";
 import CoastalMist from "./experience/CoastalMist";
+import CoastalBoat from "./experience/CoastalBoat";
 import CoastalWorld from "./experience/CoastalWorld";
 import { IS_MOBILE } from "./experience/device";
 import EnvLight from "./experience/EnvLight";
@@ -56,6 +57,7 @@ export default function Experience() {
 			/>
 			<Ocean />
 			<CoastalWorld />
+			<CoastalBoat />
 			<TemplateBoard />
 			<Wayfinding />
 			<CoastalMist />

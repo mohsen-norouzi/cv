@@ -14,6 +14,11 @@ import {
 import { lighthouseUniforms } from "./lighthouseState";
 import { reducedMotion } from "./motion";
 import {
+	oceanMotion,
+	boatWaterUniforms,
+	boatWaterClipGLSL,
+} from "./boatMotion";
+import {
 	SEA_LEVEL,
 	SHORE_BOUNDS,
 	SHORE_RANGE,
@@ -167,6 +172,11 @@ export default function Ocean() {
                 outgoingLight+=lighthouseColor*footprint*ripples*lighthouseStrength*.9;`,
 			)
 			.replace("#include <fog_fragment>", "");
+		Object.assign(surface.material.uniforms, boatWaterUniforms);
+		surface.material.fragmentShader = surface.material.fragmentShader.replace(
+			"void main() {",
+			`uniform mat4 boatInverse; uniform vec2 boatCenter;\nvoid main() {\n${boatWaterClipGLSL}`,
+		);
 		return surface;
 	}, [shore]);
 	useFrame((_, delta) => {
@@ -197,6 +207,7 @@ export default function Ocean() {
 			u.time.value += step * 0.32;
 			u.swellTime.value += step * 0.85;
 		}
+		oceanMotion.time = u.swellTime.value;
 	});
 	useEffect(
 		() => () => {
